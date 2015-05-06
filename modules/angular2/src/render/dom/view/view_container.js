@@ -1,6 +1,7 @@
 import {isPresent, isBlank, BaseException} from 'angular2/src/facade/lang';
 import {ListWrapper, MapWrapper, List} from 'angular2/src/facade/collection';
 import {DOM} from 'angular2/src/dom/dom_adapter';
+import {animator} from 'angular2/src/animations/animator';
 
 import * as viewModule from './view';
 
@@ -99,7 +100,7 @@ export class ViewContainer {
 
   static moveViewNodesAfterSibling(sibling, view) {
     for (var i = view.rootNodes.length - 1; i >= 0; --i) {
-      DOM.insertAfter(sibling, view.rootNodes[i]);
+      animator.insert(view.rootNodes[i], sibling);
     }
   }
 
@@ -108,7 +109,7 @@ export class ViewContainer {
     if (len == 0) return;
     var parent = view.rootNodes[0].parentNode;
     for (var i = len - 1; i >= 0; --i) {
-      DOM.removeChild(parent, view.rootNodes[i]);
+      animator.leave(view.rootNodes[i], parent);
     }
   }
 }

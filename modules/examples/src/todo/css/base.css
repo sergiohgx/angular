@@ -377,3 +377,21 @@ Can't use it globally since it destroys checkboxes in Firefox
     bottom: 10px;
   }
 }
+
+.record.ng-enter {
+  transition:0.5s linear all;
+  opacity:0;
+}
+
+.record.ng-enter.ng-enter-active {
+  opacity:1;
+}
+
+.record.ng-leave {
+  transition:0.5s linear all;
+  opacity:1;
+}
+
+.record.ng-leave.ng-leave-active {
+  opacity:0;
+}
