@@ -8,9 +8,9 @@ var glob = require('glob');
 var mergeTrees = require('broccoli-merge-trees');
 var path = require('path');
 var renderLodashTemplate = require('broccoli-lodash');
-var replace = require('broccoli-replace');
 var stew = require('broccoli-stew');
 import ts2dart from '../broccoli-ts2dart';
+import replace from '../broccoli-replace';
 
 /**
  * A funnel starting at modules, including the given filters, and moving into the root.

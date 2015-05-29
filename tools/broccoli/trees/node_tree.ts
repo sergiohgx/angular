@@ -7,7 +7,7 @@ var Funnel = require('broccoli-funnel');
 var mergeTrees = require('broccoli-merge-trees');
 var path = require('path');
 var renderLodashTemplate = require('broccoli-lodash');
-var replace = require('broccoli-replace');
+import replace from '../broccoli-replace';
 var stew = require('broccoli-stew');
 
 var projectRootDir = path.normalize(path.join(__dirname, '..', '..', '..', '..'));

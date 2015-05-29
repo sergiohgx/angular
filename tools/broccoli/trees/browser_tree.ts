@@ -5,12 +5,12 @@ var flatten = require('broccoli-flatten');
 var htmlReplace = require('../html-replace');
 var mergeTrees = require('broccoli-merge-trees');
 var path = require('path');
-var replace = require('broccoli-replace');
 var stew = require('broccoli-stew');
 
 import compileWithTypescript from '../broccoli-typescript';
 import destCopy from '../broccoli-dest-copy';
 import {default as transpileWithTraceur, TRACEUR_RUNTIME_PATH} from '../traceur/index';
+import replace from '../broccoli-replace';
 
 
 var projectRootDir = path.normalize(path.join(__dirname, '..', '..', '..', '..'));
