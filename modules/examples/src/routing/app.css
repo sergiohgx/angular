@@ -1,0 +1,42 @@
+body {
+  background:#eee;
+  color:black;
+}
+
+.inbox-list,
+.inbox-list li {
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+
+.inbox-list a {
+  padding:5px;
+  display:block;
+}
+
+inbox {
+  display:table;
+}
+
+inbox, inbox-side-menu {
+  display:block;
+}
+
+inbox-side-menu {
+  position:fixed;
+  left:0;
+  top:0;
+  bottom:0;
+  width:200px;
+  background:#ddd;
+}
+
+inbox {
+  margin-left:200px;
+}
+
+inbox-detail {
+  display:block;
+  margin-left:200px;
+}

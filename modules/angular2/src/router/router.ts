@@ -109,9 +109,14 @@ export class Router {
     if (this.navigating) {
       return this._currentNavigation;
     }
+
     this.lastNavigationAttempt = url;
     return this._currentNavigation = this.recognize(url).then((matchedInstruction) => {
       if (isBlank(matchedInstruction)) {
+        if (isPresent(this.parent)) {
+          this.lastNavigationAttempt = null;
+          return this.parent.navigate(url);
+        }
         return PromiseWrapper.resolve(false);
       }
 
@@ -194,7 +199,13 @@ export class Router {
    * app's base href.
    */
   generate(name: string, params: StringMap<string, string>): string {
-    return this._registry.generate(name, params, this.hostComponent);
+    var route = this._registry.generate(name, params, this.hostComponent);
+    if (isPresent(route)) {
+      return route;
+    } else if (isPresent(this.parent)) {
+      return this.parent.generate(name, params);
+    }
+    return null;
   }
 }
 
