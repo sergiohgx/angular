@@ -195,7 +195,46 @@ export function main() {
                });
          }), 1000);
     });
+
+    describe('router-link', () => {
+      beforeEachBindings(
+          () => { return [bind(appComponentTypeToken).toValue(ParentCmp)]; });
+
+      it('should recognize that the current route is active and apply the router-link-active CSS class to the associated element',
+         inject([AsyncTestCompleter, TestComponentBuilder], (async, tcb: TestComponentBuilder) => {
+           var t = `<a [router-link]="['./child']" class="child-link">Child</a>
+                    <a [router-link]="['./better-child']" class="better-child-link">Better Child</a>
+                    <router-outlet></router-outlet>`;
+
+           tcb.overrideTemplate(ParentCmp, t).createAsync(ParentCmp).then((rootTC) => {
+             var router = rootTC.componentInstance.router;
+             var element = rootTC.nativeElement;
+
+             var link1 = DOM.querySelector(element, '.child-link');
+             var link2 = DOM.querySelector(element, '.better-child-link');
+
+             router.subscribe((_) => {
+               rootTC.detectChanges();
+               assertHasClass(link1, 'router-link-active', false);
+               assertHasClass(link2, 'router-link-active', true);
+
+               async.done();
+             });
+
+             assertHasClass(link1, 'router-link-active', true);
+             assertHasClass(link2, 'router-link-active', true);
+
+             router.navigate('/better-child');
+             rootTC.detectChanges();
+           });
+       }));
+    });
   });
+}
+
+function assertHasClass(element, className, not) {
+  var result = DOM.hasClass(element, className);
+  return not && result ? false : true;
 }
 
 
@@ -218,8 +257,12 @@ class AppCmp {
 
 @Component({selector: 'parent-cmp'})
 @View({template: `parent { <router-outlet></router-outlet> }`, directives: ROUTER_DIRECTIVES})
-@RouteConfig([new Route({path: '/child', component: HelloCmp})])
+@RouteConfig([
+  new Route({path: '/child', component: HelloCmp, as: 'child'}),
+  new Route({path: '/better-child', component: Hello2Cmp, as: 'better-child'})
+])
 class ParentCmp {
+  constructor(public router: Router) {}
 }
 
 @Component({selector: 'super-parent-cmp'})

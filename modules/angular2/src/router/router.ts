@@ -86,6 +86,9 @@ export class Router {
     return _resolveToTrue;
   }
 
+  isRouteActive(instruction) {
+    return this._currentInstruction == instruction;
+  }
 
   /**
    * Dynamically update the routing configuration and trigger a navigation.
