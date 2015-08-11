@@ -200,7 +200,7 @@ export function main() {
       beforeEachBindings(
           () => { return [bind(appComponentTypeToken).toValue(ParentCmp)]; });
 
-      it('should recognize that the current route is active and apply the router-link-active CSS class to the associated element',
+      iit('should recognize that the current route is active and apply the router-link-active CSS class to the associated element',
          inject([AsyncTestCompleter, TestComponentBuilder], (async, tcb: TestComponentBuilder) => {
            var t = `<a [router-link]="['./child']" class="child-link">Child</a>
                     <a [router-link]="['./better-child']" class="better-child-link">Better Child</a>
@@ -215,14 +215,14 @@ export function main() {
 
              router.subscribe((_) => {
                rootTC.detectChanges();
-               assertHasClass(link1, 'router-link-active', false);
-               assertHasClass(link2, 'router-link-active', true);
+               expect(link1).toHaveCssClass('router-link-active');
+               expect(link2).not.toHaveCssClass('router-link-active');
 
                async.done();
              });
 
-             assertHasClass(link1, 'router-link-active', true);
-             assertHasClass(link2, 'router-link-active', true);
+             expect(link1).not.toHaveCssClass('router-link-active');
+             expect(link2).not.toHaveCssClass('router-link-active');
 
              router.navigate('/better-child');
              rootTC.detectChanges();
@@ -230,11 +230,6 @@ export function main() {
        }));
     });
   });
-}
-
-function assertHasClass(element, className, not) {
-  var result = DOM.hasClass(element, className);
-  return not && result ? false : true;
 }
 
 

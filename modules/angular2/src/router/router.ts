@@ -86,8 +86,9 @@ export class Router {
     return _resolveToTrue;
   }
 
-  isRouteActive(instruction) {
-    return this._currentInstruction == instruction;
+  isRouteActive(instruction): boolean {
+  debugger;
+    return this._currentInstruction === instruction;
   }
 
   /**

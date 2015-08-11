@@ -50,7 +50,7 @@ export class RouterLink {
 
   constructor(private _router: Router, private _location: Location) {}
 
-  get isRouteActive() {
+  get isRouteActive(): boolean {
     return this._router.isRouteActive(this._navigationInstruction);
   }
 
