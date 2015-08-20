@@ -1,27 +1,27 @@
-/*
+import {PromiseWrapper, Promise} from 'angular2/src/core/facade/async';
 import {EventEmitter, ObservableWrapper} from 'angular2/src/core/facade/async';
 import {List} from 'angular2/src/core/facade/collection';
-import {LocationStrategy} from 'angular2/src/router/location_strategy';
+import {LocationUrl} from 'angular2/src/router/location_url';
 
-
-export class MockLocationStrategy extends LocationStrategy {
+export class MockLocationUrl implements LocationUrl {
   internalBaseHref: string = '/';
   internalPath: string = '/';
   internalTitle: string = '';
   urlChanges: List<string> = [];
   _subject: EventEmitter = new EventEmitter();
-  constructor() { super(); }
 
   simulatePopState(url: string): void {
     this.internalPath = url;
-    ObservableWrapper.callNext(this._subject, null);
+    ObservableWrapper.callNext(this._subject, {"url": url});
   }
 
-  path(): string { return this.internalPath; }
+  getUrl(): Promise<string> { return PromiseWrapper.wrap(() => this.internalPath); }
 
   simulateUrlPop(pathname: string): void {
     ObservableWrapper.callNext(this._subject, {'url': pathname});
   }
+
+  setUrl(url: string, baseHref: string): void { this.pushState(null, '', url); }
 
   pushState(ctx: any, title: string, url: string): void {
     this.internalTitle = title;
@@ -31,7 +31,7 @@ export class MockLocationStrategy extends LocationStrategy {
 
   onPopState(fn: (value: any) => void): void { ObservableWrapper.subscribe(this._subject, fn); }
 
-  getBaseHref(): string { return this.internalBaseHref; }
+  getBaseHref(): Promise<string> { return PromiseWrapper.wrap(() => this.internalBaseHref); }
 
   back(): void {
     if (this.urlChanges.length > 0) {
@@ -40,5 +40,6 @@ export class MockLocationStrategy extends LocationStrategy {
       this.simulatePopState(nextUrl);
     }
   }
+
+  forward(): void {}
 }
-*/

@@ -16,7 +16,9 @@ import {Injector, bind} from 'angular2/di';
 import {CONST_EXPR} from 'angular2/src/core/facade/lang';
 import {Location, APP_BASE_HREF} from 'angular2/src/router/location';
 import {LocationStrategy} from 'angular2/src/router/location_strategy';
-import {MockLocationStrategy} from 'angular2/src/mock/mock_location_strategy';
+import {PathLocationStrategy} from 'angular2/src/router/path_location_strategy';
+import {LocationUrl} from 'angular2/src/router/location_url';
+import {MockLocationUrl} from 'angular2/src/mock/mock_location_url';
 
 export function main() {
   describe('Location', () => {
@@ -24,10 +26,15 @@ export function main() {
     var locationStrategy, location;
 
     function makeLocation(baseHref: string = '/my/app', binding: any = CONST_EXPR([])): Location {
-      locationStrategy = new MockLocationStrategy();
-      locationStrategy.internalBaseHref = baseHref;
-      let injector = Injector.resolveAndCreate(
-          [Location, bind(LocationStrategy).toValue(locationStrategy), binding]);
+      locationStrategy = new PathLocationStrategy();
+      var locationUrl = new MockLocationUrl();
+      locationUrl.internalBaseHref = baseHref;
+      let injector = Injector.resolveAndCreate([
+        Location,
+        bind(LocationStrategy).toValue(locationStrategy),
+        bind(LocationUrl).toValue(locationUrl),
+        binding
+      ]);
       return location = injector.get(Location);
     }
 
@@ -77,16 +84,18 @@ export function main() {
     });
 
     it('should throw when no base href is provided', () => {
-      var locationStrategy = new MockLocationStrategy();
-      locationStrategy.internalBaseHref = null;
-      expect(() => new Location(locationStrategy))
+      var locationStrategy = new PathLocationStrategy();
+      var locationUrl = new MockLocationUrl();
+      locationUrl.internalBaseHref = null;
+      expect(() => new Location(locationStrategy, locationUrl))
           .toThrowError(
               `No base href set. Either provide a binding to "appBaseHrefToken" or add a base element.`);
     });
 
     it('should revert to the previous path when a back() operation is executed', () => {
-      var locationStrategy = new MockLocationStrategy();
-      var location = new Location(locationStrategy);
+      var locationStrategy = new PathLocationStrategy();
+      var locationUrl = new MockLocationUrl();
+      var location = new Location(locationStrategy, locationUrl);
 
       function assertUrl(path) { expect(location.path()).toEqual(path); }
 

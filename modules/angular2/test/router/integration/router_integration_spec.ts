@@ -32,13 +32,13 @@ import {
 } from 'angular2/router';
 
 import {LocationStrategy} from 'angular2/src/router/location_strategy';
-import {MockLocationStrategy} from 'angular2/src/mock/mock_location_strategy';
+import {PathLocationStrategy} from 'angular2/src/router/path_location_strategy';
 import {APP_COMPONENT} from 'angular2/src/core/application_tokens';
 
 export function main() {
   describe('router injectables', () => {
     beforeEachBindings(
-        () => { return [ROUTER_BINDINGS, bind(LocationStrategy).toClass(MockLocationStrategy)]; });
+        () => { return [ROUTER_BINDINGS, bind(LocationStrategy).toClass(PathLocationStrategy)]; });
 
     // do not refactor out the `bootstrap` functionality. We still want to
     // keep this test around so we can ensure that bootstrapping a router works
@@ -51,7 +51,7 @@ export function main() {
            bootstrap(AppCmp,
                      [
                        ROUTER_BINDINGS,
-                       bind(LocationStrategy).toClass(MockLocationStrategy),
+                       bind(LocationStrategy).toClass(PathLocationStrategy),
                        bind(DOCUMENT).toValue(fakeDoc)
                      ])
                .then((applicationRef) => {

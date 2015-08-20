@@ -15,6 +15,7 @@ import {WebWorkerSetup} from 'angular2/src/web_workers/ui/setup';
 import {MessageBasedRenderCompiler} from 'angular2/src/web_workers/ui/render_compiler';
 import {MessageBasedRenderer} from 'angular2/src/web_workers/ui/renderer';
 import {MessageBasedXHRImpl} from 'angular2/src/web_workers/ui/xhr_impl';
+import {MessageBasedLocationImpl} from 'angular2/src/web-workers/ui/location_impl';
 
 /**
  * Creates a zone, sets up the DI bindings
@@ -35,5 +36,5 @@ export function bootstrapUICommon(bus: MessageBus) {
 export class WebWorkerMain {
   constructor(public renderCompiler: MessageBasedRenderCompiler,
               public renderer: MessageBasedRenderer, public xhr: MessageBasedXHRImpl,
-              public setup: WebWorkerSetup) {}
+              public location: MessageBasedLocationImpl, public setup: WebWorkerSetup) {}
 }

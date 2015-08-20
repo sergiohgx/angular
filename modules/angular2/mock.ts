@@ -1,4 +1,4 @@
-export * from './src/mock/mock_location_strategy';
+export * from './src/mock/mock_location_url';
 export {LocationStrategy} from './src/router/location_strategy';
 
 export {MockViewResolver} from 'angular2/src/mock/view_resolver_mock';

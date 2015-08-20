@@ -65,6 +65,8 @@ import {
 import {ObservableWrapper} from 'angular2/src/core/facade/async';
 import {SETUP_CHANNEL} from 'angular2/src/web_workers/shared/messaging_api';
 import {WebWorkerEventDispatcher} from 'angular2/src/web_workers/worker/event_dispatcher';
+import {LocationUrl} from 'angular2/src/router/location_url';
+import {WorkerLocationUrl} from 'angular2/src/web-workers/worker/location_impl';
 
 var _rootInjector: Injector;
 
@@ -137,7 +139,9 @@ function _injectorBindings(appComponentType, bus: MessageBus, initData: StringMa
     DynamicComponentLoader,
     Testability,
     bind(AppRootUrl).toValue(new AppRootUrl(initData['rootUrl'])),
-    WebWorkerEventDispatcher
+    WebWorkerEventDispatcher,
+    WorkerLocationUrl,
+    bind(LocationUrl).toAlias(WorkerLocationUrl)
   ];
 }
 

@@ -69,6 +69,10 @@ import {MessageBasedXHRImpl} from 'angular2/src/web_workers/ui/xhr_impl';
 import {WebWorkerSetup} from 'angular2/src/web_workers/ui/setup';
 import {ServiceMessageBrokerFactory} from 'angular2/src/web_workers/shared/service_message_broker';
 
+import {LocationUrl} from 'angular2/src/router/location_url';
+import {DomLocationUrl} from 'angular2/src/router/dom_location_url';
+import {MessageBasedLocationImpl} from 'angular2/src/web-workers/ui/location_impl';
+
 var _rootInjector: Injector;
 
 // Contains everything that is safe to share between applications.
@@ -139,7 +143,10 @@ function _injectorBindings(): List<any> {
     MessageBasedRenderCompiler,
     MessageBasedXHRImpl,
     MessageBasedRenderer,
-    ServiceMessageBrokerFactory
+    ServiceMessageBrokerFactory,
+    DomLocationUrl,
+    MessageBasedLocationImpl,
+    bind(LocationUrl).toAlias(DomLocationUrl)
   ];
 }
 

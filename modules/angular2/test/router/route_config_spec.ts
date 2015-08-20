@@ -28,7 +28,8 @@ import {
 
 import {ExceptionHandler} from 'angular2/src/core/exception_handler';
 import {LocationStrategy} from 'angular2/src/router/location_strategy';
-import {MockLocationStrategy} from 'angular2/src/mock/mock_location_strategy';
+import {PathLocationStrategy} from 'angular2/src/router/path_location_strategy';
+import {MockLocationUrl} from 'angular2/src/mock/mock_location_url';
 
 class _ArrayLogger {
   res: any[] = [];
@@ -48,7 +49,7 @@ export function main() {
       var exceptionHandler = new ExceptionHandler(logger, true);
       testBindings = [
         ROUTER_BINDINGS,
-        bind(LocationStrategy).toClass(MockLocationStrategy),
+        bind(LocationStrategy).toClass(PathLocationStrategy),
         bind(DOCUMENT).toValue(fakeDoc),
         bind(ExceptionHandler).toValue(exceptionHandler)
       ];

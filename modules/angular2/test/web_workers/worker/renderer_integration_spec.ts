@@ -66,7 +66,7 @@ export function main() {
     var renderCompiler = new MessageBasedRenderCompiler(uiMessageBrokerFactory, tb.compiler);
     var renderer = new MessageBasedRenderer(uiMessageBrokerFactory, uiMessageBus, uiSerializer,
                                             uiRenderViewStore, tb.renderer);
-    new WebWorkerMain(renderCompiler, renderer, null, null);
+    new WebWorkerMain(renderCompiler, renderer, null, null, null);
 
     return webWorkerBrokerFactory;
   }

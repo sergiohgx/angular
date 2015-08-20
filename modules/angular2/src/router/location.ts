@@ -1,6 +1,6 @@
 import {LocationStrategy} from './location_strategy';
+import {LocationUrl} from './location_url';
 import {StringWrapper, isPresent, CONST_EXPR} from 'angular2/src/core/facade/lang';
-import {EventEmitter, ObservableWrapper} from 'angular2/src/core/facade/async';
 import {BaseException, isBlank} from 'angular2/src/core/facade/lang';
 import {OpaqueToken, Injectable, Optional, Inject} from 'angular2/di';
 
@@ -18,68 +18,58 @@ export const APP_BASE_HREF: OpaqueToken = CONST_EXPR(new OpaqueToken('appBaseHre
  */
 @Injectable()
 export class Location {
-  private _subject: EventEmitter = new EventEmitter();
   private _baseHref: string;
+  private _subscribeFn: Function = () => {};
+  private _cachedPath: string;
 
-  constructor(public _platformStrategy: LocationStrategy,
+  constructor(private _platformStrategy: LocationStrategy, private _locationUrl: LocationUrl,
               @Optional() @Inject(APP_BASE_HREF) href?: string) {
-    var browserBaseHref = isPresent(href) ? href : this._platformStrategy.getBaseHref();
-
-    if (isBlank(browserBaseHref)) {
-      throw new BaseException(
-          `No base href set. Either provide a binding to "appBaseHrefToken" or add a base element.`);
+    if (isPresent(href)) {
+      this._baseHref = isPresent(href) ? href : null;
+    } else {
+      this._locationUrl.getBaseHref().then((baseHref) => {
+        if (isBlank(baseHref)) {
+          throw new BaseException(
+              `No base href set. Either provide a binding to "appBaseHrefToken" or add a base element.`);
+        }
+      });
     }
 
-    this._baseHref = stripTrailingSlash(stripIndexHtml(browserBaseHref));
-    this._platformStrategy.onPopState((_) => this._onPopState(_));
+    this._locationUrl.onPopState((args) => {
+      var finalUrl = this._platformStrategy.parseUrl(args["url"]);
+      this._subscribeFn({"url": this._registerPath(finalUrl), 'pop': true});
+    });
   }
 
-  _onPopState(_): void {
-    ObservableWrapper.callNext(this._subject, {'url': this.path(), 'pop': true});
-  }
+  _registerPath(path: string): string { return this._cachedPath = this.normalize(path); }
 
-  path(): string { return this.normalize(this._platformStrategy.path()); }
+  path(): string { return this._cachedPath; }
 
-  normalize(url: string): string {
-    return stripTrailingSlash(this._stripBaseHref(stripIndexHtml(url)));
-  }
+  normalize(url: string): string { return stripTrailingSlash(stripIndexHtml(url)); }
 
   normalizeAbsolutely(url: string): string {
     if (!url.startsWith('/')) {
       url = '/' + url;
     }
-    return stripTrailingSlash(this._addBaseHref(url));
-  }
-
-  _stripBaseHref(url: string): string {
-    if (this._baseHref.length > 0 && url.startsWith(this._baseHref)) {
-      return url.substring(this._baseHref.length);
-    }
-    return url;
-  }
-
-  _addBaseHref(url: string): string {
-    if (!url.startsWith(this._baseHref)) {
-      return this._baseHref + url;
-    }
-    return url;
+    return stripTrailingSlash(url);
   }
 
   go(url: string): void {
     var finalUrl = this.normalizeAbsolutely(url);
-    this._platformStrategy.pushState(null, '', finalUrl);
+    this._registerPath(finalUrl);
+    this._locationUrl.setUrl(this._platformStrategy.prepareUrl(finalUrl), this._baseHref);
   }
 
-  forward(): void { this._platformStrategy.forward(); }
+  forward(): void { this._locationUrl.forward(); }
 
-  back(): void { this._platformStrategy.back(); }
+  back(): void { this._locationUrl.back(); }
 
   subscribe(onNext: (value: any) => void, onThrow: (exception: any) => void = null,
             onReturn: () => void = null): void {
-    ObservableWrapper.subscribe(this._subject, onNext, onThrow, onReturn);
+    // TODO (matsko): figure out support for onThrow, onReturn
+    this._subscribeFn = onNext;
   }
 }
-
 
 
 function stripIndexHtml(url: string): string {

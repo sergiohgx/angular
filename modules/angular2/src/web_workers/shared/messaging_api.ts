@@ -7,3 +7,5 @@ export const RENDER_COMPILER_CHANNEL = "ng-RenderCompiler";
 export const RENDERER_CHANNEL = "ng-Renderer";
 export const XHR_CHANNEL = "ng-XHR";
 export const EVENT_CHANNEL = "ng-events";
+export const LOCATION_CHANNEL = "ng-location";
+export const LOCATION_CHANGE_CHANNEL = "ng-change-location";
