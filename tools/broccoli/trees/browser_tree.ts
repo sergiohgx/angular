@@ -182,7 +182,7 @@ module.exports = function makeBrowserTree(options, destinationPath) {
     patterns: [{
       match: /\$SCRIPTS\$/,
       replacement: function(token, filePath) {
-        return replaceContentWithBaseDir(token, filePath, /^examples\/src\/.+?\//);
+        return replaceContentWithBaseDir('SCRIPTS', filePath, /^examples\/src\/.+?\//);
       }
     }, scriptPathPatternReplacement]
   });

@@ -15,6 +15,7 @@ import {DOM} from 'angular2/src/core/dom/dom_adapter';
 import {Promise, PromiseWrapper, PromiseCompleter} from 'angular2/src/core/facade/async';
 import {XHR} from 'angular2/src/core/compiler/xhr';
 import {XHRImpl} from 'angular2/src/core/compiler/xhr_impl';
+import {AnimatorDispatch} from 'angular2/src/core/render/dom/animator_dispatch';
 
 import {
   EventManager,
@@ -55,6 +56,7 @@ export function applicationDomBindings(): Array<Type | Binding | any[]> {
     new Binding(EVENT_MANAGER_PLUGINS, {toClass: DomEventsPlugin, multi: true}),
     new Binding(EVENT_MANAGER_PLUGINS, {toClass: KeyEventsPlugin, multi: true}),
     new Binding(EVENT_MANAGER_PLUGINS, {toClass: HammerGesturesPlugin, multi: true}),
+    AnimatorDispatch,
     DomRenderer,
     bind(Renderer).toAlias(DomRenderer),
     DomSharedStylesHost,

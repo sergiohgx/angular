@@ -1,3 +1,5 @@
+import {AnimatorDispatch} from './animator_dispatch';
+
 import {Inject, Injectable, OpaqueToken} from 'angular2/src/core/di';
 import {AnimationBuilder} from 'angular2/src/animate/animation_builder';
 import {
@@ -42,7 +44,9 @@ export class DomRenderer implements Renderer, NodeFactory<Node> {
    * @private
    */
   constructor(private _eventManager: EventManager,
-              private _domSharedStylesHost: DomSharedStylesHost, private _animate: AnimationBuilder,
+              private _domSharedStylesHost: DomSharedStylesHost,
+              private _animate: AnimationBuilder,
+              private _animator: AnimatorDispatch,
               @Inject(DOCUMENT) document) {
     this._document = document;
   }
@@ -55,6 +59,10 @@ export class DomRenderer implements Renderer, NodeFactory<Node> {
     } else {
       this._domSharedStylesHost.addStyles(styles);
     }
+  }
+
+  _queueAnimationEvent(node, event, data = {}, callback = null) {
+    this._animator.queue(node, event, data, callback);
   }
 
   resolveComponentTemplate(templateId: number): RenderTemplateCmd[] {
@@ -131,13 +139,7 @@ export class DomRenderer implements Renderer, NodeFactory<Node> {
    * @param node
    */
   animateNodeEnter(node: Node) {
-    if (DOM.isElementNode(node) && DOM.hasClass(node, 'ng-animate')) {
-      DOM.addClass(node, 'ng-enter');
-      this._animate.css()
-          .addAnimationClass('ng-enter-active')
-          .start(<HTMLElement>node)
-          .onComplete(() => { DOM.removeClass(node, 'ng-enter'); });
-    }
+    this._queueAnimationEvent(node, "enter");
   }
 
   /**
@@ -146,18 +148,7 @@ export class DomRenderer implements Renderer, NodeFactory<Node> {
    * @param node
    */
   animateNodeLeave(node: Node) {
-    if (DOM.isElementNode(node) && DOM.hasClass(node, 'ng-animate')) {
-      DOM.addClass(node, 'ng-leave');
-      this._animate.css()
-          .addAnimationClass('ng-leave-active')
-          .start(<HTMLElement>node)
-          .onComplete(() => {
-            DOM.removeClass(node, 'ng-leave');
-            DOM.remove(node);
-          });
-    } else {
-      DOM.remove(node);
-    }
+    this._queueAnimationEvent(node, "leave", {}, () => DOM.remove(node));
   }
 
   attachFragmentAfterElement(elementRef: RenderElementRef, fragmentRef: RenderFragmentRef) {
@@ -241,19 +232,28 @@ export class DomRenderer implements Renderer, NodeFactory<Node> {
     var element = view.boundElements[location.boundElementIndex];
     if (isAdd) {
       DOM.addClass(element, className);
+      this._queueAnimationEvent(element, 'addClass', { className: className });
     } else {
       DOM.removeClass(element, className);
+      this._queueAnimationEvent(element, 'removeClass', { className: className });
     }
   }
 
   setElementStyle(location: RenderElementRef, styleName: string, styleValue: string): void {
     var view = resolveInternalDomView(location.renderView);
     var element = view.boundElements[location.boundElementIndex];
+    var styleTuple = {};
+    var eventData = { style: styleTuple };
     var dashCasedStyleName = camelCaseToDashCase(styleName);
     if (isPresent(styleValue)) {
-      DOM.setStyle(element, dashCasedStyleName, stringify(styleValue));
+      var finalStyle = stringify(styleValue);
+      styleTuple[dashCasedStyleName] = finalStyle;
+      this._queueAnimationEvent(element, 'style', eventData,
+        () => DOM.setStyle(element, dashCasedStyleName, finalStyle));
     } else {
-      DOM.removeStyle(element, dashCasedStyleName);
+      styleTuple[dashCasedStyleName] = true;
+      this._queueAnimationEvent(element, 'style', eventData,
+        () => DOM.removeStyle(element, dashCasedStyleName));
     }
   }
 
@@ -308,3 +308,4 @@ function decoratePreventDefault(eventHandler: Function): Function {
     }
   };
 }
+
