@@ -31,6 +31,7 @@ import {
   RENDERER_CHANNEL
 } from 'angular2/src/web_workers/shared/messaging_api';
 import {WebWorkerEventDispatcher} from 'angular2/src/web_workers/worker/event_dispatcher';
+import {StringMap} from 'angular2/src/core/facade/collection';
 
 @Injectable()
 export class WebWorkerCompiler implements RenderCompiler {
@@ -282,6 +283,19 @@ export class WebWorkerRenderer implements Renderer {
     var fnArgs = [new FnArg(viewRef, RenderViewRef)];
     var args = new UiArguments("setEventDispatcher", fnArgs);
     this._eventDispatcher.registerEventDispatcher(viewRef, dispatcher);
+    this._messageBroker.runOnService(args, null);
+  }
+
+  /**
+   * Triggers a DOM event on the given element
+   */
+  triggerCustomDomEvent(location: RenderElementRef, eventName: string, eventOptions: StringMap<string, any>) {
+    var fnArgs = [
+      new FnArg(location, WebWorkerElementRef),
+      new FnArg(eventName, null),
+      new FnArg(eventOptions, null)
+    ];
+    var args = new UiArguments("triggerCustomDomEvent", fnArgs);
     this._messageBroker.runOnService(args, null);
   }
 }

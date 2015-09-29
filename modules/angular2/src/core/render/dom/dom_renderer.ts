@@ -7,6 +7,8 @@ import {DOM} from 'angular2/src/core/dom/dom_adapter';
 
 import {EventManager} from './events/event_manager';
 
+import {StringMap} from 'angular2/src/core/facade/collection';
+
 import {DomProtoView, DomProtoViewRef, resolveInternalDomProtoView} from './view/proto_view';
 import {DomView, DomViewRef, resolveInternalDomView} from './view/view';
 import {DomFragmentRef, resolveInternalDomFragment} from './view/fragment';
@@ -114,13 +116,7 @@ export class DomRenderer extends Renderer {
    * @param node
    */
   animateNodeEnter(node: Node) {
-    if (DOM.isElementNode(node) && DOM.hasClass(node, 'ng-animate')) {
-      DOM.addClass(node, 'ng-enter');
-      this._animate.css()
-          .addAnimationClass('ng-enter-active')
-          .start(<HTMLElement>node)
-          .onComplete(() => { DOM.removeClass(node, 'ng-enter'); });
-    }
+    triggerNgEvent(node, "enter");
   }
 
   /**
@@ -129,17 +125,10 @@ export class DomRenderer extends Renderer {
    * @param node
    */
   animateNodeLeave(node: Node) {
-    if (DOM.isElementNode(node) && DOM.hasClass(node, 'ng-animate')) {
-      DOM.addClass(node, 'ng-leave');
-      this._animate.css()
-          .addAnimationClass('ng-leave-active')
-          .start(<HTMLElement>node)
-          .onComplete(() => {
-            DOM.removeClass(node, 'ng-leave');
-            DOM.remove(node);
-          });
-    } else {
-      DOM.remove(node);
+    var cb = () => DOM.remove(node);
+    triggerNgEvent(node, "leave", {}, cb);
+    if (!cb['touched']) {
+      cb();
     }
   }
 
@@ -228,6 +217,14 @@ export class DomRenderer extends Renderer {
     }
     var view = resolveInternalDomView(location.renderView);
     view.setElementStyle(location.renderBoundElementIndex, styleName, styleValue);
+  }
+
+  triggerCustomDomEvent(location: RenderElementRef, eventName: string, eventOptions: StringMap<string, any>): void {
+    if (isBlank(location.renderBoundElementIndex)) {
+      return;
+    }
+    var view = resolveInternalDomView(location.renderView);
+    view.triggerCustomDomEvent(location.renderBoundElementIndex, eventName, eventOptions);
   }
 
   invokeElementMethod(location: RenderElementRef, methodName: string, args: any[]): void {
@@ -329,4 +326,11 @@ function moveChildNodes(source: Node, target: Node) {
     DOM.appendChild(target, currChild);
     currChild = nextChild;
   }
+}
+
+function triggerNgEvent(element, eventName, eventData = {}, callback = () => {}) {
+  eventName = "ng-" + eventName;
+  eventData['callback'] = callback;
+  var event = new CustomEvent(eventName, { detail: eventData, bubbles: true });
+  element.dispatchEvent(event);
 }

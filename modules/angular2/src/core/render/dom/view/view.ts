@@ -1,5 +1,5 @@
 import {DOM} from 'angular2/src/core/dom/dom_adapter';
-import {ListWrapper, MapWrapper, Map, StringMapWrapper} from 'angular2/src/core/facade/collection';
+import {ListWrapper, MapWrapper, Map, StringMapWrapper, StringMap} from 'angular2/src/core/facade/collection';
 import {isPresent, isBlank, stringify} from 'angular2/src/core/facade/lang';
 
 import {DomProtoView} from './proto_view';
@@ -27,7 +27,9 @@ export class DomView {
               public boundElements: Element[]) {}
 
   setElementProperty(elementIndex: number, propertyName: string, value: any) {
-    DOM.setProperty(this.boundElements[elementIndex], propertyName, value);
+    var element = this.boundElements[elementIndex];
+    DOM.setProperty(element, propertyName, value);
+    triggerNgEvent(element, 'attributeChange', { attr: propertyName, value: value });
   }
 
   setElementAttribute(elementIndex: number, attributeName: string, value: string) {
@@ -38,6 +40,8 @@ export class DomView {
     } else {
       DOM.removeAttribute(element, dashCasedAttributeName);
     }
+    console.log('attr', attributeName);
+    triggerNgEvent(element, 'attributeChange', { attr: attributeName, value: value });
   }
 
   setElementClass(elementIndex: number, className: string, isAdd: boolean) {
@@ -47,6 +51,7 @@ export class DomView {
     } else {
       DOM.removeClass(element, className);
     }
+    triggerNgEvent(element, isAdd ? "addClass" : "removeClass", {  className: className });
   }
 
   setElementStyle(elementIndex: number, styleName: string, value: string) {
@@ -57,6 +62,12 @@ export class DomView {
     } else {
       DOM.removeStyle(element, dashCasedStyleName);
     }
+  }
+
+  triggerCustomDomEvent(elementIndex: number, eventName: string, eventOptions: StringMap<string, any>): void {
+    var event = new CustomEvent(eventName, eventOptions);
+    var element = this.boundElements[elementIndex];
+    element.dispatchEvent(event);
   }
 
   invokeElementMethod(elementIndex: number, methodName: string, args: any[]) {
@@ -84,4 +95,10 @@ export class DomView {
     }
     return allowDefaultBehavior;
   }
+}
+
+function triggerNgEvent(element, eventName, eventData = {}, callback = () => {}) {
+  eventName = "ng-" + eventName;
+  var event = new CustomEvent(eventName, { detail: eventData, bubbles: true });
+  element.dispatchEvent(event);
 }

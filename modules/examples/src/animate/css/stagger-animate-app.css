@@ -1,0 +1,16 @@
+.item {
+  width:100px;
+  height:100px;
+  text-align:center;
+  line-height:100px;
+  border:2px solid #ddd;
+  margin:10px;
+  font-size:80px;
+  display:inline-block;
+}
+
+.enter { opacity:0; transition:0.5s linear all; }
+.enter-active { opacity:1; }
+
+.leave { transition:0.5s linear all; }
+.leave-active { opacity:0; }
