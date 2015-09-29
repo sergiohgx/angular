@@ -1,0 +1,10 @@
+profile page
+<h1>{{ user.name }}</h1>
+<ul class="info">
+  <li>ID: <strong>{{ user.id }}</strong></li>
+  <li>Location: <strong>{{ user.location }}</strong></li>
+  <li>Email: <strong>{{ user.email }}</strong></li>
+  <li>Age: <strong>{{ user.age }}</strong></li>
+</ul>
+<hr />
+<button (click)="goHome()">Go Home</button>

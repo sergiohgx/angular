@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<title>5 Animation Example</title>
+<link rel="stylesheet" href="../../css/stagger-animate-app.css" />
+<style>
+animate-app, profile-page-cmp, index-page-cmp { display:block; }
+profile-page-cmp, index-page-cmp {
+  padding:50px;
+}
+
+.ng-enter, .ng-leave {
+  transition:1s linear all;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  bottom:0;
+}
+.ng-enter {
+  left:100%;
+}
+.ng-enter-active {
+  left:0%;
+}
+.ng-leave-active {
+  left:-100%;
+}
+</style>
+<body>
+  <animate-app>Loading...</animate-app>
+
+$SCRIPTS$
+</body>
+</html>

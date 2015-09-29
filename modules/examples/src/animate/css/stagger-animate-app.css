@@ -1,0 +1,64 @@
+html, body { margin:0; padding:0; }
+
+*, *:after, *:before { box-sizing: border-box; }
+
+html {
+  padding:0;
+}
+
+body {
+  padding:0;
+  background:white;
+  padding:0px;
+  color:black;
+}
+
+html, body, input, select, option, pre, code {
+  font-size:15px;
+  font-family: Verdana;
+}
+
+.special-user {
+  width:200px;
+  height:200px;
+  border:5px solid black;
+  display:inline-block;
+  margin:0 20px 20px 0;
+  background:#ddd;
+  text-align:center;
+  text-decoration:none;
+}
+
+.special-user h3 {
+  font-size:120px;
+}
+
+.special-user:hover {
+  background:white;
+  color:#0092B2;
+}
+
+.users-list td {
+  background:white;
+}
+
+.users-list th {
+  background:#A8C545;
+}
+
+.users-list th, .users-list td {
+  padding:5px;
+}
+
+h2 {
+  color:#0092B2;
+  margin:0 0 20px;
+}
+
+h3 { margin:0; }
+
+hr {
+  border:0;
+  border-top:5px dashed #776045;
+  margin:40px 0;
+}

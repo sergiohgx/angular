@@ -1,0 +1,39 @@
+<h2>Special Users</h2>
+
+<div class="special-users-list">
+  <a [page-link]="['/Profile', { id: user.id }]" *ng-for="#user of specialUsers" class="special-user">
+    <h3>{{ user.name | specialTitle }}</h3>
+    <span>{{ user.name }}</span>
+  </a>
+</div>
+
+<hr />
+
+<h2>All Users</h2>
+
+<table class="users-list">
+  <tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Age</th>
+    <th>Email</th>
+    <th>Location</th>
+  </tr>
+  <tr *ng-for="#user of users">
+    <td>
+      <a [page-link]="['/Profile', { id: user.id }]">{{ user.id }}</a>
+    </td>
+    <td>
+      <a [page-link]="['/Profile', { id: user.id }]">{{ user.name }}</a>
+    </td>
+    <td>
+      {{ user.age }}
+    </td>
+    <td>
+      {{ user.email }}
+    </td>
+    <td>
+      {{ user.location }}
+    </td>
+  </tr>
+</table>
