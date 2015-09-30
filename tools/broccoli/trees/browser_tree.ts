@@ -12,6 +12,14 @@ import flatten from '../broccoli-flatten';
 import mergeTrees from '../broccoli-merge-trees';
 import replace from '../broccoli-replace';
 
+function replaceContentWithBaseDir(token, filePath, exp) {
+  var baseDir = '';
+  if (filePath) {
+    baseDir = '/' + filePath.match(exp)[0];
+  }
+  return htmlReplace(token, baseDir);
+}
+
 
 var projectRootDir = path.normalize(path.join(__dirname, '..', '..', '..', '..'));
 
@@ -171,27 +179,33 @@ module.exports = function makeBrowserTree(options, destinationPath) {
   var htmlTree = new Funnel(modulesTree, {include: ['*/src/**/*.html'], destDir: '/'});
   htmlTree = replace(htmlTree, {
     files: ['examples*/**/*.html'],
-    patterns: [
-      {match: /\$SCRIPTS\$/, replacement: htmlReplace('SCRIPTS')},
-      scriptPathPatternReplacement
-    ]
+    patterns: [{
+      match: /\$SCRIPTS\$/,
+      replacement: function(token, filePath) {
+        return replaceContentWithBaseDir(token, filePath, /^examples\/src\/.+?\//);
+      }
+    }, scriptPathPatternReplacement]
   });
 
 
   htmlTree = replace(htmlTree, {
     files: ['benchmarks/**'],
-    patterns: [
-      {match: /\$SCRIPTS\$/, replacement: htmlReplace('SCRIPTS_benchmarks')},
-      scriptPathPatternReplacement
-    ]
+    patterns: [{
+      match: /\$SCRIPTS\$/,
+      replacement: function(token, filePath) {
+        return replaceContentWithBaseDir('SCRIPTS_benchmarks', filePath, /^benchmarks\/src\/.+?\//);
+      }
+    }, scriptPathPatternReplacement]
   });
 
   htmlTree = replace(htmlTree, {
     files: ['benchmarks_external/**'],
-    patterns: [
-      {match: /\$SCRIPTS\$/, replacement: htmlReplace('SCRIPTS_benchmarks_external')},
-      scriptPathPatternReplacement
-    ]
+    patterns: [{
+      match: /\$SCRIPTS\$/,
+      replacement: function(token, filePath) {
+        return replaceContentWithBaseDir('SCRIPTS_benchmarks_external', filePath, /^benchmarks_external\/src\/.+?\//);
+      }
+    }, scriptPathPatternReplacement]
   });
 
   var assetsTree =
