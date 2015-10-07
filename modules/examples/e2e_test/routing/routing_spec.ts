@@ -76,5 +76,18 @@ describe('routing inbox-app', function() {
       element(by.css('.back-button')).click();
       expect(browser.getCurrentUrl()).toMatch('/#');
     });
+
+    iit('should navigate back to index and sort the page items based on the provided querystring param', function() {
+      browser.get(URL);
+      waitForElement('#item-10');
+      element(by.css('#item-10')).click();
+      waitForElement('.sort-button');
+      element(by.css('.sort-button')).click();
+      expect(browser.getCurrentUrl()).toMatch('/#?sort=date');
+      waitForElement('.inbox-item-record');
+      element(by.css(".inbox-item-record")).getAttribute("id").then(function(id) {
+        expect(id).toEqual("item-id");
+      });
+    });
   })
 });
