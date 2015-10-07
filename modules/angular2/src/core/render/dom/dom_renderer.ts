@@ -16,7 +16,6 @@ import {DOM} from 'angular2/src/core/dom/dom_adapter';
 import {EventManager} from './events/event_manager';
 
 import {DomSharedStylesHost} from './shared_styles_host';
-import {StringMap} from 'angular2/src/core/facade/collection';
 import {WtfScopeFn, wtfLeave, wtfCreateScope} from '../../profile/profile';
 
 import {
@@ -247,14 +246,6 @@ export class DomRenderer implements Renderer, NodeFactory<Node> {
     } else {
       DOM.removeStyle(element, dashCasedStyleName);
     }
-  }
-
-  triggerCustomDomEvent(location: RenderElementRef, eventName: string, eventOptions: StringMap<string, any>): void {
-    if (isBlank(location.renderBoundElementIndex)) {
-      return;
-    }
-    var view = resolveInternalDomView(location.renderView);
-    view.triggerCustomDomEvent(location.renderBoundElementIndex, eventName, eventOptions);
   }
 
   invokeElementMethod(location: RenderElementRef, methodName: string, args: any[]): void {

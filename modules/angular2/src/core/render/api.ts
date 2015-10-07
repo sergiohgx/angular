@@ -335,11 +335,6 @@ export class Renderer {
    * the last provided dispatcher will be used.
    */
   setEventDispatcher(viewRef: RenderViewRef, dispatcher: RenderEventDispatcher) {}
-
-  /**
-   * Calls a method on an element.
-   */
-  triggerCustomDomEvent(location: RenderElementRef, eventName: string, eventOptions: StringMap<string, any>) {}
 }
 
 

@@ -66,8 +66,6 @@ export class MessageBasedRenderer {
                           bind(this._renderer.invokeElementMethod, this._renderer));
     broker.registerMethod("setEventDispatcher", [RenderViewRef],
                           bind(this._setEventDispatcher, this));
-    broker.registerMethod("triggerCustomDomEvent", [RenderViewRef],
-                          bind(this._renderer.triggerCustomDomEvent, this._renderer));
   }
 
   private _destroyView(viewRef: RenderViewRef): void {

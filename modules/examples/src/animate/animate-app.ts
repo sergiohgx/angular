@@ -1,5 +1,7 @@
 import {Component, View, NgIf, NgFor} from 'angular2/angular2';
 import {Renderer, ElementRef} from 'angular2/angular2';
+
+/*
 import {chain, parallel, wrap, AnimationFactory} from 'angular2/src/animate/animate';
 import {AnimationTimeline, WebAnimationsDriver} from 'angular2/src/animate/timeline';
 
@@ -29,6 +31,7 @@ animations.find('animate-app', (ctx) => {
   });
 })
 
+*/
 @Component({
   selector: 'notification-panel',
   host: {

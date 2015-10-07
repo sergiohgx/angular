@@ -10,12 +10,12 @@ var dialsTimeline = new AnimationTimeline(WebAnimationsDriver);
 dialsTimeline.scope("notifications", new AnimationTimeline(WebAnimationsDriver)
   .step(0, { top: "-100px" })
   .step(0.2, { top: "0px" })
-  .step(1, { top: "0px" });
+  .step(1, { top: "0px" }));
 
 dialsTimeline.scope("notifications .content", new AnimationTimeline(WebAnimationsDriver)
   .step(0, { height: "0px" })
   .step(0.4, { height: "0px" })
-  .step(0.8, { height: "400px" });
+  .step(0.8, { height: "400px" }));
 
 animations.find('simple-animate-app', (ctx) => {
   var timeline;
@@ -27,7 +27,7 @@ animations.find('simple-animate-app', (ctx) => {
     baseHeight = element.parentNode.offsetHeight - 300;
     timeline = dialsTimeline.create(element);
     timeline.start(2000, (tl, index) => {
-      return delayValue;
+      return 100;
     });
   })
 
@@ -79,7 +79,7 @@ export class SimpleAnimateApp {
     { icon: "./icons/instagram.png", title: "instagram" },
     { icon: "./icons/linkedin.png", title: "linkedin" },
     { icon: "./icons/settings.png", title: "settings" },
-    { icon: "./icons/twitter.png" title: "twitter" }
+    { icon: "./icons/twitter.png", title: "twitter" }
   ];
 
   constructor(private _render: Renderer, private _ref: ElementRef) { }
@@ -113,6 +113,6 @@ export class SimpleAnimateApp {
   }
 
   _trigger(event, data = {}) {
-    this._render.triggerCustomDomEvent(this._ref, event, { detail: data, bubbles: true });
+  //this._render.triggerCustomDomEvent(this._ref, event, { detail: data, bubbles: true });
   }
 }

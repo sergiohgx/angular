@@ -1,3 +1,5 @@
+declare var TweenLite;
+
 import {AnimationFactory} from 'angular2/src/animate/animate';
 
 var animations = new AnimationFactory();
