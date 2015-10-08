@@ -48,16 +48,6 @@ function stagger(className, delay, sortFn) {
           (element) => cssBefore(element, className));
 }
 
-var animator = new AnimationFactory();
-animator.find("stagger-animate-app", (ctx) => {
-  ctx.onEnter(stagger("enter", 100));
-  ctx.onLeave(stagger("leave", 100, randomSort));
-
-  function randomSort(a,b) {
-    return Math.random() > 0.5 ? -1 : 1;
-  }
-});
-
 @Component({
   selector: 'stagger-animate-app'
 })

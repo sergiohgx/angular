@@ -4,7 +4,7 @@ import {DbService} from './db_service';
 import {PageLink} from './page_link';
 
 @Component({
-  selector: 'index-page-cmp'
+  selector: 'index-page-cmp',
   viewBindings: [DbService]
 })
 @View({

@@ -61,20 +61,16 @@ export class AnimateApp {
     { icon: "./icons/instagram.png", title: "instagram" },
     { icon: "./icons/linkedin.png", title: "linkedin" },
     { icon: "./icons/settings.png", title: "settings" },
-    { icon: "./icons/twitter.png" title: "twitter" }
+    { icon: "./icons/twitter.png", title: "twitter" }
   ];
 
   constructor(private _render: Renderer, private _ref: ElementRef) { }
 
   onDrag(event) {
-    this.trigger("notificationMove", { x: event.clientX, y: event.clientY });
+    //this.trigger("notificationMove", { x: event.clientX, y: event.clientY });
   }
 
   onDragEnd(event) {
-    this.trigger("notificationSnap", { x: event.clientX, y: event.clientY });
-  }
-
-  trigger(eventName, eventDetail = {}) {
-    this._render.triggerCustomDomEvent(this._ref, eventName, { detail: eventDetail, bubbles: true });
+    //this.trigger("notificationSnap", { x: event.clientX, y: event.clientY });
   }
 }

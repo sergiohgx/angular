@@ -1,7 +1,7 @@
+/*
 import {Component, View, NgIf, NgFor} from 'angular2/angular2';
 import {Renderer, ElementRef} from 'angular2/angular2';
 import {AnimationFactory} from 'angular2/src/animate/animate';
-import {AnimationTimeline, WebAnimationsDriver} from 'angular2/src/animate/timeline';
 
 var animations = new AnimationFactory();
 
@@ -116,3 +116,4 @@ export class SimpleAnimateApp {
   //this._render.triggerCustomDomEvent(this._ref, event, { detail: data, bubbles: true });
   }
 }
+*/
