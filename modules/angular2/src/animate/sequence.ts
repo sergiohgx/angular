@@ -80,7 +80,7 @@ function group(beforeFn, afterFn) {
         elementQueue = [];
       });
     }
-    beforeFn(element);
+    (beforeFn.start || beforeFn)(element);
     elementQueue.push(element);
     return sharedPromise;
   }
