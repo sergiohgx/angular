@@ -20,7 +20,7 @@ class InboxRecord {
   email: string = '';
   firstName: string = '';
   lastName: string = '';
-  date: string = '';
+  date: Date;
   draft: boolean = false;
 
   constructor(data: {
@@ -52,7 +52,7 @@ class InboxRecord {
     this.email = record['email'];
     this.firstName = record['first-name'];
     this.lastName = record['last-name'];
-    this.date = record['date'];
+    this.date = new Date(record['date']);
     this.draft = record['draft'] == true;
   }
 }
@@ -108,10 +108,17 @@ class InboxCmp {
   items: InboxRecord[] = [];
   ready: boolean = false;
 
-  constructor(public router: Router, db: DbService) {
+  constructor(public router: Router, db: DbService, params: RouteParams) {
+    var sortType = params['sort'];
+    var sortEmailsByDate = isPresent(sortType) && sortType == "date";
+
     PromiseWrapper.then(db.emails(), emails => {
       this.ready = true;
       this.items = emails.map(data => new InboxRecord(data));
+
+      if (sortEmailsByDate) {
+        this.items = this.items.sort((a,b) => a.date < b.date ? -1 : 1);
+      }
     });
   }
 }
