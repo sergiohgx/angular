@@ -232,19 +232,28 @@ export class DomRenderer implements Renderer, NodeFactory<Node> {
     var element = view.boundElements[location.boundElementIndex];
     if (isAdd) {
       DOM.addClass(element, className);
+      this._queueAnimationEvent(element, 'addClass', { className: className });
     } else {
       DOM.removeClass(element, className);
+      this._queueAnimationEvent(element, 'removeClass', { className: className });
     }
   }
 
   setElementStyle(location: RenderElementRef, styleName: string, styleValue: string): void {
     var view = resolveInternalDomView(location.renderView);
     var element = view.boundElements[location.boundElementIndex];
+    var styleTuple = {};
+    var eventData = { style: styleTuple };
     var dashCasedStyleName = camelCaseToDashCase(styleName);
     if (isPresent(styleValue)) {
-      DOM.setStyle(element, dashCasedStyleName, stringify(styleValue));
+      var finalStyle = stringify(styleValue);
+      styleTuple[dashCasedStyleName] = finalStyle;
+      this._queueAnimationEvent(element, 'style', eventData,
+        () => DOM.setStyle(element, dashCasedStyleName, finalStyle));
     } else {
-      DOM.removeStyle(element, dashCasedStyleName);
+      styleTuple[dashCasedStyleName] = true;
+      this._queueAnimationEvent(element, 'style', eventData,
+        () => DOM.removeStyle(element, dashCasedStyleName));
     }
   }
 

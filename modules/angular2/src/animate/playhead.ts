@@ -20,7 +20,6 @@
   - start the animation at position
     - collect the duration and update the dependent animations
       (both label and completion dependent)
-*/
 class AnimationPlayhead {
 
   TIMER_VALUE = 10;
@@ -101,3 +100,4 @@ class AnimationPlayhead {
     this._element = element;
   }
 }
+*/

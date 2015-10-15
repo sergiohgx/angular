@@ -5,15 +5,31 @@ export class AnimatorEventsFilter {
 
   _registry = [];
   _parentMap = new Map();
+  _styleMap = new Map<any, Array<any>>();
 
   constructor(entries = []) {
     entries.forEach((entry) => this.add(entry));
+  }
+
+  _isStyleEvent(event) {
+    return event == 'style';
   }
 
   add(entry) {
     var node = entry['node'];
     var event = entry['event'];
     var parent = node.parentNode;
+    if (this._isStyleEvent(event)) {
+      var sharedStyles = this._styleMap.get(node);
+      if (!sharedStyles) {
+        sharedStyles = [];
+        this._styleMap.set(node, sharedStyles);
+      }
+      sharedStyles.push(entry);
+      return;
+    }
+
+    /*
     if (this._isStructuralEvent(event)) {
       var candidateEvent = this._parentMap.get(parent);
       var isOppositeEvent = candidateEvent &&
@@ -46,8 +62,9 @@ export class AnimatorEventsFilter {
         this._parentMap.set(parent, entry);
       }
     } else {
-      this._registry.push(entry);
-    }
+    */
+
+    this._registry.push(entry);
   }
 
   _isStructuralEvent(eventName) {
@@ -56,10 +73,44 @@ export class AnimatorEventsFilter {
 
   getItems() {
     var items = this._registry.map((item) => item);
+
+    this._styleMap.forEach((entry) => {
+      items.push(combineStyleEntries(entry));
+    });
+
     this._parentMap.forEach((entry) => {
       items.push(entry);
     });
+
     return items;
+
+    function combineStyleEntries(entries) {
+      var firstEntry = entries[0];
+      if (entries.length == 1) return firstEntry;
+
+      var combinedCallback = () => {
+        entries.forEach((entry) => entry['callback']());
+      };
+
+      var combinedStyles = {};
+      entries.forEach((entry) => {
+        var styles = entry['data']['style'];
+        for (var prop in styles) {
+          combinedStyles[prop] = styles[prop];
+        }
+      });
+
+      return {
+        node: firstEntry['node'],
+        event: 'style',
+        callback: combinedCallback,
+        data: {
+          callback: combinedCallback,
+          collectedEvents: firstEntry['data']['collectedEvents'],
+          style: combinedStyles
+        }
+      }
+    }
   }
 
 }
@@ -86,12 +137,21 @@ export class AnimatorDispatch {
 
   flush() {
     var relativeEntries = this._mergeRelativeEvents(this._entries);
+    var patchedEntries = relativeEntries.map((entry) => {
+      entry['callback'] = entry['callback'] || function() { };
+      return entry;
+    });
+    var sortedEntries = patchedEntries.sort((a,b) => {
+      var nodeA = a['node'];
+      var nodeB = b['node'];
+      return nodeA.contains(nodeB) ? -1 : 1;
+    });
 
     this._counter++;
     this._entries = [];
 
-    for (var i = 0; i < relativeEntries.length; i++) {
-      this._triggerEvent(relativeEntries[i], relativeEntries);
+    for (var i = 0; i < sortedEntries.length; i++) {
+      this._triggerEvent(sortedEntries[i], relativeEntries);
     }
   }
 
@@ -100,15 +160,22 @@ export class AnimatorDispatch {
   }
 
   _triggerEvent(entry, collectedEvents) {
+    var callback = entry['callback'];
+    if (callback['touched']) return;
+
     var eventData = entry.data || {};
-    eventData['callback'] = entry['callback'];
-    eventData['collectedEvents'] = collectedEvents;
+    eventData['callback'] = callback;
+    eventData['collectedEvents'] = collectedEvents.map((item) => item); //clone the array
 
     var eventName = "ng-" + entry['event'];
     var event = new CustomEvent(eventName, {
       detail: eventData, bubbles: true
     });
+
     entry['node'].dispatchEvent(event);
+    if (!callback['touched']) {
+      callback();
+    }
   }
 
   _onTick(callback) {

@@ -2,7 +2,7 @@ import {StringMapWrapper} from 'angular2/src/core/facade/collection';
 import {isPresent, isBlank, isArray} from 'angular2/src/core/facade/lang';
 
 import {RAFRunner, CssAnimationRunner} from "./runner";
-import {chain, parallel} from "./sequence";
+import {chain, parallel, AnimationEventContext} from "./sequence";
 import {
   calculateCoordinates,
   mergeAnimationOptions,
@@ -17,54 +17,131 @@ export class CssAnimation {
     return this;
   }
 
-  start(element, eventData, duration = null, delay = null) {
+  start(element, animationContext, duration = null, delay = null) {
     var options = StringMapWrapper.merge(this._options, {});
     options['duration'] = duration || options['duration'];
     options['delay'] = duration || options['delay'];
-    return runCssAnimation(element, options);
+    return runCssAnimation(element, options, animationContext);
   }
 }
 
-function runCssAnimation(element, options) {
-  var tempClass;
-  var calculatedDuration = 0;
-  var calculatedDelay = 0;
+function prepareTimingValue(value) {
+  return value + "ms";
+}
 
+function runCssAnimation(element, options, animationContext) {
+  var hasClasses = false;
+  var hasStyles = false;
+  var trackKeyframes = false;
+  var trackTransitions = false;
+  var collectedStyles = [];
+
+  var tempClass;
   if (options['tempClass']) {
     tempClass = options['tempClass'];
     element.addClass(tempClass);
+    animationContext.queueTempClasses(tempClass.split(' '));
+    hasClasses = true;
   }
 
-  if (options['addClass']) {
-    element.addClass(options['addClass']);
+  var addClass = options['addClass'];
+  if (addClass) {
+    animationContext.queueTempClasses(addClass.split(' '));
+    element.addClass(addClass);
+    hasClasses = true;
   }
 
-  if (options['removeClass']) {
-    element.removeClass(options['removeClass']);
+  var removeClass = options['removeClass'];
+  if (removeClass) {
+    element.removeClass(removeClass);
+    animationContext.queueTempClasses(removeClass.split(' '), true);
+    hasClasses = true;
   }
 
-  if (calculatedDuration = options['duration']) {
-    element.style['transitionDuration'] = calculatedDuration + "ms";
+  trackKeyframes = trackTransitions = hasClasses;
+
+  var applyStyles = options['style'];
+  if (applyStyles) {
+    applyCssStyles(element, applyStyles);
+    for (var style in applyStyles) {
+      // `true` indicates that we want to REMOVE the style
+      animationContext.queueStyle(style, true);
+    }
+    trackTransitions = hasStyles = true;
   }
 
-  if (calculatedDelay = options['delay']) {
-    element.style['transitionDelay'] = calculatedDelay + "ms";
+  var calculatedDuration = options['duration'];
+  var calculatedDelay = options['delay'];
+
+  var applyTransition = hasClasses || hasStyles;
+  if (applyTransition) {
+    trackTransitions = true;
+
+    if (calculatedDuration) {
+      element.style.setProperty('transition-duration', prepareTimingValue(calculatedDuration));
+      collectedStyles.push('transition-duration');
+    }
+
+    if (calculatedDelay) {
+      element.style.setProperty('transition-delay', prepareTimingValue(calculatedDelay));
+      collectedStyles.push('transition-delay');
+    }
   }
 
-  if (options['style']) {
-    applyCssStyles(element, options['style']);
+  var applyKeyframe = options['keyframe'];
+  if (applyKeyframe) {
+    trackKeyframes = true;
+
+    element.style.setProperty('animation-name', options['keyframe']);
+    element.style.setProperty('-webkit-animation-name', options['keyframe']);
+
+    if (calculatedDuration) {
+      element.style.setProperty('animation-duration', prepareTimingValue(calculatedDuration));
+      collectedStyles.push('animation-duration');
+      element.style.setProperty('-webkit-animation-duration', prepareTimingValue(calculatedDuration));
+      collectedStyles.push('-webkit-animation-duration');
+    }
+
+    if (calculatedDelay) {
+      element.style.setProperty('animation-delay', prepareTimingValue(calculatedDelay));
+      collectedStyles.push('animation-delay');
+      element.style.setProperty('-webkit-animation-delay', prepareTimingValue(calculatedDelay));
+      collectedStyles.push('-webkit-animation-delay');
+    }
+
+    element.style.setProperty('animation-fill-mode', 'forwards');
+    element.style.setProperty('-webkit-animation-fill-mode', 'forwards');
+
+    animationContext.queueKeyframe();
   }
 
   var runner = new CssAnimationRunner();
 
-  if (calculatedDuration > 0) {
-  console.log(element.getAttribute('style'), options);
+  if (calculatedDuration > 0 && (trackTransitions || trackKeyframes)) {
+    var trackEvents = [];
+
+    if (trackTransitions) {
+      trackEvents.push('transitionend');
+    }
+
+    if (trackKeyframes) {
+      trackEvents.push('animationend');
+      trackEvents.push('webkitAnimationEnd');
+    }
+
     var onComplete = function() {
-      element.removeEventListener('transitionend', onComplete);
+      trackEvents.forEach((event) => {
+        element.removeEventListener(event, onComplete);
+      });
+      collectedStyles.forEach((style) => {
+        element.style.removeProperty(style);
+      });
       runner.resolve();
     }
 
-    element.addEventListener('transitionend', onComplete);
+    trackEvents.forEach((event) => {
+      element.addEventListener(event, onComplete);
+    });
   } else {
     runner.resolve();
   }
@@ -179,31 +256,19 @@ function anchor(options, duration = null, delay = null) {
   };
 }
 */
-
-export function transition(from, to, duration = null, delay = null) {
-  var operations = [];
-  if (from && Object.keys(from).length > 0) {
-    operations.push(style(from));
+export function reflow() {
+  return function(element) {
+    element.clientWidth + 1;
   }
-
-  operations.push(
-    new CssAnimation(
-      mergeAnimationOptions(
-        {},
-        { style: to },
-        duration,
-        delay
-      )));
-
-  return chain(operations);
 }
 
-export function keyframe(name, options, duration = null, delay = null) {
-  return new CssAnimation(mergeAnimationOptions(
-    options,
-    { keyframeAnimation: name },
-    duration,
-    delay));
+export function transition(styles, duration = null, delay = null) {
+  return new CssAnimation(
+    mergeAnimationOptions(
+      {},
+      { style: styles },
+      duration,
+      delay));
 }
 
 export function style(cssProperties, value = null) {
@@ -245,6 +310,64 @@ export function setTempClass(addClass, removeClass, duration = null, delay = nul
   return new CssAnimation({
     tempAddClass: addClass,
     tempRemoveClass: removeClass,
+    duration: duration,
+    delay: delay
+  });
+}
+
+export function objectToCss(object) {
+  var css = '';
+  for (var prop in object) {
+    css += prop + ':' + object[prop] + ';';
+  }
+  return css;
+}
+
+export function keyframeObjectToCss(name, object) {
+  var css = '@keyframes ' + name + " {\n";
+  for (var step in object) {
+    css += "  " + step + ' {' + objectToCss(object[step]) + "}\n";
+  }
+  css += "}\n";
+  return css;
+}
+
+var sharedStyleTag;
+function getSharedStyleTag() {
+  if (!sharedStyleTag) {
+    var sharedStyleTag = document.createElement('style');
+    sharedStyleTag.type = 'text/css';
+    document.querySelector('head').appendChild(sharedStyleTag);
+  }
+  return sharedStyleTag;
+}
+
+var keyframeLookup = new Map();
+var keyframeLookupCount = 0;
+function createKeyframeAnimationFromObject(object) {
+  var name = keyframeLookup.get(object);
+  if (!name) {
+    name = 'ng-animate-' + ++keyframeLookupCount;
+    var cssCode = keyframeObjectToCss(name, object);
+    var styleTag = getSharedStyleTag();
+    styleTag.innerHTML += cssCode;
+    keyframeLookup.set(object, name);
+  }
+  return name;
+}
+
+export function keyframe(factory, duration = null, delay = null) {
+  var keyframeName, hasTempKeyframe;
+  if (typeof factory == 'object') {
+    keyframeName = createKeyframeAnimationFromObject(factory);
+    hasTempKeyframe = true;
+  } else {
+    keyframeName = factory;
+  }
+
+  // TODO: remember to cleanup the temp keyframe
+  return new CssAnimation({
+    keyframe: keyframeName,
     duration: duration,
     delay: delay
   });

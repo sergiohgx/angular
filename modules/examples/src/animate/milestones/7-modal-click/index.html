@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<title>5 Animation Example</title>
+<style>
+* { font-family:Arial; }
+p {
+  font-size:1.5em;
+}
+button.main {
+  margin:100px auto;
+  display:block;
+  width:300px;
+  border:0;
+  box-size:10px solid #ccc;
+  background:#2A83D9;
+  color:white;
+  padding:1em;
+  font-size:2em;
+}
+header {
+  background:#2A83D9;
+  color:white;
+  padding:1em;
+  font-size:2em;
+}
+.content {
+  padding:1em;
+}
+.close {
+  position:absolute;
+  top:0;
+  left:0;
+  background:white;
+  border-radius:30px;
+  width:30px;
+  height:30px;
+  line-height:30px;
+  display:inline-block;
+  color:maroon;
+  font-size:20px;
+}
+modal img {
+  float:right;
+}
+.overlay {
+  cursor:pointer;
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background:rgba(0,0,0,0.5);
+}
+.modal {
+  position:absolute;
+  z-index:100;
+  width:800px;
+  height:600px;
+  border:30px solid rgba(0,0,0,0.5);
+}
+.modal .inner {
+  position:absolute;
+  top:0;
+  left:0;
+  bottom:0;
+  right:0;
+  background:white;
+}
+</style>
+<body>
+  <animate-app>Loading...</animate-app>
+
+$SCRIPTS$
+</body>
+</html>

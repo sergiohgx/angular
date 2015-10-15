@@ -1,6 +1,6 @@
 import {PromiseWrapper} from 'angular2/src/core/facade/async';
 import {isArray} from 'angular2/src/core/facade/lang';
-import {chain, parallel, wrapAnimation, startAnimation} from './sequence';
+import {chain, parallel, wrapAnimation, startAnimation, AnimationEventContext} from './sequence';
 import {RAFRunner} from './runner';
 
 var noopTrue = () => true;
@@ -12,7 +12,7 @@ var elementMatches = (element, selector) => {
   return element.matches && element.matches(selector);
 }
 
-function touchCallback(fn) {
+export function touchCallback(fn) {
   if(fn) {
     fn['touched'] = true;
   }
@@ -23,7 +23,7 @@ function wrapPrepareCallbackValue(callback, param) {
     if (callback.start) {
       return callback.start(element, data);
     } else {
-      return callback(element, data[param]);
+      return callback(element, data[param], data);
     }
   };
 }
@@ -32,6 +32,7 @@ export class AnimationQueryContext {
   private _registeredEvents = {};
   private _lookup = {};
   private _container;
+  private _lastClickEvent;
 
   constructor(public selector) {
     this._container = window;
@@ -56,7 +57,16 @@ export class AnimationQueryContext {
         var results = [];
         operations.forEach((op) => {
           if (op.test(element, data)) {
-            results.push(wrapAnimation(op.fn(element, data)));
+            if (this._lastClickEvent) {
+              data['collectedEvents'].push(this._lastClickEvent);
+            }
+
+            var context = new AnimationEventContext(element, data);
+            var animation = wrapAnimation(op.fn(element, context)).then(() => {
+              this._lastClickEvent = null;
+              context.flush();
+            });
+            results.push(animation);
           }
         });
         return RAFRunner.all(results).then(callback);
@@ -125,12 +135,22 @@ export class AnimationQueryContext {
     return this.on("ng-swap", startFn, noopTrue);
   }
 
+  onStyle(callback): AnimationQueryContext {
+    return this.on("ng-style", callback, noopTrue);
+  }
+
   onEnter(callback): AnimationQueryContext {
     return this.on("ng-enter", callback, noopTrue);
   }
 
   onLeave(callback): AnimationQueryContext {
     return this.on("ng-leave", callback, noopTrue);
+  }
+
+  trackClick(): void {
+    document.body.addEventListener('mousedown', (event) => {
+      this._lastClickEvent = event;
+    });
   }
 
   onAttrChange(attribute, callback): AnimationQueryContext {
