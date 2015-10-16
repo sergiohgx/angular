@@ -15,6 +15,24 @@ export class CssAnimation {
   private _immediate: boolean = false;
   private _tempStyles;
 
+  static _activeAnimations = new Map<HTMLElement, CssAnimationRunner>();
+
+  static setActiveAnimation(element, entry) {
+    if (entry) {
+      CssAnimation._activeAnimations.set(element, entry);
+    } else {
+      CssAnimation._activeAnimations.delete(element);
+    }
+  }
+
+  static cancelActiveAnimationIfExists(element) {
+    var animation = CssAnimation._activeAnimations.get(element);
+    if (animation) {
+      return animation.cancel();
+    }
+    return RAFRunner.when(true);
+  }
+
   constructor(private _options) {}
 
   get options() {
@@ -46,6 +64,10 @@ export class CssAnimation {
   }
 
   start(element, animationContext, duration = null, delay = null) {
+    // make sure that it cancels things before jumping to the next line
+    // and that things get combined into a single runner
+    // TODO: CssAnimation.cancelActiveAnimationIfExists(element);
+
     // this will create a clone of the map
     var options = StringMapWrapper.merge(this._options, {});
 
@@ -71,7 +93,13 @@ export class CssAnimation {
 
     options['duration'] = duration || options['duration'];
     options['delay']    = delay    || options['delay'];
-    return runCssAnimation(element, options, animationContext);
+
+    var runner = runCssAnimation(element, options, animationContext).then(() => {
+      CssAnimation.setActiveAnimation(element, false);
+    });
+
+    CssAnimation.setActiveAnimation(element, runner);
+    return runner;
   }
 }
 
@@ -306,6 +334,7 @@ function anchor(options, duration = null, delay = null) {
   };
 }
 */
+
 export function reflow() {
   return function(element) {
     element.clientWidth + 1;

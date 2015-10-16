@@ -97,13 +97,21 @@ export class AnimationEventContext {
   }
 
   public blockInnerEvents(): void {
-    this.fetchAndBlockInnerEvents();
+    this.fetchAndBlockInnerEvents(true);
   }
 
-  public fetchAndBlockInnerEvents() {
-    return this._data['collectedEvents'].map((event) => {
+  public permitInnerEvents(): void {
+    this.fetchAndBlockInnerEvents(false);
+  }
+
+  get innerEvents() {
+    return this._data['collectedEvents'];
+  }
+
+  public fetchAndBlockInnerEvents(block) {
+    return this.innerEvents.map((event) => {
       var callback = event['callback'];
-      touchCallback(callback);
+      touchCallback(callback, block);
       this._flushCallbacks.push(callback);
       return event;
     });
@@ -402,6 +410,9 @@ export function group(beforeFn, afterFn) {
         isPendingTick = false;
         startAnimation(afterFn, elementQueue, contextQueue).then(() => {
           sharedPromise.resolve();
+          sharedPromise = null;
+        }, () => {
+          sharedPromise.reject();
           sharedPromise = null;
         });
         elementQueue = [];

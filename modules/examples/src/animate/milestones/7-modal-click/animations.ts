@@ -20,7 +20,6 @@ animations.add('animate-app', (ctx) => {
   ctx.trackClick();
 
   ctx.onClassRemove('modal-active', (element, className, animationContext: AnimationEventContext) => {
-    var events = animationContext.fetchAndBlockInnerEvents();
     var fadeOutAnimation = transition({ opacity: 0 }, 1000);
     return parallel([
       query('.overlay', fadeOutAnimation),
@@ -30,7 +29,7 @@ animations.add('animate-app', (ctx) => {
 
   ctx.onClassAdd('modal-active', (element, className, animationContext: AnimationEventContext) => {
     var eventData = animationContext.detail;
-    var events = animationContext.fetchAndBlockInnerEvents();
+    var events = animationContext.innerEvents;
 
     var styleEvent = findEvent(events, 'style');
     var y = styleEvent.data.style.top;

@@ -20,18 +20,23 @@ var elementMatches = (element, selector) => {
   return element.matches && element.matches(selector);
 }
 
-export function touchCallback(fn) {
+export function touchCallback(fn, block = true) {
   if(fn) {
-    fn['touched'] = true;
+    if (block) {
+      fn['touched'] = true;
+    } else if (fn['touched']) {
+      delete fn['touched'];
+    }
   }
 }
 
-function wrapPrepareCallbackValue(callback, param) {
-  return (element, data) => {
+function wrapPrepareCallbackValueAndBlock(callback, param) {
+  return (element, context) => {
+    context.blockInnerEvents();
     if (callback.start) {
-      return callback.start(element, data);
+      return callback.start(element, context);
     } else {
-      return callback(element, data[param], data);
+      return callback(element, context.detail[param], context);
     }
   };
 }
@@ -75,10 +80,12 @@ export class AnimationQueryContext {
             }
 
             var context = new AnimationEventContext(element, data, this._stylesLookup);
-            var animation = startAnimation(op.fn, element, context).then(() => {
+            var onAllComplete = () => {
               this._lastClickEvent = null;
               context.flush();
-            });
+            };
+
+            var animation = startAnimation(op.fn, element, context).then(onAllComplete, onAllComplete);
             results.push(animation);
           }
         });
@@ -107,6 +114,7 @@ export class AnimationQueryContext {
     var startFn;
     if (typeof callback == "function") {
       startFn = function(container, context) {
+        context.blockInnerEvents();
         var leave = context.elements[0];
         var enter = context.elements[1];
         //var anchors = context['anchors'];
@@ -145,15 +153,15 @@ export class AnimationQueryContext {
   }
 
   onAttrChange(attribute, callback): AnimationQueryContext {
-    return this.on("ng-attributeChange", wrapPrepareCallbackValue(callback, 'value'), (element, data) => data.attr == attribute);
+    return this.on("ng-attributeChange", wrapPrepareCallbackValueAndBlock(callback, 'value'), (element, data) => data.attr == attribute);
   }
 
   onClassAdd(className, callback): AnimationQueryContext {
-    return this.on("ng-addClass", wrapPrepareCallbackValue(callback, 'className'), (element, data) => data.className = className);
+    return this.on("ng-addClass", wrapPrepareCallbackValueAndBlock(callback, 'className'), (element, data) => data.className = className);
   }
 
   onClassRemove(className, callback): AnimationQueryContext {
-    return this.on("ng-removeClass", wrapPrepareCallbackValue(callback, 'className'), (element, data) => data.className = className);
+    return this.on("ng-removeClass", wrapPrepareCallbackValueAndBlock(callback, 'className'), (element, data) => data.className = className);
   }
 
   on(event, callback, predicate = (element, data) => true): AnimationQueryContext {

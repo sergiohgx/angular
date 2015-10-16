@@ -7,7 +7,10 @@ animations.add('animate-app', "animations.css", (ctx) => {
 
   ctx.onEnter(chain([
     cssClass("invisible!"),
-    cssClass("visible", 1000)
+    parallel([
+      cssClass("red"),
+      cssClass("visible")
+    ], 5000)
   ]))
 
   ctx.onLeave(chain([
@@ -18,7 +21,9 @@ animations.add('animate-app', "animations.css", (ctx) => {
       cssClass("invisible"),
       cssClass("mangle"),
       cssClass("red"),
-      cssClass("blue")
+      cssClass("blue"),
+      transition({ color: 'red' }),
+      transition({ 'font-size': '200px' })
     ], 1000)
   ]))
 

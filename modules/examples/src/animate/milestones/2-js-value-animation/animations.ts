@@ -3,7 +3,7 @@ import {AnimationFactory} from 'angular2/src/animate/animate';
 var animations = new AnimationFactory();
 
 animations.add('.number-counter', (ctx) => {
-  ctx.onAttrChange('dataCounter', (element, value) => {
+  ctx.onAttrChange('data-counter', (element, value) => {
     animateValueChange(element, value);
   });
 });

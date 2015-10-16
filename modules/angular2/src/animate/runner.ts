@@ -15,8 +15,9 @@ export interface AnimationRunner extends AnimationPromise {
 }
 
 export class RAFRunner implements AnimationPromise {
-  private _promise;
+  protected _promise;
   private _resolvePromise;
+  private _rejectPromise;
   private _runnerResolved;
   private _resolved;
   private _rafResolved;
@@ -54,23 +55,34 @@ export class RAFRunner implements AnimationPromise {
 
   static all(runners) {
     var count = 0;
+    var rejected = false;
     var runnerWrapper = new RAFRunner();
 
     runners.forEach((runner) => {
-      runner.then(progress);
+      runner.then(progress, () => {
+        rejected = true;
+        progress();
+      });
     });
 
     return runnerWrapper;
 
     function progress() {
       if (++count == runners.length) {
-        runnerWrapper.resolve();
+        if (rejected) {
+          runnerWrapper.reject();
+        } else {
+          runnerWrapper.resolve();
+        }
       }
     }
   }
 
   public constructor() {
-    this._promise = new Promise((resolve) => this._resolvePromise = resolve);
+    this._promise = new Promise((resolve, reject) => {
+      this._resolvePromise = resolve,
+      this._rejectPromise = reject
+    });
     window.requestAnimationFrame(() => this._onRAF());
   }
 
@@ -79,6 +91,17 @@ export class RAFRunner implements AnimationPromise {
     if (this._rafResolved) {
       this._resolve(value);
     }
+  }
+
+  public reject(reason = null) {
+    if (!this._resolved) {
+      this._runnerResolved = true;
+      this._reject(reason);
+    }
+  }
+
+  get promise() {
+    return this._promise;
   }
 
   private _onRAF() {
@@ -90,6 +113,11 @@ export class RAFRunner implements AnimationPromise {
 
   protected _resolve(value = null) {
     this._resolvePromise(value);
+    this._resolved = true;
+  }
+
+  protected _reject(reason = null) {
+    this._rejectPromise(reason);
     this._resolved = true;
   }
 
@@ -127,8 +155,14 @@ export class CssAnimationRunner extends RAFRunner implements AnimationRunner {
     document.body.clientWidth + 1;
   }
 
+  public cancel() {
+    this.reject();
+    return this._promise;
+  }
+
   public close() {
     this.resolve();
+    return this._promise;
   }
 
   public isClosed() {

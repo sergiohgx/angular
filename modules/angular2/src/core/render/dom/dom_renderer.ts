@@ -220,11 +220,14 @@ export class DomRenderer implements Renderer, NodeFactory<Node> {
     var view = resolveInternalDomView(location.renderView);
     var element = view.boundElements[location.boundElementIndex];
     var dashCasedAttributeName = camelCaseToDashCase(attributeName);
+    var attrValue;
     if (isPresent(attributeValue)) {
-      DOM.setAttribute(element, dashCasedAttributeName, stringify(attributeValue));
+      attrValue = stringify(attributeValue);
+      DOM.setAttribute(element, dashCasedAttributeName, attrValue);
     } else {
       DOM.removeAttribute(element, dashCasedAttributeName);
     }
+    this._queueAnimationEvent(element, 'attributeChange', { attr: dashCasedAttributeName, value: attrValue });
   }
 
   setElementClass(location: RenderElementRef, className: string, isAdd: boolean): void {
