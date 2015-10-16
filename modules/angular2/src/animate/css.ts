@@ -1,21 +1,32 @@
 import {StringMapWrapper} from 'angular2/src/core/facade/collection';
 import {isPresent, isBlank, isArray} from 'angular2/src/core/facade/lang';
+import {BaseException} from 'angular2/src/core/facade/exceptions';
 
 import {RAFRunner, CssAnimationRunner} from "./runner";
-import {chain, parallel, AnimationEventContext} from "./sequence";
+import {cssClassVal, chain, parallel, AnimationEventContext} from "./sequence";
 import {
   calculateCoordinates,
   mergeAnimationOptions,
+  mergeAnimationStyles,
   extractAndRemoveOption
 } from "./util";
 
 export class CssAnimation {
   private _immediate: boolean = false;
+  private _tempStyles;
 
   constructor(private _options) {}
 
-  merge(newOptions) {
-    this._options = mergeAnimationOptions(this._options, newOptions);
+  get options() {
+    return this._options;
+  }
+
+  get duration() {
+    return this.options['duration'];
+  }
+
+  merge(animation: CssAnimation) {
+    this._options = mergeAnimationOptions(this._options, animation.options);
     return this;
   }
 
@@ -23,14 +34,43 @@ export class CssAnimation {
     this._immediate = value;
   }
 
+  setTemporaryStyle(property: string, value: string) {
+    if (!this._tempStyles) {
+      this._tempStyles = {};
+    }
+    this._tempStyles[property] = value;
+  }
+
   public get immediate() {
     return this._immediate;
   }
 
   start(element, animationContext, duration = null, delay = null) {
+    // this will create a clone of the map
     var options = StringMapWrapper.merge(this._options, {});
+
+    if (this._tempStyles) {
+      options['style'] = StringMapWrapper.merge(options['style'], this._tempStyles);
+    }
+
+    var cssClasses = options['cssClasses'];
+    if (cssClasses) {
+      cssClasses.split(/[\s\.]+/).forEach((klass) => {
+        // this will return an empty string for the first value
+        if (klass) {
+          var classStyles = animationContext.getClassStyles(klass);
+          if (Object.keys(classStyles).length) {
+            options['style'] = mergeAnimationStyles(options['style'], classStyles);
+          } else {
+            console.log(cssClassVal(klass), "returned zero stlyes or does not exist");
+            //throw new BaseException(`The selector "${klass}" does not exist in the provided stylesheet or contains zero styles`);
+          }
+        }
+      });
+    }
+
     options['duration'] = duration || options['duration'];
-    options['delay'] = duration || options['delay'];
+    options['delay']    = delay    || options['delay'];
     return runCssAnimation(element, options, animationContext);
   }
 }
@@ -273,12 +313,18 @@ export function reflow() {
 }
 
 export function transition(styles, duration = null, delay = null) {
-  return new CssAnimation(
+  var animation = new CssAnimation(
     mergeAnimationOptions(
       {},
       { style: styles },
       duration,
       delay));
+
+  if (duration === 0) {
+    animation.setTemporaryStyle('transition-delay', '-9999s');
+  }
+
+  return animation;
 }
 
 export function style(cssProperties, value = null) {
@@ -294,8 +340,17 @@ export function style(cssProperties, value = null) {
   return animator;
 }
 
-export function tempClass(className, duration = null, delay = null) {
-  return this.addClass(className, duration, delay);
+export function cssClass(cssClasses, duration = null, delay = null) {
+  if (cssClasses.indexOf("!") >= 0) {
+    duration = 0;
+    cssClasses = cssClasses.replace(/!/g, "");
+  }
+
+  return new CssAnimation(mergeAnimationOptions(
+    {},
+    { cssClasses: cssClasses },
+    duration,
+    delay));
 }
 
 export function addClass(className, duration = null, delay = null) {

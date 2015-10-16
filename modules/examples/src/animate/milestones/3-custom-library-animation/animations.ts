@@ -4,7 +4,7 @@ import {AnimationFactory} from 'angular2/src/animate/animate';
 
 var animations = new AnimationFactory();
 
-animations.find('[state]', (ctx) => {
+animations.add('[state]', (ctx) => {
   ctx.onAttrChange('state', (element, value) => {
     animateState(element, value);
   });

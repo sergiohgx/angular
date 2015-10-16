@@ -14,7 +14,7 @@ import {
 
 var animations = new AnimationFactory();
 
-animations.find('animate-app', (ctx) => {
+animations.add('animate-app', (ctx) => {
 
   ctx.onEnter(chain([
     style({ opacity: 0 }),

@@ -27,7 +27,7 @@ function outsideInStagger(delay) {
   }
 }
 
-animations.find('tr', (ctx) => {
+animations.add('tr', (ctx) => {
   ctx.onEnter(staggerCss('ng-enter', outsideInStagger(100)));
   ctx.onLeave(staggerCss('ng-leave', insideOutStagger(100)));
 });

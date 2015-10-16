@@ -1,6 +1,14 @@
 import {PromiseWrapper} from 'angular2/src/core/facade/async';
 import {isArray} from 'angular2/src/core/facade/lang';
-import {chain, parallel, wrapAnimation, startAnimation, AnimationEventContext} from './sequence';
+import {
+  chain,
+  parallel,
+  wrapAnimation,
+  startAnimation,
+  AnimationEventContext,
+  AnimationStylesLookup,
+  NoopAnimationStylesLookup
+} from './sequence';
 import {RAFRunner} from './runner';
 
 var noopTrue = () => true;
@@ -31,11 +39,16 @@ function wrapPrepareCallbackValue(callback, param) {
 export class AnimationQueryContext {
   private _registeredEvents = {};
   private _lookup = {};
+  private _stylesLookup = new NoopAnimationStylesLookup();
   private _container;
   private _lastClickEvent;
 
   constructor(public selector) {
     this._container = window;
+  }
+
+  setStylesLookup(lookup: AnimationStylesLookup) {
+    this._stylesLookup = lookup;
   }
 
   isSelectorMatch(element) {
@@ -61,7 +74,7 @@ export class AnimationQueryContext {
               data['collectedEvents'].push(this._lastClickEvent);
             }
 
-            var context = new AnimationEventContext(element, data);
+            var context = new AnimationEventContext(element, data, this._stylesLookup);
             var animation = startAnimation(op.fn, element, context).then(() => {
               this._lastClickEvent = null;
               context.flush();
@@ -167,11 +180,26 @@ export class AnimationFactory {
       .map((query) => query.trigger(element, event, data));
   }
 
-  find(selector: string, callback): AnimationFactory {
-    var query = new AnimationQueryContext(selector);
-    callback(query);
-    this._queries.push(query);
+  add(selector: string, stylesheet, callback = null): AnimationFactory {
+    var query = this._add(selector);
+
+    if (arguments.length == 2) {
+      callback = stylesheet;
+      callback(query);
+    } else {
+      AnimationStylesLookup.fromStylesheet(stylesheet).then((lookup) => {
+        query.setStylesLookup(lookup);
+        callback(query);
+      });
+    }
+
     return this;
+  }
+
+  _add(selector: string) {
+    var query = new AnimationQueryContext(selector);
+    this._queries.push(query);
+    return query;
   }
 }
 

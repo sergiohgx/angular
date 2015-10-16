@@ -3,8 +3,7 @@ import {wait, query, stagger, style, transition, group, chain, parallel, RAFRunn
 
 var animations = new AnimationFactory();
 
-animations.find('animate-app', (ctx) => {
-
+animations.add('animate-app', (ctx) => {
   ctx.onSwap({
     leave: chain([
       style({ opacity: 1 }),

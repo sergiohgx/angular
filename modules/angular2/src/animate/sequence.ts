@@ -8,13 +8,84 @@ export function wrapAnimation(fn) {
   return RAFRunner.wrap(fn);
 }
 
+export function cssClassVal(className) {
+  return className[0] == '.' ? className : ('.' + className);
+}
+
+export class NoopAnimationStylesLookup {
+  fetchClassStyles(className) {
+    return {};
+  }
+}
+
+export class AnimationStylesLookup {
+  private _classMap = {};
+
+  static fromStylesheet(url): Promise<any> {
+    return new Promise((resolve) => {
+      var request = new XMLHttpRequest();
+      request.addEventListener("load", () => {
+        var content = request.responseText;
+        var lookup = new AnimationStylesLookup(content);
+        resolve(lookup);
+      });
+      request.open("GET", url);
+      request.send(null);
+    });
+  }
+
+  constructor(cssCode) {
+    this._parseRulesIntoLookup(cssCode);
+  }
+
+  _parsePropertiesFromCss(rule) {
+    var firstBrace = rule.indexOf('{');
+    var inner = rule.substr(firstBrace);
+    return inner.match(/\b\w+(?=:)/g);
+  }
+
+  _parseRulesIntoLookup(cssCode) {
+    var styleTag = document.createElement('style');
+    styleTag.setAttribute('type','text/css');
+    styleTag.innerHTML = cssCode;
+    document.body.appendChild(styleTag);
+
+    var rules = styleTag['sheet']['rules'];
+    for (var i = 0; i < rules.length; i++) {
+      var rule = rules[i];
+      var selector = rule.selectorText;
+      if (selector[0] == ".") {
+        var stylesEntry = {};
+        var properties = this._parsePropertiesFromCss(rule.cssText);
+        properties.forEach((property) => {
+          stylesEntry[property] = rule.style[property];
+        });
+        this._classMap[selector] = stylesEntry;
+      }
+    };
+    styleTag.remove();
+  }
+
+  fetchClassStyles(className) {
+    return copyObj(this._classMap[cssClassVal(className)] || {});
+  }
+}
+
+function copyObj(object) {
+  var newObject = {};
+  for (var i in object) {
+    newObject[i] = object[i];
+  }
+  return newObject;
+}
+
 export class AnimationEventContext {
   private _styles = [];
   private _classes = [];
   private _children = [];
   private _flushCallbacks = [];
 
-  public constructor(private _element, private _data = {}) {}
+  public constructor(private _element, private _data = {}, private _stylesLookup) {}
 
   // this is used to emulate an event
   public get detail() {
@@ -36,6 +107,10 @@ export class AnimationEventContext {
       this._flushCallbacks.push(callback);
       return event;
     });
+  }
+
+  public getClassStyles(className) {
+    return this._stylesLookup.fetchClassStyles(className);
   }
 
   public queueStyles(styles) {
@@ -70,7 +145,7 @@ export class AnimationEventContext {
   }
 
   public fork(child, data = {}) {
-    var instance = new AnimationEventContext(child, data);
+    var instance = new AnimationEventContext(child, data, this._stylesLookup);
     this._children.push(instance);
     return instance;
   }
@@ -193,12 +268,20 @@ export function startAnimation(factory, element, context, duration = null, delay
 }
 
 export function parallel(operations, duration = null, delay = null) {
+  var zeroDuration = duration === 0;
+  var immediate = true;
   var group = new CssAnimation({
     duration: duration,
     delay: delay
   });
 
   var nonCssAnimations = operations.filter((operation) => {
+    immediate = immediate && operation.immediate;
+
+    if (operation.duration === 0) {
+      zeroDuration = true;
+    }
+
     var isCssAnimation = operation instanceof CssAnimation;
     if (isCssAnimation) {
       group.merge(operation);
@@ -212,8 +295,11 @@ export function parallel(operations, duration = null, delay = null) {
   });
 
   return {
-    immediate: false,
+    immediate: immediate,
     start: function(element, context, duration = null, delay = null) {
+      if (zeroDuration) {
+        zeroDuration = true;
+      }
       return RAFRunner.all(animations.map((animation) => {
         return startAnimation(animation, element, context, duration, delay);
       }));

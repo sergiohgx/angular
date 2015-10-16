@@ -15,7 +15,7 @@ var animations = new AnimationFactory();
   onLeave(css('ng-leave'))
 */
 
-animations.find('component', (ctx) => {
+animations.add('component', (ctx) => {
   ctx.onAttrChange('state', (element, value) => {
     value === "closed" ? animateKeyframe(element, "fade-out", "1s")
                        : animateKeyframe(element, "fade-in", "1s");

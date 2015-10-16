@@ -15,7 +15,7 @@ import {
 
 var animations = new AnimationFactory();
 
-animations.find('animate-app', (ctx) => {
+animations.add('animate-app', (ctx) => {
 
   ctx.trackClick();
 
