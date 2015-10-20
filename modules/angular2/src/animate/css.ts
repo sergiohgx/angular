@@ -1,6 +1,8 @@
 import {StringMapWrapper} from 'angular2/src/core/facade/collection';
-import {isPresent, isBlank, isArray} from 'angular2/src/core/facade/lang';
+import {isNumber, isPresent, isBlank, isArray} from 'angular2/src/core/facade/lang';
 import {BaseException} from 'angular2/src/core/facade/exceptions';
+
+import {copyObj, AnimationTimeline, WebAnimationsDriver} from "./timeline";
 
 import {RAFRunner, CssAnimationRunner} from "./runner";
 import {cssClassVal, chain, parallel, AnimationEventContext} from "./sequence";
@@ -43,9 +45,21 @@ export class CssAnimation {
     return this.options['duration'];
   }
 
+  get delay() {
+    return this.options['delay'];
+  }
+
+  get styles() {
+    return this.options['style'];
+  }
+
   merge(animation: CssAnimation) {
     this._options = mergeAnimationOptions(this._options, animation.options);
     return this;
+  }
+
+  mergeStyles(styles) {
+    this._options['style'] = mergeAnimationStyles(this._options['style'], styles);
   }
 
   setAsImmediate(value: boolean) {
@@ -63,12 +77,7 @@ export class CssAnimation {
     return this._immediate;
   }
 
-  start(element, animationContext, duration = null, delay = null) {
-    // make sure that it cancels things before jumping to the next line
-    // and that things get combined into a single runner
-    // TODO: CssAnimation.cancelActiveAnimationIfExists(element);
-
-    // this will create a clone of the map
+  public prepareOptionsFromContext(animationContext) {
     var options = StringMapWrapper.merge(this._options, {});
 
     if (this._tempStyles) {
@@ -90,6 +99,17 @@ export class CssAnimation {
         }
       });
     }
+
+    return options;
+  }
+
+  start(element, animationContext, duration = null, delay = null) {
+    // make sure that it cancels things before jumping to the next line
+    // and that things get combined into a single runner
+    // TODO: CssAnimation.cancelActiveAnimationIfExists(element);
+
+    // this will create a clone of the map
+    var options = this.prepareOptionsFromContext(animationContext);
 
     options['duration'] = duration || options['duration'];
     options['delay']    = delay    || options['delay'];
@@ -467,4 +487,55 @@ export function keyframe(factory, duration = null, delay = null) {
     duration: duration,
     delay: delay
   });
+}
+
+export function timeline(factory) {
+  return {
+    start: function(element, context) {
+      var tl = new AnimationTimeline(WebAnimationsDriver);
+      var totalTime = _setupTimeline(tl, factory, element, context, 0, 0);
+
+      var player = tl.create(element);
+      player.start(totalTime);
+      return player;
+    }
+  }
+}
+
+function _setupTimeline(timeline, factory, element, context, position, index) {
+  if (factory.stagger) { // query
+    var staggerDelay = factory.delay * index;
+    position += staggerDelay;
+    factory = factory.animations;
+  }
+  if (factory.query) { // query
+    var targets = element.querySelectorAll(factory.selector);
+    var maxTime = 0;
+    for (var i = 0; i < targets.length; i++) {
+      var innerTimeline = timeline.scopeElementTimeline(targets[i]);
+      var pos = _setupTimeline(innerTimeline, factory.animation, element, context, position, i);
+      maxTime = Math.max(pos, maxTime);
+    }
+    position = maxTime;
+  }
+  else if (factory.chain) { // chain
+    factory.allAnimations.forEach((animation) => {
+      position = _setupTimeline(timeline, animation, element, context, position, 0);
+    });
+  }
+  else if (factory.parallel) { // parallel
+    var maxPosition = 0;
+    factory.animations.forEach((animation) => {
+      var pos = _setupTimeline(timeline, animation, element, context, position, 0);
+      maxPosition = Math.max(pos, maxPosition);
+    });
+    position = maxPosition;
+  }
+  else if (factory instanceof CssAnimation) {
+    position += factory.delay || 0;
+    var options = factory.prepareOptionsFromContext(context);
+    timeline.stepTo(position, factory.duration, copyObj(options['style']));
+    position += factory.duration;
+  }
+  return position;
 }

@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<title>5 Animation Example</title>
+<link rel="stylesheet" href="https://storage.googleapis.com/code.getmdl.io/1.0.5/material.indigo-pink.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<style>
+.overlay {
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background:white;
+}
+.overlay button {
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translateX(-50%) translateY(-50%);
+  font-size:80px;
+  padding:20px;
+  background:blue;
+  display:inline-block;
+}
+* { box-sizing: border-box; }
+animate-app { display:block; }
+.authors .author {
+  float:left;
+  margin:5px;
+  width:15%;
+}
+section {
+  overflow:auto;
+  border-bottom:1px solid #ddd;
+  padding-bottom:20px;
+  margin-bottom:20px;
+}
+
+.authors .author img {
+  width:100%;
+  height:auto;
+}
+.app-header {
+  border-bottom:1px solid #ddd;
+}
+.app-header img {
+  height:80px;
+}
+.page {
+  width:80%;
+}
+.drag-dial {
+  position:fixed;
+  top:0;
+  right:0;
+  bottom:0;
+  width:20%;
+  background:#eee;
+  transition:0.5s linear all;
+  opacity:0;
+}
+.drag-dial:hover { opacity:1; }
+.page {
+  padding:50px;
+}
+.drag-dial:after {
+  content:"";
+  border-left:2px solid #ddd;
+  position:absolute;
+  top:50px;
+  left:50%;
+  bottom:50px;
+}
+.dragger {
+  position:absolute;
+  top:50px;
+  text-align:center;
+  font-size:40px;
+  font-weight:bold;
+  line-height:50px;
+  background:#ddd;
+  border:2px dashed #555;
+  left:50px;
+  right:50px;
+  height:50px;
+  cursor:move;
+}
+</style>
+<body>
+  <animate-app>Loading...</animate-app>
+
+$SCRIPTS$
+</body>
+</html>

@@ -1,4 +1,4 @@
-function copyObj(obj) {
+export function copyObj(obj) {
   var newObj = {};
   for (var i in obj) {
     newObj[i] = obj[i];
@@ -6,7 +6,7 @@ function copyObj(obj) {
   return newObj;
 }
 
-class WebAnimationsDriver {
+export class WebAnimationsDriver {
   static create(element, steps, duration) {
     return new WebAnimationsDriver(element, steps, duration);
   }
@@ -21,21 +21,22 @@ class WebAnimationsDriver {
 
   _formatSteps(steps, totalDuration) {
     var compiledSteps = [];
-    for (var position in steps) {
+    steps.forEach((entry) => {
+      var position = entry['position'];
+      var step = entry['value'];
       // we copy this since for each timeline/element/duration
       // value there is a different combination of step timing
       // values and if we modify the existing step object then
       // that data will trickle over to the next time the same
       // timeline is used to create a new timeline session.
-      var stepDetails = copyObj(steps[position]);
+      var stepDetails = copyObj(step);
 
-      // maybe offset?
-      stepDetails['duration'] = position <= 1
-          ? totalDuration * position // percentage-based
+      stepDetails['offset'] = position > 1
+          ? position / totalDuration // percentage-based
           : position;                // millisecond magnitude
 
       compiledSteps.push(stepDetails);
-    }
+    });
 
     return compiledSteps.sort((a, b) => {
       return a.duration - b.duration;
@@ -45,17 +46,22 @@ class WebAnimationsDriver {
   start() {
     if (!this._closingPromise) {
       this._closingPromise = new Promise((resolve) => {
-        this._player = this._element.animate(this._steps, { duration: this._duration });
-
-        this._player.onfinish = () => resolve();
-        this.resume();
+        try {
+          this._player = this._element.animate(this._steps, { duration: this._duration, fill: 'forwards' });
+          this._player.onfinish = () => {
+            //resolve();
+          };
+          this.resume();
+        } catch(e) {
+          console.log(this._element, e);
+        }
       });
     }
     return this._closingPromise;
   }
 
   resume() {
-    this._player.resume();
+    this._player.play();
   }
 
   pause() {
@@ -85,6 +91,10 @@ class WebAnimationsDriver {
 class AnimationPlayhead {
   private _playing = false;
   private _player;
+  private _duration;
+  private _resolve;
+  private _reject;
+  private _promise;
 
   constructor(private _driver, private _element, private _steps, private _playheads) { }
 
@@ -110,7 +120,8 @@ class AnimationPlayhead {
   start(duration) {
     if (!this._player) {
       this._player = this._driver.create(this._element, this._steps, duration);
-      this._player.start();
+      this._player.start().then(this._onComplete);
+      this._duration = duration;
 
       this._playing = true;
       this._playheads.forEach((ph) => ph.start(duration));
@@ -118,6 +129,10 @@ class AnimationPlayhead {
   }
 
   progress(stepValue) {
+    this.track(stepValue * this._duration);
+  }
+
+  track(stepValue) {
     this.pause();
     this._goTo(stepValue);
 
@@ -127,25 +142,86 @@ class AnimationPlayhead {
   _goTo(stepValue) {
     this._player.goTo(stepValue);
   }
+
+  _onComplete() {
+    if (this._resolve) {
+      this._resolve();
+    }
+  }
+
+  _getPromise() {
+    if (!this._promise) {
+      this._promise = new Promise((resolve, reject) => {
+        this._resolve = resolve;
+        this._reject = reject;
+      });
+    }
+    return this._promise;
+  }
+
+  then(cb, er = null) {
+    return this._getPromise()(cb, er);
+  }
 }
 
-class AnimationTimeline {
+export class AnimationTimeline {
 
-  private _steps = {};
+  private _steps = [];
   private _scopes = {};
+  private _elements = new Map<HTMLElement, AnimationTimeline>();
 
   constructor(private _driver) {}
 
+  fork() {
+    return new AnimationTimeline(this._driver);
+  }
+
+  stepTo(position, duration, value) {
+    if (this._steps.length) {
+      var previous = this._steps[this._steps.length - 1];
+      if (previous['position'] != position) {
+        this.step(position, previous['value']);
+      }
+      this.step(position + duration, value);
+    } else {
+      this.step(position + duration, value);
+    }
+  }
+
   step(position, value) {
-    this._steps[position] = value;
+    this._steps.push({
+      position:position,
+      value:value
+    });
     return this;
+  }
+
+  scopeElementTimeline(elm) {
+    var timeline = this._elements.get(elm);
+    if (!timeline) {
+      timeline = this.fork();
+      this._elements.set(elm, timeline);
+    }
+    return timeline;
   }
 
   scope(selector, timeline: AnimationTimeline) {
     this._scopes[selector] = timeline;
   }
 
+  _finalizeSteps() {
+    var finalValues = {};
+    this._steps.forEach((step) => {
+      for (var i in step.value) {
+        finalValues[i] = step.value[i];
+      }
+    });
+    this.step(1, finalValues);
+  }
+
   create(container) {
+    this._finalizeSteps();
+
     var playheads = [];
     for (var selector in this._scopes) {
       let timeline = this._scopes[selector];
@@ -154,6 +230,10 @@ class AnimationTimeline {
         playheads.push(timeline.create(elements[i]));
       }
     }
+
+    this._elements.forEach((timeline, elm) => {
+      playheads.push(timeline.create(elm));
+    });
 
     return new AnimationPlayhead(this._driver, container, this._steps, playheads);
   }

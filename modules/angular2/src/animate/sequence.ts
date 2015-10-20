@@ -3,6 +3,7 @@ var noop = () => {};
 import {CssAnimation} from "./css";
 import {RAFRunner} from "./runner";
 import {touchCallback} from "./factory";
+import {mergeAnimationStyles} from "./util";
 
 export function wrapAnimation(fn) {
   return RAFRunner.wrap(fn);
@@ -85,9 +86,13 @@ export class AnimationEventContext {
   private _children = [];
   private _flushCallbacks = [];
 
-  public constructor(private _element, private _data = {}, private _stylesLookup) {}
+  public constructor(private _element, private _data = {}, private _stylesLookup, private _event) {}
 
   // this is used to emulate an event
+  public get event() {
+    return this._event;
+  }
+
   public get detail() {
     return this._data;
   }
@@ -153,7 +158,7 @@ export class AnimationEventContext {
   }
 
   public fork(child, data = {}) {
-    var instance = new AnimationEventContext(child, data, this._stylesLookup);
+    var instance = new AnimationEventContext(child, data, this._stylesLookup, this._event);
     this._children.push(instance);
     return instance;
   }
@@ -303,7 +308,9 @@ export function parallel(operations, duration = null, delay = null) {
   });
 
   return {
+    parallel: true,
     immediate: immediate,
+    animations: animations,
     start: function(element, context, duration = null, delay = null) {
       if (zeroDuration) {
         zeroDuration = true;
@@ -315,15 +322,18 @@ export function parallel(operations, duration = null, delay = null) {
   };
 }
 
-export function chain(operations, duration = null, delay = null) {
+export function chain(allOperations, duration = null, delay = null) {
   var hasTimings = arguments.length > 2;
-  operations = groupImmediateOperations(operations);
+  var operations = groupImmediateOperations(allOperations);
 
   var isFullyImmediate = operations.reduce((previous,b) => {
     return previous && b.immediate;
   }, true);
 
   return {
+    chain: true,
+    allAnimations: allOperations,
+    animations: operations,
     immediate: isFullyImmediate,
     start: function(element, context, duration = null, delay = null) {
       if (operations.length == 0) {
@@ -433,13 +443,20 @@ export function stagger(animationFactory, staggerDelay, duration = null, delay =
       return index * staggerDelay;
     };
 
-  return group(noop, (elements, contexts) => {
+  var groupFn = group(noop, (elements, contexts) => {
     return RAFRunner.all(elements.map((element, index) => {
       return wait(delayFn(element, index, elements.length)).then(() => {
         return startAnimation(animationFactory, element, contexts[index], duration, null);
       });
     }));
   });
+
+  return {
+    stagger: true,
+    animations: animationFactory,
+    delay: staggerDelay,
+    start: groupFn
+  }
 }
 
 export function wait(time) {
@@ -451,6 +468,9 @@ export function wait(time) {
 export function query(selector, factory) {
   return {
     immediate: factory.immediate,
+    animation: factory,
+    selector: selector,
+    query: true,
     start: function(element, context, duration = null, delay = null) {
       var contexts = [];
       var targets = element.querySelectorAll(selector);
@@ -463,6 +483,7 @@ export function query(selector, factory) {
       var sharedRunner;
       for (var i = 0; i < targets.length; i++) {
         var newTarget = targets[i];
+
         var newContext = context.fork(newTarget);
         sharedRunner = queueElement(newTarget, newContext, duration, delay);
       }

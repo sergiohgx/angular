@@ -1,0 +1,40 @@
+<div *ng-if="!pageIsActive" class="overlay">
+  <button (click)="pageIsActive=true">Start</button>
+</div>
+<div [class.page-active]="pageIsActive">
+  <header class="app-header">
+    <img src="./ac.png" />
+  </header>
+
+  <div class="page">
+    <section class="authors">
+      <div *ng-for="#author of authors" class="author">
+        <img [src]="author.image" />
+      </div>
+    </section>
+
+    <p>
+      Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod
+      tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At
+      vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren,
+      no sea takimata sanctus est Lorem ipsum dolor sit amet.
+    </p>
+
+    <h2>
+      Some Heading</h2>
+    </h2>
+
+    <p>
+      Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod
+      tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At
+      vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren,
+      no sea takimata sanctus est Lorem ipsum dolor sit amet.
+    </p>
+  </div>
+
+</div>
+
+<div class="drag-dial">
+  <div (drag)="dragging($event)" draggable="true" class="dragger">
+  </div>
+</div>

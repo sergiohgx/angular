@@ -65,8 +65,9 @@ export class AnimationQueryContext {
     return false;
   }
 
-  trigger(element, event, data) {
+  trigger(element, event, data, eventInstance) {
     var callback = data['callback'] || noopTrue;
+    data['collectedEvents'] = data['collectedEvents'] || [];
     touchCallback(callback);
 
     if (this.isSelectorMatch(element)) {
@@ -79,7 +80,7 @@ export class AnimationQueryContext {
               data['collectedEvents'].push(this._lastClickEvent);
             }
 
-            var context = new AnimationEventContext(element, data, this._stylesLookup);
+            var context = new AnimationEventContext(element, data, this._stylesLookup, eventInstance);
             var onAllComplete = () => {
               this._lastClickEvent = null;
               context.flush();
@@ -99,11 +100,11 @@ export class AnimationQueryContext {
     if (this._registeredEvents[event]) return this;
 
     this._container.addEventListener(event, (e) => {
-      var eventData = e.detail || {};
+      var eventData = (e instanceof CustomEvent && e.detail) || {};
       touchCallback(eventData['callback']);
       var callback = eventData['callback'] || function() { };
 
-      this.trigger(e.target, event, eventData).then(callback);
+      this.trigger(e.target, event, eventData, e).then(callback);
     });
 
     this._registeredEvents[event] = true;
