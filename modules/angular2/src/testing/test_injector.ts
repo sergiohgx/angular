@@ -11,8 +11,6 @@ import {
   ViewResolver,
   provide
 } from 'angular2/core';
-import {AnimationBuilder} from 'angular2/src/animate/animation_builder';
-import {MockAnimationBuilder} from 'angular2/src/mock/animation_builder_mock';
 
 import {ProtoViewFactory} from 'angular2/src/core/linker/proto_view_factory';
 import {Reflector, reflector} from 'angular2/src/core/reflection/reflection';
@@ -118,7 +116,6 @@ function _getAppBindings() {
     provide(XHR, {useClass: DOM.getXHR()}),
     TestComponentBuilder,
     provide(NgZone, {useClass: MockNgZone}),
-    provide(AnimationBuilder, {useClass: MockAnimationBuilder}),
     EventManager,
     new Provider(EVENT_MANAGER_PLUGINS, {useClass: DomEventsPlugin, multi: true})
   ];

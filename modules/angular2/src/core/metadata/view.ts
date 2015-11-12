@@ -123,7 +123,11 @@ export class ViewMetadata {
    */
   encapsulation: ViewEncapsulation;
 
-  constructor({templateUrl, template, directives, pipes, encapsulation, styles, styleUrls}: {
+  animations: {[key: string]: string[]};
+
+  animationStyles: {[key: string]: {[key: string]: string}};
+
+  constructor({templateUrl, template, directives, pipes, encapsulation, styles, styleUrls, animations, animationStyles}: {
     templateUrl?: string,
     template?: string,
     directives?: Array<Type | any[]>,
@@ -131,6 +135,8 @@ export class ViewMetadata {
     encapsulation?: ViewEncapsulation,
     styles?: string[],
     styleUrls?: string[],
+    animations?: {[key: string]: string[]},
+    animationStyles?: {[key: string]: {[key: string]: string}},
   } = {}) {
     this.templateUrl = templateUrl;
     this.template = template;
@@ -139,5 +145,7 @@ export class ViewMetadata {
     this.directives = directives;
     this.pipes = pipes;
     this.encapsulation = encapsulation;
+    this.animations = animations;
+    this.animationStyles = animationStyles;
   }
 }

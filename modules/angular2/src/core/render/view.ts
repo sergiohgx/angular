@@ -18,7 +18,7 @@ export class DefaultProtoViewRef extends RenderProtoViewRef {
 }
 
 export class DefaultRenderFragmentRef<N> extends RenderFragmentRef {
-  constructor(public nodes: N[]) { super(); }
+  constructor(public nodes: N[], public componentTemplate: RenderComponentTemplate) { super(); }
 }
 
 export class DefaultRenderView<N> extends RenderViewRef {
@@ -28,7 +28,8 @@ export class DefaultRenderView<N> extends RenderViewRef {
 
   constructor(public fragments: DefaultRenderFragmentRef<N>[], public boundTextNodes: N[],
               public boundElements: N[], public nativeShadowRoots: N[],
-              public globalEventAdders: Function[], public rootContentInsertionPoints: N[]) {
+              public globalEventAdders: Function[], public rootContentInsertionPoints: N[],
+              public componentTemplate: RenderComponentTemplate) {
     super();
   }
 

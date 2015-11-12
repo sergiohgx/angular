@@ -326,3 +326,7 @@ class DateWrapper {
 
 // needed to match the exports from lang.js
 var global = null;
+
+bool isPromiseLike(p) {
+  return isPresent(p) && isFunction(p['then']);
+}

@@ -74,7 +74,7 @@ export function main() {
       nodeFactory = new DomNodeFactory(componentTemplates);
       eventDispatcher = new SpyRenderEventDispatcher();
       defaultCmpTpl =
-          new RenderComponentTemplate('someId', 'shortid', ViewEncapsulation.None, [], []);
+        new RenderComponentTemplate('someId', 'shortid', ViewEncapsulation.None, [], [], [], {});
     });
 
     describe('primitives', () => {
@@ -344,7 +344,7 @@ export function main() {
                                              [
                                                text('hello', false, null),
                                              ],
-                                             []));
+                                             [], [], {}));
         var view = createRenderView(defaultCmpTpl,
                                     [beginComponent('my-comp', [], [], null, '0'), endComponent()],
                                     null, nodeFactory);
@@ -503,7 +503,7 @@ export function main() {
 
       it('should keep non projected nodes in the light dom when using native shadow dom', () => {
         componentTemplates.set('0', new RenderComponentTemplate('someId', 'shortid',
-                                                                ViewEncapsulation.Native, [], []));
+        ViewEncapsulation.Native, [], [], [], {}));
         var view = createRenderView(defaultCmpTpl,
                                     [
                                       beginComponent('my-comp', [], [], null, '0'),
@@ -561,15 +561,14 @@ export function main() {
 
     describe('view encapsulation', () => {
       it('should not add attributes to elements in template with ViewEncapsulation.None', () => {
-        var tpl = new RenderComponentTemplate('someId', 'shortid', ViewEncapsulation.None, [], []);
+        var tpl = new RenderComponentTemplate('someId', 'shortid', ViewEncapsulation.None, [], [], [], {});
         var view = createRenderView(tpl, [beginElement('div', [], [], false, null), endElement()],
                                     null, nodeFactory);
         expect(stringifyFragment(view.fragments[0].nodes)).toEqual('<div></div>');
       });
 
       it('should not add attributes to elements in template with ViewEncapsulation.Native', () => {
-        var tpl =
-            new RenderComponentTemplate('someId', 'shortid', ViewEncapsulation.Native, [], []);
+        var tpl = new RenderComponentTemplate('someId', 'shortid', ViewEncapsulation.Native, [], [], [], {});
         var view = createRenderView(tpl, [beginElement('div', [], [], false, null), endElement()],
                                     null, nodeFactory);
         expect(stringifyFragment(view.fragments[0].nodes)).toEqual('<div></div>');
@@ -580,7 +579,7 @@ export function main() {
 
         beforeEach(() => {
           encapsulatedTpl =
-              new RenderComponentTemplate('someId', 'shortid', ViewEncapsulation.Emulated, [], []);
+          new RenderComponentTemplate('someId', 'shortid', ViewEncapsulation.Emulated, [], [], [], {});
         });
 
         it('should add marker attributes to content elements', () => {
@@ -609,7 +608,7 @@ export function main() {
              componentTemplates.set(
                  '0', new RenderComponentTemplate(
                           'innerComp', 'innerid', ViewEncapsulation.Emulated,
-                          [beginElement('div', [], [], false, null), endElement()], []));
+                          [beginElement('div', [], [], false, null), endElement()], [], [], {}));
              var view = createRenderView(
                  defaultCmpTpl, [beginComponent('my-comp', [], [], null, '0'), endComponent()],
                  null, nodeFactory);
@@ -626,19 +625,19 @@ export function main() {
 
     it('should not change styles for ViewEncapsulation.Native', () => {
       var tpl =
-          new RenderComponentTemplate('someId', 'shortid', ViewEncapsulation.Native, [], [input]);
+        new RenderComponentTemplate('someId', 'shortid', ViewEncapsulation.Native, [], [input], [], {});
       expect(encapsulateStyles(tpl)).toEqual([input]);
     });
 
     it('should not change styles for ViewEncapsulation.None', () => {
       var tpl =
-          new RenderComponentTemplate('someId', 'shortid', ViewEncapsulation.None, [], [input]);
+        new RenderComponentTemplate('someId', 'shortid', ViewEncapsulation.None, [], [input], [], {});
       expect(encapsulateStyles(tpl)).toEqual([input]);
     });
 
     it('should change styles for ViewEncapsulation.Emulated', () => {
       var tpl =
-          new RenderComponentTemplate('someId', 'shortid', ViewEncapsulation.Emulated, [], [input]);
+        new RenderComponentTemplate('someId', 'shortid', ViewEncapsulation.Emulated, [], [input], [], {});
       expect(encapsulateStyles(tpl)).toEqual(['div[shortid] {}']);
     });
   });
@@ -672,7 +671,7 @@ class DomNodeFactory implements NodeFactory<Node> {
       return data;
     } else {
       return new RenderComponentTemplate(templateId, templateId, ViewEncapsulation.None,
-                                         <RenderTemplateCmd[]>data, []);
+                    <RenderTemplateCmd[]>data, [], [], {});
     }
   }
   createTemplateAnchor(attrNameAndValues: string[]): Node {

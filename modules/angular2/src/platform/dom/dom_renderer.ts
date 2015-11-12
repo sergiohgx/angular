@@ -1,14 +1,21 @@
 import {Inject, Injectable, OpaqueToken} from 'angular2/src/core/di';
-import {AnimationBuilder} from 'angular2/src/animate/animation_builder';
+
+import {NoOpAnimation} from 'angular2/src/animate/ui/animation';
+
+var ONE_SECOND = 1000;
+
 import {
   isPresent,
   isBlank,
+  isArray,
   Json,
   RegExpWrapper,
   CONST_EXPR,
   stringify,
   StringWrapper
 } from 'angular2/src/facade/lang';
+
+import {StringMapWrapper} from 'angular2/src/facade/collection';
 
 import {BaseException, WrappedException} from 'angular2/src/facade/exceptions';
 import {DomSharedStylesHost} from './shared_styles_host';
@@ -43,10 +50,30 @@ import {ViewEncapsulation} from 'angular2/src/core/metadata';
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
 import {camelCaseToDashCase} from './util';
 
+import {ComponentAnimationsLookup} from 'angular2/src/animate/ui/component_animations_lookup';
+
 const NAMESPACE_URIS =
     CONST_EXPR({'xlink': 'http://www.w3.org/1999/xlink', 'svg': 'http://www.w3.org/2000/svg'});
 const TEMPLATE_COMMENT_TEXT = 'template bindings={}';
 var TEMPLATE_BINDINGS_EXP = /^template bindings=(.*)$/g;
+
+var animationsLookup = new Map();
+
+function getAnimations(animationSteps: any, eventName: string) {
+  var lookup = animationsLookup.get(animationSteps);
+  if (!isPresent(lookup)) {
+    lookup = ComponentAnimationsLookup.fromMap(animationSteps);
+    animationsLookup.set(animationSteps, lookup);
+  }
+  if (isPresent(lookup)) {
+  //var operation = lookup.getAnimationByEvent(eventName);
+  //if (operation) {
+  //return operation;
+  //}
+  }
+
+  return new NoOpAnimation();
+}
 
 export abstract class DomRenderer extends Renderer implements NodeFactory<Node> {
   abstract registerComponentTemplate(template: RenderComponentTemplate);
@@ -76,40 +103,62 @@ export abstract class DomRenderer extends Renderer implements NodeFactory<Node> 
                               fragmentRef: RenderFragmentRef) {
     var previousFragmentNodes = resolveInternalDomFragment(previousFragmentRef);
     if (previousFragmentNodes.length > 0) {
+      var template = resolveFragmentComponentTemplate(fragmentRef)
+      //var animations = getAnimations(template.animations, "enter");
+      //var animationStyles = template.animationStyles;
+
       var sibling = previousFragmentNodes[previousFragmentNodes.length - 1];
       let nodes = resolveInternalDomFragment(fragmentRef);
       moveNodesAfterSibling(sibling, nodes);
-      this.animateNodesEnter(nodes);
+      //this.animateNodesEnter(nodes, animations, animationStyles);
     }
   }
+
+  /*
+  abstract animateAttributeChange(node: Node,
+                                  animationStyles: {[key: string]: any},
+                                  attrName: string,
+                                  attrValue: string);
+
+  abstract animateClassChange(node: Node,
+                              animationStyles: {[key: string]: any},
+                              className: string,
+                              classVal: string);
+*/
 
   /**
    * Iterates through all nodes being added to the DOM and animates them if necessary
    * @param nodes
-   */
-  animateNodesEnter(nodes: Node[]) {
-    for (let i = 0; i < nodes.length; i++) this.animateNodeEnter(nodes[i]);
+  animateNodesEnter(nodes: Node[], animation: string[], animationStyles: {[key: string]: any}) {
+    for (let i = 0; i < nodes.length; i++) {
+      this.animateNodeEnter(nodes[i], animation, animationStyles);
+    }
   }
+   */
 
   /**
    * Performs animations if necessary
    * @param node
+  abstract animateNodeEnter(node: Node, animation: string[], animationStyles: {[key: string]: any});
    */
-  abstract animateNodeEnter(node: Node);
 
   /**
    * If animations are necessary, performs animations then removes the element; otherwise, it just
    * removes the element.
    * @param node
+  abstract animateNodeLeave(node: Node, animation: string[], animationStyles: {[key: string]: any});
    */
-  abstract animateNodeLeave(node: Node);
 
   attachFragmentAfterElement(elementRef: RenderElementRef, fragmentRef: RenderFragmentRef) {
+    var template = resolveFragmentComponentTemplate(fragmentRef)
+    //var animations = getAnimations(template.animations, "enter");
+    //var animationStyles = template.animationStyles;
+
     var parentView = resolveInternalDomView(elementRef.renderView);
     var element = parentView.boundElements[elementRef.boundElementIndex];
     var nodes = resolveInternalDomFragment(fragmentRef);
     moveNodesAfterSibling(element, nodes);
-    this.animateNodesEnter(nodes);
+    //this.animateNodesEnter(nodes, animations, animationStyles);
   }
 
   abstract detachFragment(fragmentRef: RenderFragmentRef);
@@ -139,11 +188,17 @@ export abstract class DomRenderer extends Renderer implements NodeFactory<Node> 
                       attributeValue: string): void {
     var view = resolveInternalDomView(location.renderView);
     var element = view.boundElements[location.boundElementIndex];
+    var dashCasedAttributeName = camelCaseToDashCase(attributeName);
+    var attrValue = '';
     if (isPresent(attributeValue)) {
-      DOM.setAttribute(element, attributeName, stringify(attributeValue));
+      DOM.setAttribute(element, dashCasedAttributeName, attrValue);
+      attrValue = stringify(attributeValue);
     } else {
       DOM.removeAttribute(element, attributeName);
     }
+    var template = view.componentTemplate;
+    var animationStyles = template.animationStyles;
+    //this.animateAttributeChange(element, template.animations, dashCasedAttributeName, attrValue);
   }
 
   /**
@@ -170,11 +225,17 @@ export abstract class DomRenderer extends Renderer implements NodeFactory<Node> 
   setElementClass(location: RenderElementRef, className: string, isAdd: boolean): void {
     var view = resolveInternalDomView(location.renderView);
     var element = view.boundElements[location.boundElementIndex];
+    var event: string;
     if (isAdd) {
+      event = 'addClass';
       DOM.addClass(element, className);
     } else {
+      event = 'removeClass';
       DOM.removeClass(element, className);
     }
+    var template = view.componentTemplate;
+    var animationStyles = template.animationStyles;
+    //this.animateClassChange(element, template.animations, event, className);
   }
 
   setElementStyle(location: RenderElementRef, styleName: string, styleValue: string): void {
@@ -210,7 +271,7 @@ export class DomRenderer_ extends DomRenderer {
   private _document;
 
   constructor(private _eventManager: EventManager,
-              private _domSharedStylesHost: DomSharedStylesHost, private _animate: AnimationBuilder,
+              private _domSharedStylesHost: DomSharedStylesHost,
               @Inject(DOCUMENT) document) {
     super();
     this._document = document;
@@ -271,38 +332,77 @@ export class DomRenderer_ extends DomRenderer {
     }
   }
 
-  animateNodeEnter(node: Node) {
-    if (DOM.isElementNode(node) && DOM.hasClass(node, 'ng-animate')) {
-      DOM.addClass(node, 'ng-enter');
-      this._animate.css()
-          .addAnimationClass('ng-enter-active')
-          .start(<HTMLElement>node)
-          .onComplete(() => { DOM.removeClass(node, 'ng-enter'); });
+  /*
+  animateAttributeChange(node: Node,
+                         animationStyles: {[key: string]: any},
+                         attrName: string,
+                         attrValue: string): void {
+    var animation = getAnimations(animationStyles, '[' + attrName + ']');
+    if (!animation) {
+      animation = getAnimations(animationStyles, 'attrChange');
+    }
+    if (animation.length) {
+      var styleMap = new CssSelectorStylesMap(animationStyles);
+      nextTick(this._zone, (index) => {
+        performAnimation(<HTMLElement>node, 'attrChange', animation, styleMap, this._animate, index, this._zone);
+      });
+    }
+  }
+*/
+
+  /*
+  animateClassChange(node: Node,
+                     animationStyles: {[key: string]: any},
+                     event: string,
+                     className: string) {
+    var animation = getAnimations(animationStyles, event);
+    if (!animation.length) {
+      animation = getAnimations(animationStyles, 'setClass');
+    }
+    if (animation.length) {
+      var styleMap = new CssSelectorStylesMap(animationStyles);
+      nextTick(this._zone, (index) => {
+        performAnimation(<HTMLElement>node, event, animation, styleMap, this._animate, index, this._zone);
+      });
     }
   }
 
-  animateNodeLeave(node: Node) {
-    if (DOM.isElementNode(node) && DOM.hasClass(node, 'ng-animate')) {
-      DOM.addClass(node, 'ng-leave');
-      this._animate.css()
-          .addAnimationClass('ng-leave-active')
-          .start(<HTMLElement>node)
-          .onComplete(() => {
-            DOM.removeClass(node, 'ng-leave');
-            DOM.remove(node);
-          });
+  animateNodeEnter(node: Node, animation: string[], animationStyles: {[key: string]: any}): void {
+    if (DOM.isElementNode(node)) {
+      var styleMap = new CssSelectorStylesMap(animationStyles);
+      var index = 0;
+      nextTick(this._zone, (index) => {
+        performAnimation(<HTMLElement>node, "enter", animation, styleMap, this._animate, index, this._zone);
+      });
+    }
+  }
+
+  animateNodeLeave(node: Node, animation: string[], animationStyles: {[key: string]: any}): void {
+    if (DOM.isElementNode(node) && animation.length) {
+      var styleMap = new CssSelectorStylesMap(animationStyles);
+      var index = 0;
+      nextTick(this._zone, (index) => {
+        performAnimation(<HTMLElement>node, "leave", animation, styleMap, this._animate, index, this._zone).then(() => {
+          DOM.remove(node);
+        });
+      });
     } else {
       DOM.remove(node);
     }
   }
+*/
 
   /** @internal */
   _detachFragmentScope = wtfCreateScope('DomRenderer#detachFragment()');
   detachFragment(fragmentRef: RenderFragmentRef) {
+    var template = resolveFragmentComponentTemplate(fragmentRef)
+    //var animations = getAnimations(template.animations, "leave");
+    //var animationStyles = template.animationStyles;
+
     var s = this._detachFragmentScope();
     var fragmentNodes = resolveInternalDomFragment(fragmentRef);
     for (var i = 0; i < fragmentNodes.length; i++) {
-      this.animateNodeLeave(fragmentNodes[i]);
+    //this.animateNodeLeave(fragmentNodes[i], animations, template['styleUrls']);
     }
     wtfLeave(s);
   }
@@ -364,6 +464,10 @@ function resolveInternalDomFragment(fragmentRef: RenderFragmentRef): Node[] {
   return (<DefaultRenderFragmentRef<Node>>fragmentRef).nodes;
 }
 
+function resolveFragmentComponentTemplate(fragmentRef: RenderFragmentRef): RenderComponentTemplate {
+  return (<DefaultRenderFragmentRef<Node>>fragmentRef).componentTemplate;
+}
+
 function moveNodesAfterSibling(sibling, nodes) {
   var parent = DOM.parentElement(sibling);
   if (nodes.length > 0 && isPresent(parent)) {
@@ -399,3 +503,17 @@ function splitNamespace(name: string): string[] {
   let match = RegExpWrapper.firstMatch(NS_PREFIX_RE, name);
   return [match[1], match[2]];
 }
+
+var tickQueue = [];
+function nextTick(zone, fn) {
+  var count = tickQueue.length;
+  tickQueue.push(fn);
+  if (count == 0) {
+    zone.overrideOnEventDone(() => {
+      tickQueue.forEach((fn, i) => fn(i));
+      tickQueue = [];
+    }, true);
+  }
+}
+
+//function getAnimations

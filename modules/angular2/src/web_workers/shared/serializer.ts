@@ -163,7 +163,9 @@ export class Serializer {
     return new RenderComponentTemplate(map['id'], map['shortId'],
                                        this.deserialize(map['encapsulation'], ViewEncapsulation),
                                        this.deserialize(map['commands'], WebWorkerTemplateCmd),
-                                       this.deserialize(map['styles'], PRIMITIVE));
+                                       this.deserialize(map['styles'], PRIMITIVE),
+                                       this.deserialize(map['animations'], PRIMITIVE),
+                                       this.deserialize(map['animationStyles'], PRIMITIVE));
   }
 }
 

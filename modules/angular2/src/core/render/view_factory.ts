@@ -37,11 +37,12 @@ export function createRenderView(componentTemplate: RenderComponentTemplate,
   context.build(componentTemplate, cmds);
   var fragments: DefaultRenderFragmentRef<any>[] = [];
   for (var i = 0; i < context.fragments.length; i++) {
-    fragments.push(new DefaultRenderFragmentRef(context.fragments[i]));
+    fragments.push(new DefaultRenderFragmentRef(context.fragments[i], componentTemplate));
   }
   view = new DefaultRenderView<any>(fragments, context.boundTextNodes, context.boundElements,
                                     context.nativeShadowRoots, context.globalEventAdders,
-                                    context.rootContentInsertionPoints);
+                                    context.rootContentInsertionPoints,
+                                    componentTemplate);
   return view;
 }
 

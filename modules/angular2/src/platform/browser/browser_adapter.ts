@@ -1,5 +1,5 @@
 import {MapWrapper, ListWrapper} from 'angular2/src/facade/collection';
-import {isBlank, isPresent, global, setValueOnPath, DateWrapper} from 'angular2/src/facade/lang';
+import {isFunction, isBlank, isPresent, global, setValueOnPath, DateWrapper} from 'angular2/src/facade/lang';
 import {setRootDomAdapter} from 'angular2/src/platform/dom/dom_adapter';
 import {GenericBrowserDomAdapter} from './generic_browser_adapter';
 
@@ -338,6 +338,14 @@ export class BrowserDomAdapter extends GenericBrowserDomAdapter {
     } else {
       return DateWrapper.toMillis(DateWrapper.now());
     }
+  }
+
+  supportsCssAnimation(): boolean {
+    return isPresent(window['AnimationEvent']);
+  }
+
+  supportsWebAnimation(): boolean {
+    return isFunction(document.body['animate']);
   }
 }
 

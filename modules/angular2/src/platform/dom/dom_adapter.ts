@@ -132,5 +132,6 @@ export abstract class DomAdapter {
   abstract performanceNow(): number;
   abstract getAnimationPrefix(): string;
   abstract getTransitionEnd(): string;
-  abstract supportsAnimation(): boolean;
+  abstract supportsCssAnimation(): boolean;
+  abstract supportsWebAnimation(): boolean;
 }

@@ -53,7 +53,7 @@ export class ProtoViewFactory {
       var emptyMap: {[key: string]: PipeProvider} = {};
       var shortId = `${this._appId}-${this._nextTemplateId++}`;
       this._renderer.registerComponentTemplate(new RenderComponentTemplate(
-          compiledTemplate.id, shortId, ViewEncapsulation.None, compiledTemplate.commands, []));
+          compiledTemplate.id, shortId, ViewEncapsulation.None, compiledTemplate.commands, [], null, null));
       result =
           new AppProtoView(compiledTemplate.id, compiledTemplate.commands, ViewType.HOST, true,
                            compiledTemplate.changeDetectorFactory, null, new ProtoPipes(emptyMap));
@@ -71,7 +71,7 @@ export class ProtoViewFactory {
       var styles = _flattenStyleArr(compiledTemplate.styles, []);
       var shortId = `${this._appId}-${this._nextTemplateId++}`;
       this._renderer.registerComponentTemplate(new RenderComponentTemplate(
-          compiledTemplate.id, shortId, cmd.encapsulation, compiledTemplate.commands, styles));
+          compiledTemplate.id, shortId, cmd.encapsulation, compiledTemplate.commands, styles, view.animations, view.animationStyles));
       var boundPipes = this._flattenPipes(view).map(pipe => this._bindPipe(pipe));
 
       nestedProtoView = new AppProtoView(

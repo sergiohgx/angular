@@ -190,7 +190,8 @@ export interface RenderElementRef {
  */
 export class RenderComponentTemplate {
   constructor(public id: string, public shortId: string, public encapsulation: ViewEncapsulation,
-              public commands: RenderTemplateCmd[], public styles: string[]) {}
+              public commands: RenderTemplateCmd[], public styles: string[],
+              public animations, public animationStyles) {} // TODO(matsko): types for animations
 }
 
 /**

@@ -412,3 +412,7 @@ export function getSymbolIterator(): string | symbol {
   }
   return _symbolIterator;
 }
+
+export function isPromiseLike(p:any): boolean {
+  return isPresent(p) && isFunction(p['then']);
+}
