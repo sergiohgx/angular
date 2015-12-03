@@ -38,6 +38,7 @@ export function main() {
       });
 
       it('should ignore the base path when the url has a scheme', () => {
+        var val = resolver.resolve('http://www.foo.com', 'http://www.bar.com');
         expect(resolver.resolve('http://www.foo.com', 'http://www.bar.com'))
             .toEqual('http://www.bar.com');
       });

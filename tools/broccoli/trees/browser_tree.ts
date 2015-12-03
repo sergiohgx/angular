@@ -50,6 +50,7 @@ const kServedPaths = [
   'playground/src/jsonp',
   'playground/src/key_events',
   'playground/src/routing',
+  'playground/src/relative_assets',
   'playground/src/sourcemap',
   'playground/src/todo',
   'playground/src/upgrade',

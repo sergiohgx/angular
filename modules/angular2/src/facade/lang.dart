@@ -152,6 +152,10 @@ class NumberWrapper {
   static bool isNaN(num value) => value.isNaN;
 
   static bool isInteger(value) => value is int;
+
+  static int toInt(num number) {
+    return number.toInt();
+  }
 }
 
 class RegExpWrapper {
@@ -164,6 +168,12 @@ class RegExpWrapper {
 
   static Match firstMatch(RegExp regExp, String input) {
     return regExp.firstMatch(input);
+  }
+
+  static int countTotalCaptures(Match match) {
+    // Dart doesn't include the first full match as a capture
+    // so we add an extra count here so it lines up with JS
+    return match.groupCount + 1;
   }
 
   static bool test(RegExp regExp, String input) {
@@ -291,3 +301,7 @@ class DateWrapper {
 
 // needed to match the exports from lang.js
 var global = null;
+
+String encodeURI(String uri) {
+  return Uri.encodeFull(uri);
+}

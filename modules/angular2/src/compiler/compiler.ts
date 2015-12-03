@@ -27,6 +27,7 @@ import {UrlResolver} from 'angular2/src/compiler/url_resolver';
 import {AppRootUrl} from 'angular2/src/compiler/app_root_url';
 import {AnchorBasedAppRootUrl} from 'angular2/src/compiler/anchor_based_app_root_url';
 import {Parser, Lexer} from 'angular2/src/core/change_detection/change_detection';
+import {PACKAGE_ROOT_URL} from 'angular2/src/core/application_tokens';
 
 function _createChangeDetectorGenConfig() {
   return new ChangeDetectorGenConfig(assertionsEnabled(), false, true);
@@ -40,6 +41,7 @@ export const COMPILER_PROVIDERS: Array<Type | Provider | any[]> = CONST_EXPR([
   TemplateNormalizer,
   RuntimeMetadataResolver,
   StyleCompiler,
+  provide(PACKAGE_ROOT_URL, { useValue: "/packages" }),
   CommandCompiler,
   ChangeDetectionCompiler,
   new Provider(ChangeDetectorGenConfig, {useFactory: _createChangeDetectorGenConfig, deps: []}),

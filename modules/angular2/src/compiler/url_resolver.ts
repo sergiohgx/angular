@@ -1,12 +1,13 @@
-import {Injectable} from 'angular2/src/core/di';
-import {isPresent, isBlank, RegExpWrapper, normalizeBlank} from 'angular2/src/facade/lang';
-import {BaseException, WrappedException} from 'angular2/src/facade/exceptions';
+import {Injectable, Inject} from 'angular2/src/core/di';
+import {isPresent, isBlank, normalizeBlank} from 'angular2/src/facade/lang';
+import {encodeURI} from 'angular2/src/compiler/uri_encode';
 import {ListWrapper} from 'angular2/src/facade/collection';
+import {RegExpWrapper, serializeEnum} from 'angular2/src/facade/lang';
+import {PACKAGE_ROOT_URL} from 'angular2/src/core/application_tokens';
 
 export function createWithoutPackagePrefix(): UrlResolver {
-  return new UrlResolver();
+  return new UrlResolver(null);
 }
-
 
 /**
  * Used by the {@link Compiler} when resolving HTML and CSS template URLs.
@@ -15,8 +16,11 @@ export function createWithoutPackagePrefix(): UrlResolver {
  *
  * See {@link Compiler}
  */
+
 @Injectable()
 export class UrlResolver {
+  constructor(@Inject(PACKAGE_ROOT_URL) private _packageUrl: string = null) { }
+
   /**
    * Resolves the `url` given the `baseUrl`:
    * - when the `url` is null, the `baseUrl` is returned,
@@ -29,7 +33,13 @@ export class UrlResolver {
    * @param {string} url
    * @returns {string} the resolved URL
    */
-  resolve(baseUrl: string, url: string): string { return _resolveUrl(baseUrl, url); }
+  resolve(baseUrl: string, url: string): string {
+    var resolvedUrl = _resolveUrl(baseUrl, url);
+    if (isPresent(this._packageUrl) && getUrlScheme(resolvedUrl) == "package") {
+      resolvedUrl = _resolveUrl(this._packageUrl, resolvedUrl);
+    }
+    return resolvedUrl;
+  }
 }
 
 // The code below is adapted from Traceur:
@@ -166,17 +176,17 @@ var _splitRe =
                                                               // escapes, and unicode characters.
                          '(?::([0-9]+))?' +                   // port
                          ')?' +
-                         '([^?#]+)?' +        // path
-                         '(?:\\?([^#]*))?' +  // query
-                         '(?:#(.*))?' +       // fragment
+                         '([^?\#]+)?' +        // path
+                         '(?:\\?([^\#]*))?' +  // query
+                         '(?:\#(.*))?' +       // fragment
                          '$');
-
 /**
  * The index of each URI component in the return value of goog.uri.utils.split.
  * @enum {number}
  */
 enum _ComponentIndex {
-  Scheme = 1,
+  URL,
+  Scheme,
   UserInfo,
   Domain,
   Port,
@@ -190,7 +200,7 @@ enum _ComponentIndex {
  *
  * Each component can be accessed via the component indices; for example:
  * <pre>
- * goog.uri.utils.split(someStr)[goog.uri.utils.CompontentIndex.QUERY_DATA];
+ * goog.uri.utils.split(someStr)[goog.uri.utils.CompontentIndex.QUERY_DATA)];
  * </pre>
  *
  * @param {string} uri The URI string to examine.
@@ -200,8 +210,19 @@ enum _ComponentIndex {
  *     on the browser's regular expression implementation.  Never null, since
  *     arbitrary strings may still look like path names.
  */
-function _split(uri: string): Array<string | any> {
-  return RegExpWrapper.firstMatch(_splitRe, uri);
+function _split(uri: string): Array<string> {
+  var limit = serializeEnum(_ComponentIndex.Fragment) + 1;
+  var values = ListWrapper.createFixedSize(limit);
+  var match = RegExpWrapper.firstMatch(_splitRe, uri);
+  var max = RegExpWrapper.countTotalCaptures(match);
+  for (var i = 0; i < limit; i++) {
+    values[i] = i < max ? match[i] : null;
+  }
+  return values;
+}
+
+export function getUrlScheme(url: string): string {
+  return _split(url)[serializeEnum(_ComponentIndex.Scheme)];
 }
 
 /**
@@ -256,13 +277,14 @@ function _removeDotSegments(path: string): string {
  * @return {string}
  */
 function _joinAndCanonicalizePath(parts: any[]): string {
-  var path = parts[_ComponentIndex.Path];
+  var path = parts[serializeEnum(_ComponentIndex.Path)];
   path = isBlank(path) ? '' : _removeDotSegments(path);
-  parts[_ComponentIndex.Path] = path;
+  parts[serializeEnum(_ComponentIndex.Path)] = path;
 
-  return _buildFromEncodedParts(parts[_ComponentIndex.Scheme], parts[_ComponentIndex.UserInfo],
-                                parts[_ComponentIndex.Domain], parts[_ComponentIndex.Port], path,
-                                parts[_ComponentIndex.QueryData], parts[_ComponentIndex.Fragment]);
+  return _buildFromEncodedParts(
+      parts[serializeEnum(_ComponentIndex.Scheme)], parts[serializeEnum(_ComponentIndex.UserInfo)],
+      parts[serializeEnum(_ComponentIndex.Domain)], parts[serializeEnum(_ComponentIndex.Port)], path,
+      parts[serializeEnum(_ComponentIndex.QueryData)], parts[serializeEnum(_ComponentIndex.Fragment)]);
 }
 
 /**
@@ -275,26 +297,26 @@ function _resolveUrl(base: string, url: string): string {
   var parts = _split(encodeURI(url));
   var baseParts = _split(base);
 
-  if (isPresent(parts[_ComponentIndex.Scheme])) {
+  if (isPresent(parts[serializeEnum(_ComponentIndex.Scheme)])) {
     return _joinAndCanonicalizePath(parts);
   } else {
-    parts[_ComponentIndex.Scheme] = baseParts[_ComponentIndex.Scheme];
+    parts[serializeEnum(_ComponentIndex.Scheme)] = baseParts[serializeEnum(_ComponentIndex.Scheme)];
   }
 
-  for (var i = _ComponentIndex.Scheme; i <= _ComponentIndex.Port; i++) {
+  for (var i = serializeEnum(_ComponentIndex.Scheme); i <= serializeEnum(_ComponentIndex.Port); i++) {
     if (isBlank(parts[i])) {
       parts[i] = baseParts[i];
     }
   }
 
-  if (parts[_ComponentIndex.Path][0] == '/') {
+  if (parts[serializeEnum(_ComponentIndex.Path)][0] == '/') {
     return _joinAndCanonicalizePath(parts);
   }
 
-  var path = baseParts[_ComponentIndex.Path];
+  var path = baseParts[serializeEnum(_ComponentIndex.Path)];
   if (isBlank(path)) path = '/';
   var index = path.lastIndexOf('/');
-  path = path.substring(0, index + 1) + parts[_ComponentIndex.Path];
-  parts[_ComponentIndex.Path] = path;
+  path = path.substring(0, index + 1) + parts[serializeEnum(_ComponentIndex.Path)];
+  parts[serializeEnum(_ComponentIndex.Path)] = path;
   return _joinAndCanonicalizePath(parts);
 }

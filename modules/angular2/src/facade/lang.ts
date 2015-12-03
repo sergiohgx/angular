@@ -257,6 +257,10 @@ export class NumberWrapper {
   static isNaN(value: any): boolean { return isNaN(value); }
 
   static isInteger(value: any): boolean { return Number.isInteger(value); }
+
+  static toInt(value: number): number {
+    return Math.floor(number);
+  }
 }
 
 export var RegExp = _global.RegExp;
@@ -271,6 +275,7 @@ export class RegExpWrapper {
     regExp.lastIndex = 0;
     return regExp.exec(input);
   }
+  static countTotalCaptures(match: RegExpExecArray): number { return match.length; }
   static test(regExp: RegExp, input: string): boolean {
     regExp.lastIndex = 0;
     return regExp.test(input);

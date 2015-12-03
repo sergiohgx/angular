@@ -1,0 +1,11 @@
+:host {
+  background:red;
+  padding:1em;
+  display:block;
+  font-size:20px;
+  color:white;
+}
+
+.inner-container {
+  font-weight:bold;
+}
