@@ -30,3 +30,7 @@ void gc() {
     _gc.apply(const []);
   }
 }
+
+String encodeURI(String uri) {
+  return Uri.encodeFull(uri);
+}

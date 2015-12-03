@@ -15,3 +15,4 @@ export const EventTarget = EventTarget;
 export const History = History;
 export const Location = Location;
 export const EventListener = EventListener;
+export const encodeURI = encodeURI;

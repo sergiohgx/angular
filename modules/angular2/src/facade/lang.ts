@@ -271,6 +271,9 @@ export class RegExpWrapper {
     regExp.lastIndex = 0;
     return regExp.exec(input);
   }
+  static countTotalGroups(match: RegExpExecArray): number {
+    return match.length;
+  }
   static test(regExp: RegExp, input: string): boolean {
     regExp.lastIndex = 0;
     return regExp.test(input);

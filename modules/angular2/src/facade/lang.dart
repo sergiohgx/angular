@@ -166,6 +166,10 @@ class RegExpWrapper {
     return regExp.firstMatch(input);
   }
 
+  static int countTotalGroups(Match match) {
+    return match.groupCount;
+  }
+
   static bool test(RegExp regExp, String input) {
     return regExp.hasMatch(input);
   }

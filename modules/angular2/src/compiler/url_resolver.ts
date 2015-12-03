@@ -1,7 +1,8 @@
 import {Injectable} from 'angular2/src/core/di';
-import {isPresent, isBlank, RegExpWrapper, normalizeBlank} from 'angular2/src/facade/lang';
-import {BaseException, WrappedException} from 'angular2/src/facade/exceptions';
+import {isPresent, isBlank, normalizeBlank} from 'angular2/src/facade/lang';
+import {encodeURI} from 'angular2/src/facade/browser';
 import {ListWrapper} from 'angular2/src/facade/collection';
+import {RegExpWrapper} from 'angular2/src/facade/lang';
 
 export function createWithoutPackagePrefix(): UrlResolver {
   return new UrlResolver();
@@ -175,15 +176,13 @@ var _splitRe =
  * The index of each URI component in the return value of goog.uri.utils.split.
  * @enum {number}
  */
-enum _ComponentIndex {
-  Scheme = 1,
-  UserInfo,
-  Domain,
-  Port,
-  Path,
-  QueryData,
-  Fragment
-}
+var _componentIndexScheme    = 1;
+var _componentIndexUserInfo  = 2;
+var _componentIndexDomain    = 3;
+var _componentIndexPort      = 4;
+var _componentIndexPath      = 5;
+var _componentIndexQueryData = 6;
+var _componentIndexFragment  = 6;
 
 /**
  * Splits a URI into its component parts.
@@ -201,7 +200,14 @@ enum _ComponentIndex {
  *     arbitrary strings may still look like path names.
  */
 function _split(uri: string): Array<string | any> {
-  return RegExpWrapper.firstMatch(_splitRe, uri);
+  var limit = _componentIndexFragment + 1;
+  var values = ListWrapper.createGrowableSize(limit);
+  var match = RegExpWrapper.firstMatch(_splitRe, uri);
+  var max = RegExpWrapper.countTotalGroups(match);
+  for (var i = 0; i < limit; i++) {
+    values[i] = i < max ? match[i] : null;
+  }
+  return values;
 }
 
 /**
@@ -256,13 +262,13 @@ function _removeDotSegments(path: string): string {
  * @return {string}
  */
 function _joinAndCanonicalizePath(parts: any[]): string {
-  var path = parts[_ComponentIndex.Path];
+  var path = parts[_componentIndexPath];
   path = isBlank(path) ? '' : _removeDotSegments(path);
-  parts[_ComponentIndex.Path] = path;
+  parts[_componentIndexPath] = path;
 
-  return _buildFromEncodedParts(parts[_ComponentIndex.Scheme], parts[_ComponentIndex.UserInfo],
-                                parts[_ComponentIndex.Domain], parts[_ComponentIndex.Port], path,
-                                parts[_ComponentIndex.QueryData], parts[_ComponentIndex.Fragment]);
+  return _buildFromEncodedParts(parts[_componentIndexScheme], parts[_componentIndexUserInfo],
+                                parts[_componentIndexDomain], parts[_componentIndexPort], path,
+                                parts[_componentIndexQueryData], parts[_componentIndexFragment]);
 }
 
 /**
@@ -275,26 +281,26 @@ function _resolveUrl(base: string, url: string): string {
   var parts = _split(encodeURI(url));
   var baseParts = _split(base);
 
-  if (isPresent(parts[_ComponentIndex.Scheme])) {
+  if (isPresent(parts[_componentIndexScheme])) {
     return _joinAndCanonicalizePath(parts);
   } else {
-    parts[_ComponentIndex.Scheme] = baseParts[_ComponentIndex.Scheme];
+    parts[_componentIndexScheme] = baseParts[_componentIndexScheme];
   }
 
-  for (var i = _ComponentIndex.Scheme; i <= _ComponentIndex.Port; i++) {
+  for (var i = _componentIndexScheme; i <= _componentIndexPort; i++) {
     if (isBlank(parts[i])) {
       parts[i] = baseParts[i];
     }
   }
 
-  if (parts[_ComponentIndex.Path][0] == '/') {
+  if (parts[_componentIndexPath][0] == '/') {
     return _joinAndCanonicalizePath(parts);
   }
 
-  var path = baseParts[_ComponentIndex.Path];
+  var path = baseParts[_componentIndexPath];
   if (isBlank(path)) path = '/';
   var index = path.lastIndexOf('/');
-  path = path.substring(0, index + 1) + parts[_ComponentIndex.Path];
-  parts[_ComponentIndex.Path] = path;
+  path = path.substring(0, index + 1) + parts[_componentIndexPath];
+  parts[_componentIndexPath] = path;
   return _joinAndCanonicalizePath(parts);
 }

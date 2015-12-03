@@ -38,6 +38,7 @@ export function main() {
       });
 
       it('should ignore the base path when the url has a scheme', () => {
+        var val = resolver.resolve('http://www.foo.com', 'http://www.bar.com');
         expect(resolver.resolve('http://www.foo.com', 'http://www.bar.com'))
             .toEqual('http://www.bar.com');
       });
@@ -72,7 +73,7 @@ export function main() {
     });
 
     describe('corner and error cases', () => {
-      it('should encode URLs before resolving', () => {
+      iit('should encode URLs before resolving', () => {
         expect(resolver.resolve('foo/baz', `<p #p>Hello
         </p>`))
             .toEqual('foo/%3Cp%20#p%3EHello%0A%20%20%20%20%20%20%20%20%3C/p%3E');
