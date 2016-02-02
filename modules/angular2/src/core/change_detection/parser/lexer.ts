@@ -135,24 +135,37 @@ export const $EQ = 61;
 export const $GT = 62;
 export const $QUESTION = 63;
 
-const $0 = 48;
-const $9 = 57;
+export const $0 = 48;
+export const $9 = 57;
 
-const $A = 65, $E = 69, $Z = 90;
+export const $A = 65;
+export const $E = 69;
+export const $Z = 90;
 
 export const $LBRACKET = 91;
 export const $BACKSLASH = 92;
 export const $RBRACKET = 93;
-const $CARET = 94;
-const $_ = 95;
+export const $CARET = 94;
+export const $_ = 95;
 
-const $a = 97, $e = 101, $f = 102, $n = 110, $r = 114, $t = 116, $u = 117, $v = 118, $z = 122;
+export const $a = 97;
+export const $e = 101;
+export const $f = 102;
+export const $n = 110;
+export const $r = 114;
+export const $t = 116;
+export const $u = 117;
+export const $v = 118;
+export const $z = 122;
 
 export const $LBRACE = 123;
 export const $BAR = 124;
 export const $RBRACE = 125;
 const $NBSP = 160;
 
+export const $PIPE = 124;
+export const $TILDA = 126;
+export const $AT = 64;
 
 export class ScannerError extends BaseException {
   constructor(public message) { super(); }
@@ -387,8 +400,21 @@ class _Scanner {
   }
 }
 
-function isWhitespace(code: number): boolean {
+export function isWhitespace(code: number): boolean {
   return (code >= $TAB && code <= $SPACE) || (code == $NBSP);
+}
+
+export function isNewline(code): boolean {
+  switch (code) {
+    case $FF:
+    case $CR:
+    case $LF:
+    case $VTAB:
+      return true;
+
+    default:
+      return false;
+  }
 }
 
 function isIdentifierStart(code: number): boolean {
