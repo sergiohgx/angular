@@ -243,6 +243,10 @@ export class BrowserDomAdapter extends GenericBrowserDomAdapter {
     return document.implementation.createHTMLDocument('fakeTitle');
   }
   defaultDoc(): HTMLDocument { return document; }
+  matchMedia(mediaQuery: string): boolean {
+    // IE9 doesn't support this API
+    return window.matchMedia ? window.matchMedia(mediaQuery).matches : mediaQuery == 'all';
+  }
   getBoundingClientRect(el): any {
     try {
       return el.getBoundingClientRect();

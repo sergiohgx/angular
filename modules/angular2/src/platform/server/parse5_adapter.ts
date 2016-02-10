@@ -464,6 +464,7 @@ export class Parse5DomAdapter extends DomAdapter {
     StringMapWrapper.set(newDoc, "_window", StringMapWrapper.create());
     return newDoc;
   }
+  matchMedia(mediaQuery: string): boolean { return true; }
   defaultDoc(): Document {
     if (defDoc === null) {
       defDoc = this.createHtmlDocument();
