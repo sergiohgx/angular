@@ -475,7 +475,7 @@ export function humanizeViewFactory(
   var viewManager = new SpyAppViewManager();
   viewManager.spy('createRenderComponentType')
       .andCallFake((encapsulation: ViewEncapsulation, styles: Array<string | any[]>) => {
-        return new RenderComponentType('someId', encapsulation, styles);
+        return new RenderComponentType('someId', encapsulation, styles, null, null);
       });
   var view: AppView = viewFactory(new RecordingRenderer([]), viewManager, containerAppElement, [],
                                   null, null, null);

@@ -118,14 +118,18 @@ export class Serializer {
     return {
       'id': obj.id,
       'encapsulation': this.serialize(obj.encapsulation, ViewEncapsulation),
-      'styles': this.serialize(obj.styles, PRIMITIVE)
+      'styles': this.serialize(obj.styles, PRIMITIVE),
+      'animations': this.serialize(obj.animations, PRIMITIVE),
+      'animationStyles': this.serialize(obj.animationStyles, PRIMITIVE)
     };
   }
 
   private _deserializeRenderComponentType(map: {[key: string]: any}): RenderComponentType {
     return new RenderComponentType(map['id'],
                                    this.deserialize(map['encapsulation'], ViewEncapsulation),
-                                   this.deserialize(map['styles'], PRIMITIVE));
+                                   this.deserialize(map['styles'], PRIMITIVE),
+                                   this.deserialize(map['animations'], PRIMITIVE),
+                                   this.deserialize(map['animationStyles'], PRIMITIVE));
   }
 }
 
