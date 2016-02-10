@@ -1,5 +1,4 @@
 import {Inject, Injectable, OpaqueToken} from 'angular2/src/core/di';
-import {AnimationBuilder} from 'angular2/src/animate/animation_builder';
 import {
   isPresent,
   isBlank,
@@ -37,7 +36,7 @@ export abstract class DomRootRenderer implements RootRenderer {
   private _registeredComponents: Map<string, DomRenderer> = new Map<string, DomRenderer>();
 
   constructor(public document: any, public eventManager: EventManager,
-              public sharedStylesHost: DomSharedStylesHost, public animate: AnimationBuilder) {}
+              public sharedStylesHost: DomSharedStylesHost) {}
 
   renderComponent(componentProto: RenderComponentType): Renderer {
     var renderer = this._registeredComponents.get(componentProto.id);
@@ -52,8 +51,8 @@ export abstract class DomRootRenderer implements RootRenderer {
 @Injectable()
 export class DomRootRenderer_ extends DomRootRenderer {
   constructor(@Inject(DOCUMENT) _document: any, _eventManager: EventManager,
-              sharedStylesHost: DomSharedStylesHost, animate: AnimationBuilder) {
-    super(_document, _eventManager, sharedStylesHost, animate);
+              sharedStylesHost: DomSharedStylesHost) {
+    super(_document, _eventManager, sharedStylesHost);
   }
 }
 
@@ -239,13 +238,6 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeEnter(node: Node) {
-    if (DOM.isElementNode(node) && DOM.hasClass(node, 'ng-animate')) {
-      DOM.addClass(node, 'ng-enter');
-      this._rootRenderer.animate.css()
-          .addAnimationClass('ng-enter-active')
-          .start(<HTMLElement>node)
-          .onComplete(() => { DOM.removeClass(node, 'ng-enter'); });
-    }
   }
 
 
@@ -255,18 +247,7 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeLeave(node: Node) {
-    if (DOM.isElementNode(node) && DOM.hasClass(node, 'ng-animate')) {
-      DOM.addClass(node, 'ng-leave');
-      this._rootRenderer.animate.css()
-          .addAnimationClass('ng-leave-active')
-          .start(<HTMLElement>node)
-          .onComplete(() => {
-            DOM.removeClass(node, 'ng-leave');
-            DOM.remove(node);
-          });
-    } else {
-      DOM.remove(node);
-    }
+    DOM.remove(node);
   }
 }
 
