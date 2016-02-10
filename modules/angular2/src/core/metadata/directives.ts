@@ -871,6 +871,10 @@ export class ComponentMetadata extends DirectiveMetadata {
 
   styles: string[];
 
+  animations: {[key: string]: any};
+
+  animationStyles: {[key: string]: any};
+
   directives: Array<Type | any[]>;
 
   pipes: Array<Type | any[]>;
@@ -880,7 +884,7 @@ export class ComponentMetadata extends DirectiveMetadata {
   constructor({selector, inputs, outputs, properties, events, host, exportAs, moduleId, bindings,
                providers, viewBindings, viewProviders,
                changeDetection = ChangeDetectionStrategy.Default, queries, templateUrl, template,
-               styleUrls, styles, directives, pipes, encapsulation}: {
+               styleUrls, styles, animations, animationStyles, directives, pipes, encapsulation}: {
     selector?: string,
     inputs?: string[],
     outputs?: string[],
@@ -899,6 +903,8 @@ export class ComponentMetadata extends DirectiveMetadata {
     template?: string,
     styleUrls?: string[],
     styles?: string[],
+    animations?: {[key: string]: any},
+    animationStyles?: {[key: string]: any},
     directives?: Array<Type | any[]>,
     pipes?: Array<Type | any[]>,
     encapsulation?: ViewEncapsulation
@@ -923,6 +929,8 @@ export class ComponentMetadata extends DirectiveMetadata {
     this.template = template;
     this.styleUrls = styleUrls;
     this.styles = styles;
+    this.animations = animations;
+    this.animationStyles = animationStyles;
     this.directives = directives;
     this.pipes = pipes;
     this.encapsulation = encapsulation;

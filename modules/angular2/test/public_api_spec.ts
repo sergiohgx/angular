@@ -145,7 +145,6 @@ var NG_CORE = [
   'Class:js',
   'Compiler',
   'Component',
-  'ComponentMetadata',
   'ComponentRef',
   'ContentChild',
   'ContentChildMetadata',

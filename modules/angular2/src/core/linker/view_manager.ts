@@ -319,9 +319,10 @@ export class AppViewManager_ extends AppViewManager {
 
   /** @internal */
   createRenderComponentType(encapsulation: ViewEncapsulation,
-                            styles: Array<string | any[]>): RenderComponentType {
-    return new RenderComponentType(`${this._appId}-${this._nextCompTypeId++}`, encapsulation,
-                                   styles);
+                            styles: Array<string | any[]>,
+                            animations: {[key: string]: any},
+                            animationStyles: {[key: string]: any}): RenderComponentType {
+    return new RenderComponentType(`${this._appId}-${this._nextCompTypeId++}`, encapsulation, styles, animations, animationStyles);
   }
 
   private _attachViewToContainer(view: AppView, vcAppElement: AppElement, viewIndex: number) {
