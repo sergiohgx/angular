@@ -24,6 +24,10 @@ function parseTime(time:string): number {
   return value;
 }
 
+function parseTime(time:string): number {
+  return isPresent(time) && time.length > 0 ? parseInt(time) : 0;
+}
+
 export class AnimationDefinition {
   private _css: any[];
   private _staggerDelay: string;
