@@ -89,7 +89,8 @@ export class ViewResolver {
           pipes: compMeta.pipes,
           encapsulation: compMeta.encapsulation,
           styles: compMeta.styles,
-          styleUrls: compMeta.styleUrls
+          styleUrls: compMeta.styleUrls,
+          animations: compMeta.animations
         });
       }
     } else {
@@ -109,3 +110,5 @@ export class ViewResolver {
         `Component '${stringify(component)}' cannot have both '${propertyName}' and '@View' set at the same time"`);
   }
 }
+
+export var CODEGEN_VIEW_RESOLVER = new ViewResolver(reflector);

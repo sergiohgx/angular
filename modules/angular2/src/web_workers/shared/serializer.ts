@@ -120,14 +120,16 @@ export class Serializer {
       'templateUrl': obj.templateUrl,
       'slotCount': obj.slotCount,
       'encapsulation': this.serialize(obj.encapsulation, ViewEncapsulation),
-      'styles': this.serialize(obj.styles, PRIMITIVE)
+      'styles': this.serialize(obj.styles, PRIMITIVE),
+      'animations': this.serialize(obj.animations, PRIMITIVE)
     };
   }
 
   private _deserializeRenderComponentType(map: {[key: string]: any}): RenderComponentType {
     return new RenderComponentType(map['id'], map['templateUrl'], map['slotCount'],
                                    this.deserialize(map['encapsulation'], ViewEncapsulation),
-                                   this.deserialize(map['styles'], PRIMITIVE));
+                                   this.deserialize(map['styles'], PRIMITIVE),
+                                   this.deserialize(map['animations'], PRIMITIVE));
   }
 }
 

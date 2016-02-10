@@ -11,8 +11,6 @@ import {DirectiveResolver, ViewResolver} from 'angular2/compiler';
 
 import {Parse5DomAdapter} from 'angular2/src/platform/server/parse5_adapter';
 
-import {AnimationBuilder} from 'angular2/src/animate/animation_builder';
-import {MockAnimationBuilder} from 'angular2/src/mock/animation_builder_mock';
 import {MockDirectiveResolver} from 'angular2/src/mock/directive_resolver_mock';
 import {MockViewResolver} from 'angular2/src/mock/view_resolver_mock';
 import {MockLocationStrategy} from 'angular2/src/mock/mock_location_strategy';
@@ -30,11 +28,16 @@ import {RootRenderer} from 'angular2/src/core/render/api';
 import {DomRootRenderer, DomRootRenderer_} from 'angular2/src/platform/dom/dom_renderer';
 import {DomSharedStylesHost, SharedStylesHost} from 'angular2/src/platform/dom/shared_styles_host';
 
+import {AnimationDriver, NoOpAnimationDriver} from 'angular2/src/core/render/animation_driver';
+import {AnimationCompiler} from 'angular2/src/core/animation/animation_compiler';
+import {RuntimeAnimationCompiler} from 'angular2/src/compiler/animation/runtime_animation_compiler';
+
 import {
   EventManager,
   EVENT_MANAGER_PLUGINS,
   ELEMENT_PROBE_PROVIDERS
 } from 'angular2/platform/common_dom';
+
 import {DomEventsPlugin} from 'angular2/src/platform/dom/events/dom_events';
 
 import {CONST_EXPR} from 'angular2/src/facade/lang';
@@ -74,6 +77,8 @@ export const TEST_SERVER_APPLICATION_PROVIDERS: Array<any /*Type | Provider | an
       new Provider(DOCUMENT, {useFactory: appDoc}),
       new Provider(DomRootRenderer, {useClass: DomRootRenderer_}),
       new Provider(RootRenderer, {useExisting: DomRootRenderer}),
+      new Provider(AnimationDriver, {useClass: NoOpAnimationDriver}),
+      new Provider(AnimationCompiler, {useClass: RuntimeAnimationCompiler}),
       EventManager,
       new Provider(EVENT_MANAGER_PLUGINS, {useClass: DomEventsPlugin, multi: true}),
       new Provider(XHR, {useClass: XHR}),
@@ -86,6 +91,5 @@ export const TEST_SERVER_APPLICATION_PROVIDERS: Array<any /*Type | Provider | an
       Log,
       TestComponentBuilder,
       new Provider(NgZone, {useClass: MockNgZone}),
-      new Provider(LocationStrategy, {useClass: MockLocationStrategy}),
-      new Provider(AnimationBuilder, {useClass: MockAnimationBuilder}),
+      new Provider(LocationStrategy, {useClass: MockLocationStrategy})
     ]);

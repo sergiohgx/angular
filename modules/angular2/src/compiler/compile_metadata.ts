@@ -455,13 +455,16 @@ export class CompileTemplateMetadata {
   templateUrl: string;
   styles: string[];
   styleUrls: string[];
+  animations: {[key: string]: any};
   ngContentSelectors: string[];
-  constructor({encapsulation, template, templateUrl, styles, styleUrls, ngContentSelectors}: {
+  constructor({encapsulation, template, templateUrl, styles, styleUrls, animations,
+               ngContentSelectors}: {
     encapsulation?: ViewEncapsulation,
     template?: string,
     templateUrl?: string,
     styles?: string[],
     styleUrls?: string[],
+    animations?: {[key: string]: string},
     ngContentSelectors?: string[]
   } = {}) {
     this.encapsulation = isPresent(encapsulation) ? encapsulation : ViewEncapsulation.Emulated;
@@ -469,6 +472,7 @@ export class CompileTemplateMetadata {
     this.templateUrl = templateUrl;
     this.styles = isPresent(styles) ? styles : [];
     this.styleUrls = isPresent(styleUrls) ? styleUrls : [];
+    this.animations = isPresent(animations) ? animations : {};
     this.ngContentSelectors = isPresent(ngContentSelectors) ? ngContentSelectors : [];
   }
 
@@ -481,6 +485,7 @@ export class CompileTemplateMetadata {
       templateUrl: data['templateUrl'],
       styles: data['styles'],
       styleUrls: data['styleUrls'],
+      animations: data['animations'],
       ngContentSelectors: data['ngContentSelectors']
     });
   }
@@ -493,6 +498,7 @@ export class CompileTemplateMetadata {
       'templateUrl': this.templateUrl,
       'styles': this.styles,
       'styleUrls': this.styleUrls,
+      'animations': this.animations,
       'ngContentSelectors': this.ngContentSelectors
     };
   }

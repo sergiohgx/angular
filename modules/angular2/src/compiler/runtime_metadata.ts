@@ -84,7 +84,8 @@ export class RuntimeMetadataResolver {
           template: viewMeta.template,
           templateUrl: viewMeta.templateUrl,
           styles: viewMeta.styles,
-          styleUrls: viewMeta.styleUrls
+          styleUrls: viewMeta.styleUrls,
+          animations: viewMeta.animations
         });
         changeDetectionStrategy = cmpMeta.changeDetection;
         if (isPresent(dirMeta.viewProviders)) {

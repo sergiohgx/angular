@@ -185,9 +185,10 @@ export class AppViewManager_ extends AppViewManager {
    */
   createRenderComponentType(templateUrl: string, slotCount: number,
                             encapsulation: ViewEncapsulation,
-                            styles: Array<string | any[]>): RenderComponentType {
+                            styles: Array<string | any[]>,
+                            animations: {[key: string]: any}): RenderComponentType {
     return new RenderComponentType(`${this._appId}-${this._nextCompTypeId++}`, templateUrl,
-                                   slotCount, encapsulation, styles);
+                                   slotCount, encapsulation, styles, animations);
   }
 
   /** @internal */
