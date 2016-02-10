@@ -71,6 +71,9 @@ export class TemplateNormalizer {
       return styleWithImports.style;
     });
 
+    var animations = templateMeta.animations;
+    var animationStyles = templateMeta.animationStyles;
+
     var encapsulation = templateMeta.encapsulation;
     if (encapsulation === ViewEncapsulation.Emulated && allResolvedStyles.length === 0 &&
         allStyleAbsUrls.length === 0) {
@@ -82,6 +85,8 @@ export class TemplateNormalizer {
       templateUrl: templateAbsUrl,
       styles: allResolvedStyles,
       styleUrls: allStyleAbsUrls,
+      animations: animations,
+      animationStyles: animationStyles,
       ngContentSelectors: visitor.ngContentSelectors
     });
   }

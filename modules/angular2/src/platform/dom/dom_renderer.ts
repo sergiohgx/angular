@@ -60,9 +60,14 @@ export class DomRenderer implements Renderer {
   private _contentAttr: string;
   private _hostAttr: string;
   private _styles: string[];
+  private _animations: {[key: string]: any};
+  private _animationStyles: {[key: string]: any};
 
   constructor(private _rootRenderer: DomRootRenderer, private componentProto: RenderComponentType) {
     this._styles = _flattenStyles(componentProto.id, componentProto.styles, []);
+    this._animations = componentProto.animations;
+    this._animationStyles = componentProto.animationStyles;
+
     if (componentProto.encapsulation !== ViewEncapsulation.Native) {
       this._rootRenderer.sharedStylesHost.addStyles(this._styles);
     }

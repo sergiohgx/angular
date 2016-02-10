@@ -89,7 +89,9 @@ export class ViewResolver {
           pipes: compMeta.pipes,
           encapsulation: compMeta.encapsulation,
           styles: compMeta.styles,
-          styleUrls: compMeta.styleUrls
+          styleUrls: compMeta.styleUrls,
+          animations: compMeta.animations,
+          animationStyles: compMeta.animationStyles
         });
       }
     } else {

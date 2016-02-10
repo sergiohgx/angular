@@ -52,7 +52,9 @@ export class RuntimeMetadataResolver {
           template: viewMeta.template,
           templateUrl: viewMeta.templateUrl,
           styles: viewMeta.styles,
-          styleUrls: viewMeta.styleUrls
+          styleUrls: viewMeta.styleUrls,
+          animations: viewMeta.animations,
+          animationStyles: viewMeta.animationStyles
         });
         changeDetectionStrategy = cmpMeta.changeDetection;
       }

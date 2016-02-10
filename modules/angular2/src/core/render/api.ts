@@ -3,7 +3,9 @@ import {Injector, Injectable} from 'angular2/src/core/di';
 
 export class RenderComponentType {
   constructor(public id: string, public encapsulation: ViewEncapsulation,
-              public styles: Array<string | any[]>) {}
+  public styles: Array<string | any[]>,
+  public animations: {[key: string]: any},
+  public animationStyles: {[key: string]: any}) {}
 }
 
 export class RenderDebugInfo {
