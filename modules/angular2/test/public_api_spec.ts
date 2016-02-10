@@ -1651,6 +1651,7 @@ var NG_PLATFORM_BROWSER = [
   'BrowserDomAdapter.logError():js',
   'BrowserDomAdapter.logGroup():js',
   'BrowserDomAdapter.logGroupEnd():js',
+  'BrowserDomAdapter.matchMedia()',
   'BrowserDomAdapter.nextSibling():js',
   'BrowserDomAdapter.nodeName():js',
   'BrowserDomAdapter.nodeValue():js',
