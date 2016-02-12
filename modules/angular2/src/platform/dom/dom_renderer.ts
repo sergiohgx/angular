@@ -27,6 +27,8 @@ import {ViewEncapsulation} from 'angular2/src/core/metadata';
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
 import {camelCaseToDashCase} from './util';
 
+import {AnimationRenderQueue} from 'angular2/src/animate/ui/animation_render_queue';
+
 const NAMESPACE_URIS =
     CONST_EXPR({'xlink': 'http://www.w3.org/1999/xlink', 'svg': 'http://www.w3.org/2000/svg'});
 const TEMPLATE_COMMENT_TEXT = 'template bindings={}';
@@ -36,12 +38,13 @@ export abstract class DomRootRenderer implements RootRenderer {
   private _registeredComponents: Map<string, DomRenderer> = new Map<string, DomRenderer>();
 
   constructor(public document: any, public eventManager: EventManager,
-              public sharedStylesHost: DomSharedStylesHost) {}
+              public sharedStylesHost: DomSharedStylesHost,
+              public animationQueue: AnimationRenderQueue) {}
 
   renderComponent(componentProto: RenderComponentType): Renderer {
     var renderer = this._registeredComponents.get(componentProto.id);
     if (isBlank(renderer)) {
-      renderer = new DomRenderer(this, componentProto);
+      renderer = new DomRenderer(this, componentProto, this.animationQueue);
       this._registeredComponents.set(componentProto.id, renderer);
     }
     return renderer;
@@ -51,8 +54,9 @@ export abstract class DomRootRenderer implements RootRenderer {
 @Injectable()
 export class DomRootRenderer_ extends DomRootRenderer {
   constructor(@Inject(DOCUMENT) _document: any, _eventManager: EventManager,
-              sharedStylesHost: DomSharedStylesHost) {
-    super(_document, _eventManager, sharedStylesHost);
+              sharedStylesHost: DomSharedStylesHost,
+              animationQueue: AnimationRenderQueue) {
+    super(_document, _eventManager, sharedStylesHost, animationQueue);
   }
 }
 
@@ -60,13 +64,13 @@ export class DomRenderer implements Renderer {
   private _contentAttr: string;
   private _hostAttr: string;
   private _styles: string[];
-  private _animations: {[key: string]: any};
-  private _animationStyles: {[key: string]: any};
 
-  constructor(private _rootRenderer: DomRootRenderer, private componentProto: RenderComponentType) {
+  constructor(private _rootRenderer: DomRootRenderer,
+              private componentProto: RenderComponentType,
+              private _animationQueue:AnimationRenderQueue) {
     this._styles = _flattenStyles(componentProto.id, componentProto.styles, []);
-    this._animations = componentProto.animations;
-    this._animationStyles = componentProto.animationStyles;
+
+    this._animationQueue.registerComponent(componentProto, componentProto.animations, componentProto.animationStyles);
 
     if (componentProto.encapsulation !== ViewEncapsulation.Native) {
       this._rootRenderer.sharedStylesHost.addStyles(this._styles);
@@ -243,6 +247,7 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeEnter(node: Node) {
+    this._animationQueue.schedule(this.componentProto, <HTMLElement>node, 'enter', null);
   }
 
 
@@ -252,7 +257,9 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeLeave(node: Node) {
-    DOM.remove(node);
+    this._animationQueue.schedule(this.componentProto, <HTMLElement>node, 'leave', null).then(() => {
+      DOM.remove(node);
+    });
   }
 }
 
