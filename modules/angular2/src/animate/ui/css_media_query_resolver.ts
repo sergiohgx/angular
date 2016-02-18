@@ -2,6 +2,7 @@ import {Injectable} from 'angular2/core';
 import {StringMapWrapper} from 'angular2/src/facade/collection';
 import {CssMatchMedia} from 'angular2/src/animate/ui/css_match_media';
 import {CssDefinition, CssKeyframeDefinition} from 'angular2/src/animate/ui/css_definition';
+import {isPresent} from 'angular2/src/facade/lang';
 
 @Injectable()
 export class CssMediaQueryResolver {
@@ -10,7 +11,7 @@ export class CssMediaQueryResolver {
   resolveStyles(definitions: CssDefinition[]): {[key: string]: any} {
     var styles = {};
     definitions.forEach((def) => {
-      var allow = def.mediaQuery == 'all' || this._matchMedia.match(def.mediaQuery);
+      var allow = !isPresent(def.mediaQuery) || def.mediaQuery == 'all' || this._matchMedia.match(def.mediaQuery);
       if (allow) {
         styles = StringMapWrapper.merge(styles, def.styles);
       }
@@ -19,8 +20,9 @@ export class CssMediaQueryResolver {
   }
 
   resolveClassDefinition(definitions: CssDefinition[]): CssDefinition {
-    if (definitions.length) return null;
-    var styles = this.resolveStyles(definitions);
+    var styles = definitions.length > 0
+        ? this.resolveStyles(definitions)
+        : {};
     return new CssDefinition('all', styles);
   }
 

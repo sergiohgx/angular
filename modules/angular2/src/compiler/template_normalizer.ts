@@ -3,7 +3,7 @@ import {
   CompileDirectiveMetadata,
   CompileTemplateMetadata
 } from './directive_metadata';
-import {isPresent, isBlank} from 'angular2/src/facade/lang';
+import {isPresent, isBlank, isArray} from 'angular2/src/facade/lang';
 import {BaseException} from 'angular2/src/facade/exceptions';
 import {PromiseWrapper} from 'angular2/src/facade/async';
 
@@ -12,7 +12,8 @@ import {UrlResolver} from 'angular2/src/compiler/url_resolver';
 import {extractStyleUrls, isStyleUrlResolvable} from './style_url_resolver';
 import {Injectable} from 'angular2/src/core/di';
 import {ViewEncapsulation} from 'angular2/src/core/metadata/view';
-
+import {AnimationDefinition} from 'angular2/src/animate/worker/animation_definition';
+import {StringMapWrapper} from 'angular2/src/facade/collection';
 
 import {
   HtmlAstVisitor,
@@ -70,7 +71,18 @@ export class TemplateNormalizer {
       return styleWithImports.style;
     });
 
-    var animations = templateMeta.animations;
+    var animations: {[key: string]: any} = {};
+    StringMapWrapper.forEach(templateMeta.animations, (entries, event) => {
+      entries = <AnimationDefinition[]>(isArray(entries) ? entries : [entries]);
+      animations[event] = entries.map((entry) => {
+        if (entry instanceof AnimationDefinition) {
+          entry = entry.steps;
+        }
+        return entry;
+      });
+    });
+
+    // TODO (matsko): implement parser / lexer integration
     var animationStyles = templateMeta.animationStyles;
 
     var encapsulation = templateMeta.encapsulation;

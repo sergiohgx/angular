@@ -1686,6 +1686,8 @@ var NG_PLATFORM_BROWSER = [
   'BrowserDomAdapter.setTitle():js',
   'BrowserDomAdapter.setValue():js',
   'BrowserDomAdapter.supportsAnimation():js',
+  'BrowserDomAdapter.supportsCssAnimation():js',
+  'BrowserDomAdapter.supportsWebAnimation():js',
   'BrowserDomAdapter.supportsDOMEvents():js',
   'BrowserDomAdapter.supportsNativeShadowDOM():js',
   'BrowserDomAdapter.tagName():js',
