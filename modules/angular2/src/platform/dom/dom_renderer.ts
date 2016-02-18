@@ -157,7 +157,6 @@ export class DomRenderer implements Renderer {
   detachView(viewRootNodes: any[]) {
     for (var i = 0; i < viewRootNodes.length; i++) {
       var node = viewRootNodes[i];
-      DOM.remove(node);
       this.animateNodeLeave(node);
     }
   }
@@ -247,7 +246,7 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeEnter(node: Node) {
-    this._animationQueue.schedule(this.componentProto, <HTMLElement>node, 'enter', null);
+    this._animationQueue.schedule(this.componentProto, <HTMLElement>node, 'ng-enter', null);
   }
 
 
@@ -257,7 +256,7 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeLeave(node: Node) {
-    this._animationQueue.schedule(this.componentProto, <HTMLElement>node, 'leave', null).then(() => {
+    this._animationQueue.schedule(this.componentProto, <HTMLElement>node, 'ng-leave', null).then(() => {
       DOM.remove(node);
     });
   }

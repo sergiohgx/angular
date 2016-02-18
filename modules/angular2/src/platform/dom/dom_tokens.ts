@@ -8,3 +8,9 @@ import {CONST_EXPR} from 'angular2/src/facade/lang';
  * Contexts are not the same (e.g. when running the application into a Web Worker).
  */
 export const DOCUMENT: OpaqueToken = CONST_EXPR(new OpaqueToken('DocumentToken'));
+
+/**
+ * Animation registry
+ */
+export const ANIMATIONS: OpaqueToken =
+  CONST_EXPR(new OpaqueToken("Application animations"));

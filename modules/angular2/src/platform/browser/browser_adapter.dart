@@ -505,6 +505,15 @@ class BrowserDomAdapter extends GenericBrowserDomAdapter {
     window.cancelAnimationFrame(id);
   }
 
+  // TODO(matsko): make sure that this is ok for older browsers
+  bool supportsCssAnimation() {
+    return true;
+  }
+
+  supportsWebAnimation() {
+    return false;
+  }
+
   num performanceNow() {
     return window.performance.now();
   }
