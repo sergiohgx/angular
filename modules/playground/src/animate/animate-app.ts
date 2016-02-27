@@ -1,5 +1,5 @@
 import {Component} from 'angular2/core';
-import {css} from 'angular2/src/animate/worker/animation_definition';
+import {animate, style} from 'angular2/src/animate/worker/animation_definition';
 
 @Component({
   selector: 'animate-app',
@@ -30,12 +30,12 @@ import {css} from 'angular2/src/animate/worker/animation_definition';
   `],
   animations: {
     'ng-enter': [
-      css(['.invisible', '.rotated' ], '0s'),
-      css(['.visible', { 'transform':'rotate(0deg)' }], '0.5s ease-out').stagger('100ms'),
+      style(['.invisible', '.rotated' ]),
+      animate(['.visible', { 'transform':'rotate(0deg)' }], '0.5s ease-out').stagger('100ms'),
     ],
     'ng-leave': [
-      css(['.visible', { 'transform':'rotate(0deg)' }], '0s'),
-      css(['.invisible', '.rotated'], '0.5s ease-out').stagger('100ms')
+      style(['.visible', { 'transform':'rotate(0deg)' }]),
+      animate(['.invisible', '.rotated'], '0.5s ease-out').stagger('100ms')
     ]
   },
   template: `
