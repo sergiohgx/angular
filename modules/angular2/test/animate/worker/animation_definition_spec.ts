@@ -13,7 +13,7 @@ import {
 } from 'angular2/testing_internal';
 
 import {StringMapWrapper} from 'angular2/src/facade/collection';
-import {AnimationDefinition, css, query, fn} from 'angular2/src/animate/worker/animation_definition';
+import {AnimationDefinition, animate, query, fn} from 'angular2/src/animate/worker/animation_definition';
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
 
 function getStyle(element, prop) {
@@ -31,15 +31,15 @@ export function main() {
 
     describe('css', () => {
       it('should export the provided step value', () => {
-        var def = css('.something 1s');
+        var def = animate('.something','1s');
         expect(def.steps['css']).toEqual([['.something', 1000]]);
       });
 
       it('should throw an exception when a css value is defined twice', () => {
         var def = new AnimationDefinition();
-        def.css('.one 1s');
+        def.animate('.one','1s');
         expect(() => {
-          def.css('.two 1s');
+          def.animate('.two','1s');
         }).toThrow();
       });
     });
@@ -47,16 +47,16 @@ export function main() {
     describe('fn', () => {
       it('should explose the fn as an inner step', () => {
         var def = fn('explode');
-        expect(def.steps['steps']).toEqual([['explode']]);
+        expect(def.steps['transforms']).toEqual([['explode']]);
 
-        def.pipe('implode');
-        expect(def.steps['steps']).toEqual([['explode'], ['implode']]);
+        def.transform('implode');
+        expect(def.steps['transforms']).toEqual([['explode'], ['implode']]);
       });
 
       it('should combine both the `css` and `fn` helper methods into one', () => {
-        var def = css('.one 2s').pipe('two', 'some value');
+        var def = animate('.one','2s').transform('two', 'some value');
         expect(def.steps['css']).toEqual([['.one', 2000]]);
-        expect(def.steps['steps'][0]).toEqual(['two', 'some value']);
+        expect(def.steps['transforms'][0]).toEqual(['two', 'some value']);
       });
     });
 
@@ -69,7 +69,7 @@ export function main() {
       });
 
       it('should explose the query in the step details', () => {
-        var def = query('.something').css('.my-animation 100ms');
+        var def = query('.something').animate('.my-animation','100ms');
         var steps = def.steps;
         expect(steps['query']).toEqual('.something');
         expect(steps['css']).toEqual([['.my-animation',100]]);
@@ -79,7 +79,7 @@ export function main() {
     describe('AnimationDefinition', () => {
       it('should create a CSS animation with a stagger', () => {
         var def = new AnimationDefinition();
-        def.css('.my-animation');
+        def.animate('.my-animation','1s');
         def.stagger('reverse', '100ms');
         expect(def.steps['staggerName']).toEqual('reverse');
         expect(def.steps['staggerDelay']).toEqual(100);
@@ -87,7 +87,7 @@ export function main() {
 
       it('should use `linear` as the default stagger name when only the duration is provided', () => {
         var def = new AnimationDefinition();
-        def.css('.my-animation');
+        def.animate('.my-animation','1s');
         def.stagger('999ms');
         expect(def.steps['staggerName']).toEqual('linear');
         expect(def.steps['staggerDelay']).toEqual(999);

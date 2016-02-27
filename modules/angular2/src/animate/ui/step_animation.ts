@@ -18,17 +18,17 @@ export class StepAnimation extends Animation {
   private _duration: number;
   private _delay: number;
   private _easing: string;
-  private _steps: string[];
+  private _transforms: string[];
   private _staggerName: string;
   private _staggerDelay: number;
 
-  constructor(private _helpers: AnimationHelperMap, {query, css, duration, delay, easing, steps, staggerName, staggerDelay}: {
+  constructor(private _helpers: AnimationHelperMap, {query, css, duration, delay, easing, transforms, staggerName, staggerDelay}: {
     query: string,
     css: string[],
     duration: number,
     delay: number,
     easing: string,
-    steps: string[],
+    transforms: string[],
     staggerName: string,
     staggerDelay: number
   }) {
@@ -38,7 +38,7 @@ export class StepAnimation extends Animation {
     this._duration = duration;
     this._delay = delay;
     this._easing = easing;
-    this._steps = steps;
+    this._transforms = transforms;
     this._staggerName = staggerName;
     this._staggerDelay = staggerDelay;
   }
@@ -78,8 +78,8 @@ export class StepAnimation extends Animation {
 
       var baseIndex = stepIndex + startIndex;
       children.map((child, childIndex: number) => {
-        for (var i = 0; i < this._steps.length; i++) {
-          let step = this._steps[i];
+        for (var i = 0; i < this._transforms.length; i++) {
+          let step = this._transforms[i];
           let helper = <AnimationHelper>this._helpers.lookup(step);
           let fnStyles = helper.pipe(child, endStyles, context);
           if (fnStyles instanceof Promise) {

@@ -4,6 +4,10 @@ import {NumberWrapper} from 'angular2/src/facade/lang';
 
 const ONE_SECOND = 1000;
 
+function pick(val1, val2) {
+  return isPresent(val1) ? val1 : val2;
+}
+
 function parseTime(time:string): number {
   var value = 0;
   var modifier = 1;
@@ -31,10 +35,10 @@ export class AnimationDefinition {
   private _easing: string = 'linear';
   private _staggerDelay: string;
   private _staggerName: string;
-  private _steps = [];
+  private _transforms = [];
 
   get steps(): {[key: string]: any} {
-    if (!isPresent(this._css) && this._steps.length == 0) {
+    if (!isPresent(this._css) && this._transforms.length == 0) {
       throw new BaseException('No animation has been set...');
     }
 
@@ -44,7 +48,7 @@ export class AnimationDefinition {
       'duration': this._duration,
       'delay': this._delay,
       'easing': this._easing,
-      'steps': this._steps,
+      'transforms': this._transforms,
       'staggerName': this._staggerName,
       'staggerDelay': parseTime(this._staggerDelay)
     };
@@ -52,16 +56,39 @@ export class AnimationDefinition {
 
   constructor(private _query: string = null) {}
 
-  css(exp: any, timing: string = null): AnimationDefinition {
+  isInstantAnimation() {
+    return this._css.length > 0 && this._duration == 0 && this._transforms.length == 0;
+  }
+
+  style(exp: any): AnimationDefinition {
+    return this.animate(exp, '0')
+  }
+
+  merge(def: AnimationDefinition) {
+    var steps = def.steps;
+
+    var css = [];
+    this._css.forEach((val) => css.push(val));
+    steps['css'].forEach((val) => css.push(val));
+    this._css = css;
+
+    this._query = pick(this._query, steps['query']);
+    this._duration = pick(this._duration, steps['duration']);
+    this._delay = pick(this._delay, steps['delay']);
+    this._easing = pick(this._easing, steps['easing']);
+    this._transforms = pick(this._transforms, steps['transforms']);
+    this._staggerName = pick(this._staggerName, steps['staggerName']);
+    this._staggerDelay = pick(this._staggerDelay, steps['staggerDelay']);
+  }
+
+  animate(exp: any, timing: string): AnimationDefinition {
     if (isPresent(this._css)) {
       throw new Error("css has already been set");
     }
 
     this._css = [];
     if (isArray(exp)) {
-      exp.forEach((cssDef) => {
-        this._css.push(cssDef);
-      });
+      exp.forEach((cssDef) => this._css.push(cssDef));
     } else if (isString(exp) || isStringMap(exp)) {
       this._css.push(exp);
     } else {
@@ -90,12 +117,12 @@ export class AnimationDefinition {
     return this;
   }
 
-  pipe(fnName: string, args: any = null): AnimationDefinition {
+  transform(fnName: string, args: any = null): AnimationDefinition {
     var input = [fnName];
     if (isPresent(args)) {
       input.push(args);
     }
-    this._steps.push(input);
+    this._transforms.push(input);
     return this;
   }
 
@@ -111,13 +138,17 @@ export class AnimationDefinition {
 }
 
 export function fn(fn: string, args: any = null): AnimationDefinition {
-  return new AnimationDefinition().pipe(fn, args);
+  return new AnimationDefinition().transform(fn, args);
 }
 
 export function query(selector: string): AnimationDefinition {
   return new AnimationDefinition(selector);
 }
 
-export function css(exp: any, timing: string = null): AnimationDefinition {
-  return new AnimationDefinition().css(exp, timing);
+export function animate(exp: any, timing: string): AnimationDefinition {
+  return new AnimationDefinition().animate(exp, timing);
+}
+
+export function style(exp: any): AnimationDefinition {
+  return new AnimationDefinition().style(exp);
 }

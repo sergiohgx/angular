@@ -74,12 +74,19 @@ export class TemplateNormalizer {
     var animations: {[key: string]: any} = {};
     StringMapWrapper.forEach(templateMeta.animations, (entries, event) => {
       entries = <AnimationDefinition[]>(isArray(entries) ? entries : [entries]);
-      animations[event] = entries.map((entry) => {
-        if (entry instanceof AnimationDefinition) {
-          entry = entry.steps;
+
+      var theseAnimations = [];
+      var previous: AnimationDefinition = null;
+      entries.forEach((entry: AnimationDefinition) => {
+        if (previous != null && previous.isInstantAnimation() && entry.isInstantAnimation()) {
+          previous.merge(entry);
+        } else {
+          previous = entry;
+          theseAnimations.push(entry);
         }
-        return entry;
       });
+
+      animations[event] = theseAnimations.map((entry) => entry.steps);
     });
 
     // TODO (matsko): implement parser / lexer integration

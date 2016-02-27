@@ -1,5 +1,5 @@
 import {Component} from 'angular2/core';
-import {css} from 'angular2/src/animate/worker/animation_definition';
+import {animate, style} from 'angular2/src/animate/worker/animation_definition';
 
 @Component({
   selector: 'animate-app',
@@ -26,16 +26,20 @@ import {css} from 'angular2/src/animate/worker/animation_definition';
   `],
   animations: {
     'ng-enter': [
-      css(['.invisible', '.rotated', {height: '0px'}], '0s'),
-      css(['.visible', {height: '200px'}], '0.5s ease-out').stagger('40ms'),
-      css('.white', '0s'),
-      css(['.green', '.normal'], '0.5s').stagger('40ms')
+      style('.invisible'),
+      style('.rotated'),
+      style({height: '0px'}),
+      animate(['.visible', {height: '200px'}], '0.5s ease-out').stagger('40ms'),
+      style('.white'),
+      animate(['.green', '.normal'], '0.5s').stagger('40ms')
     ],
     'ng-leave': [
-      css(['.green', '.normal'], '0s'),
-      css('.white', '0.5s').stagger('40ms'),
-      css(['.visible', {height: '200px'}], '0s'),
-      css(['.invisible', '.rotated', {height: '0px'}], '0.5s ease-out').stagger('40ms')
+      style('.green'),
+      style('.normal'),
+      animate('.white', '0.5s').stagger('40ms'),
+      style('.visible'),
+      style({height: '200px'}),
+      animate(['.invisible', '.rotated', {height: '0px'}], '0.5s ease-out').stagger('40ms')
     ]
   },
   animationStyles: {
