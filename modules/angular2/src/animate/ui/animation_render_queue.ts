@@ -1,6 +1,6 @@
 import {Injectable} from 'angular2/core';
 import {isBlank, isPresent} from 'angular2/src/facade/lang';
-import {StringMapWrapper} from 'angular2/src/facade/collection';
+import {Map, StringMapWrapper} from 'angular2/src/facade/collection';
 import {PromiseWrapper, ObservableWrapper} from 'angular2/src/facade/async';
 import {RenderComponentType} from 'angular2/src/core/render/api';
 import {NgZone} from 'angular2/src/core/zone/ng_zone';
@@ -29,7 +29,7 @@ export enum AnimationPriority {
   Structural
 }
 
-class _AnimationRenderQueueEntry {
+export class AnimationRenderQueueEntry {
   constructor(public element: AnimationElement,
               public driver: AnimationDriver,
               public animation: AnimationOperation,
@@ -39,7 +39,7 @@ class _AnimationRenderQueueEntry {
   isAnimatable(): boolean { return true; }
 }
 
-class _NoOpAnimationRenderQueueEntry extends _AnimationRenderQueueEntry {
+export class NoOpAnimationRenderQueueEntry extends AnimationRenderQueueEntry {
   constructor(public doneFn: Function) {
     super(null, null, null, null, doneFn);
   }
@@ -47,14 +47,14 @@ class _NoOpAnimationRenderQueueEntry extends _AnimationRenderQueueEntry {
   isAnimatable(): boolean { return false; }
 }
 
-class _AnimationElementLookupEntry {
+export class AnimationElementLookupEntry {
   constructor(public index: number, public priority: AnimationPriority) {}
 }
 
 @Injectable()
 export class AnimationRenderQueue {
-  queue: _AnimationRenderQueueEntry[] = [];
-  queueLookup = new Map<Node, _AnimationElementLookupEntry>();
+  queue: AnimationRenderQueueEntry[] = [];
+  queueLookup = new Map<Node, AnimationElementLookupEntry>();
   lookup = new Map<RenderComponentType, {[key: string]: any}>();
   _defaultDriver: AnimationDriver;
 
@@ -97,19 +97,19 @@ export class AnimationRenderQueue {
       let animationDetails = <AnimationOperation>entry['animations'][eventName];
 
       if (isPresent(animationDetails)) {
-        let existingAnimation: _AnimationElementLookupEntry = this.queueLookup.get(element);
+        let existingAnimation = this.queueLookup.get(element);
         if (!isPresent(existingAnimation)) {
           registerAnimation = true;
         } else if (existingAnimation.priority < priority) {
-          this.queue[existingAnimation.index] = new _NoOpAnimationRenderQueueEntry(doneFn);
+          this.queue[existingAnimation.index] = new NoOpAnimationRenderQueueEntry(doneFn);
           registerAnimation = true;
         }
       }
 
       if (registerAnimation) {
-        this.queueLookup.set(element, new _AnimationElementLookupEntry(this.queue.length, priority));
+        this.queueLookup.set(element, new AnimationElementLookupEntry(this.queue.length, priority));
 
-        this.queue.push(new _AnimationRenderQueueEntry(
+        this.queue.push(new AnimationRenderQueueEntry(
           new AnimationElement(element, eventName, event, data),
           entry['animationDriver'],
           animationDetails,
@@ -121,16 +121,16 @@ export class AnimationRenderQueue {
 
     if (!registerAnimation) {
       // fallback noOp animation
-      this.queue.push(new _NoOpAnimationRenderQueueEntry(doneFn));
+      this.queue.push(new NoOpAnimationRenderQueueEntry(doneFn));
     }
   }
 
   public flush(): void {
     if (this.queue.length == 0) return;
     var index = 0;
-    this.queue.forEach((entry: _AnimationRenderQueueEntry) => {
+    this.queue.forEach((entry: AnimationRenderQueueEntry) => {
       if (entry.isAnimatable()) {
-        var player = entry.animation.start([entry.element], entry.animationStyles, entry.driver, index++);
+        var player = entry.animation.start([entry.element], entry.animationStyles, {}, entry.driver, index++);
         entry.element.player = player;
         player.subscribe(() => entry.doneFn());
       } else {

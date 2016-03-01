@@ -36,7 +36,7 @@ export class NoOpAnimationDriver implements AnimationDriver {
                duration: number,
                delay: number): AnimationPlayer {
     StringMapWrapper.forEach(steps, (styles, step) => {
-      this.style(element, styles)
+      this.style(element, styles);
     });
 
     return new NoOpAnimationPlayer();

@@ -13,13 +13,14 @@ export class SequenceAnimation extends Animation {
 
   start(elements: AnimationElement[],
         styleLookup: AnimationStyles,
+        initialStyles: {[key: string]: any},
         driver: AnimationDriver,
         startIndex: number): AnimationPlayer {
 
     if (this._steps.length == 0) return new NoOpAnimationPlayer();
 
     var playerFns: Function[] = this._steps.map(step => {
-      return () => step.start(elements, styleLookup, driver, startIndex);
+      return () => step.start(elements, styleLookup, initialStyles, driver, startIndex);
     });
 
     return new SequenceAnimationPlayer(playerFns);

@@ -29,7 +29,7 @@ function parseTime(time:string): number {
 }
 
 export class AnimationDefinition {
-  private _css: any[];
+  private _css: any[] = [];
   private _duration: number = 0;
   private _delay: number = 0;
   private _easing: string = 'linear';
@@ -48,20 +48,25 @@ export class AnimationDefinition {
       'duration': this._duration,
       'delay': this._delay,
       'easing': this._easing,
+      'snapshot': this._snapshot,
+      'snapshotStyles': this._snapshotStyles,
       'transforms': this._transforms,
       'staggerName': this._staggerName,
       'staggerDelay': parseTime(this._staggerDelay)
     };
   }
 
-  constructor(private _query: string = null) {}
+  constructor(private _query: string = null, private _snapshot: string = null, private _snapshotStyles = []) {}
 
   isInstantAnimation() {
-    return this._css.length > 0 && this._duration == 0 && this._transforms.length == 0;
+    return this._css.length > 0 &&
+           this._duration == 0 &&
+           this._transforms.length == 0 &&
+           this._snapshot == null;
   }
 
   style(exp: any): AnimationDefinition {
-    return this.animate(exp, '0')
+    return this.animate(exp, '0');
   }
 
   merge(def: AnimationDefinition) {
@@ -76,17 +81,18 @@ export class AnimationDefinition {
     this._duration = pick(this._duration, steps['duration']);
     this._delay = pick(this._delay, steps['delay']);
     this._easing = pick(this._easing, steps['easing']);
+    this._snapshot = pick(this._snapshot, steps['snapshot']);
+    this._snapshotStyles = pick(this._snapshotStyles, steps['snapshotStyles']);
     this._transforms = pick(this._transforms, steps['transforms']);
     this._staggerName = pick(this._staggerName, steps['staggerName']);
     this._staggerDelay = pick(this._staggerDelay, steps['staggerDelay']);
   }
 
   animate(exp: any, timing: string): AnimationDefinition {
-    if (isPresent(this._css)) {
+    if (this._css.length > 0) {
       throw new Error("css has already been set");
     }
 
-    this._css = [];
     if (isArray(exp)) {
       exp.forEach((cssDef) => this._css.push(cssDef));
     } else if (isString(exp) || isStringMap(exp)) {
@@ -151,4 +157,19 @@ export function animate(exp: any, timing: string): AnimationDefinition {
 
 export function style(exp: any): AnimationDefinition {
   return new AnimationDefinition().style(exp);
+}
+
+export function restore(styles, time = null): AnimationDefinition {
+  var steps = [':initial'];
+  if (arguments.length == 1) {
+    time = styles;
+    styles = [];
+  } else {
+    steps = steps.concat(styles);
+  }
+  return animate(steps, time);
+}
+
+export function save(snapshot: string, snapshotStyles = []): AnimationDefinition {
+  return new AnimationDefinition(null, snapshot, snapshotStyles);
 }

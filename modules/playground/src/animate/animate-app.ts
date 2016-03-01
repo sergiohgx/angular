@@ -1,5 +1,5 @@
 import {Component} from 'angular2/core';
-import {animate, style} from 'angular2/src/animate/worker/animation_definition';
+import {animate, style, restore, save} from 'angular2/src/animate/worker/animation_definition';
 
 @Component({
   selector: 'animate-app',
@@ -30,13 +30,16 @@ import {animate, style} from 'angular2/src/animate/worker/animation_definition';
   `],
   animations: {
     ngEnter: [
-      style(['.invisible', '.rotated' ]),
-      animate(['.visible', { 'transform':'rotate(0deg)' }], '0.5s ease-out').stagger('100ms'),
+      style(['.invisible', { 'background': 'white', 'font-size':'50px' }]),
+      animate(['.visible', { 'transform':'rotate(-90deg)', 'background':'red' }], '0.5s ease-out').stagger('100ms'),
+      restore([{ 'font-size':'100px' }], '1s'),
+      restore('1s')
     ],
     ngLeave: [
       style(['.visible', { 'transform':'rotate(0deg)' }]),
       animate(['.invisible', '.rotated'], '0.5s ease-out').stagger('100ms')
     ],
+    /*
     addClass: [
       style({ 'background':'blue' }),
       animate({ 'background':'red' }, '0.5s')
@@ -49,12 +52,13 @@ import {animate, style} from 'angular2/src/animate/worker/animation_definition';
       style({ 'background':'red' }),
       animate({ 'background':'green' }, '0.5s')
     ]
+    */
   },
   template: `
     <button (click)="visible=!visible">Animate</button>
     <hr />
-    <div *ngFor="#item of items" [attr.title]="item.exp">
-      {{ item.value }} <button (click)="item.exp=!item.exp">good</button>
+    <div *ngFor="#item of items">
+      {{ item.value }}
     </div>
   `
 })
@@ -64,6 +68,10 @@ export class AnimateApp {
 
   get visible() {
     return this._visible;
+  }
+
+  makeClass(index) {
+    return index % 2 == 0 ? 'red' : 'green';
   }
 
   set visible(bool) {
