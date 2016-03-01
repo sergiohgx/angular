@@ -9,6 +9,7 @@ import {NoOpAnimationPlayer} from 'angular2/src/animate/ui/animation_player';
 export abstract class Animation {
   abstract start(elements: AnimationElement[],
                  styleLookup: AnimationStyles,
+                 initialStyles: {[key: string]: any},
                  driver: AnimationDriver,
                  startIndex: number): AnimationPlayer;
 }
@@ -16,6 +17,7 @@ export abstract class Animation {
 export class NoOpAnimation extends Animation {
   start(elements: AnimationElement[],
         styleLookup: AnimationStyles,
+        initialStyles: {[key: string]: any},
         driver: AnimationDriver,
         startIndex: number): AnimationPlayer {
     return new NoOpAnimationPlayer();

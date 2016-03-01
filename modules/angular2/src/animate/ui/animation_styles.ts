@@ -46,7 +46,7 @@ export class AnimationStyles {
         if (isPresent(defs)) {
           defs.forEach((def) => {
             definitions.push(def);
-          })
+          });
         }
       } else if (isStringMap(className)) {
         var def = new CssDefinition('all', <{[key: string]: any}>className);
