@@ -28,10 +28,10 @@ export class AnimationStyles {
       classes.push(cssToken);
     });
 
-    var styles: {[key: string]: any} = this._cache[cacheKey];
-    if (!isPresent(styles)) {
-      styles = this._cache[cacheKey] = this._lookup(classes).getStyles();
-    }
+    //var styles: {[key: string]: any} = this._cache[cacheKey];
+    //if (!isPresent(styles)) {
+      var styles = this._cache[cacheKey] = this._lookup(classes).getStyles();
+    //}
 
     // we copy the styles so that the cache doesn't get mutated
     return new CssDefinition('all', copy(styles));

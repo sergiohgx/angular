@@ -1,5 +1,5 @@
 import {Component} from 'angular2/core';
-import {animate, style} from 'angular2/src/animate/worker/animation_definition';
+import {snapshot, animate, style, restore, save} from 'angular2/src/animate/worker/animation_definition';
 
 @Component({
   selector: 'animate-app',
@@ -23,15 +23,24 @@ import {animate, style} from 'angular2/src/animate/worker/animation_definition';
       text-align:center;
       margin:10px;
     }
+
+    .red { background-color:maroon; }
+    .green { background-color:silver; }
   `],
   animations: {
     'ng-enter': [
-      style('.invisible'),
+      save(['height','transform','background-color','opacity']),
+
       style('.rotated'),
-      style({height: '0px'}),
-      animate(['.visible', {height: '200px'}], '0.5s ease-out').stagger('40ms'),
+      style('.invisible'),
       style('.white'),
-      animate(['.green', '.normal'], '0.5s').stagger('40ms')
+      style({height: '0px'}),
+
+      animate(['.visible', {height: '200px'}], '0.5s ease-out').stagger('40ms'),
+      animate('.normal', '0.5s').stagger('40ms'),
+
+      restore('0.5s').stagger('10ms')
+      //animate([':initial', {'transform':'rotate(10deg) translateY(-20px)'}], '0.5s').stagger('100ms')
     ],
     'ng-leave': [
       style('.green'),
@@ -43,17 +52,20 @@ import {animate, style} from 'angular2/src/animate/worker/animation_definition';
     ]
   },
   animationStyles: {
+    '.red': [
+      ['all', {'background-color': 'maroon' }]
+    ],
     '.white': [
-      ['all', {'background': 'white' }]
+      ['all', {'background-color': 'white' }]
     ],
     '.green': [
-      ['all', {'background': 'green' }]
+      ['all', {'background-color': 'silver' }]
     ],
     '.rotated': [
-      ['all', {'transform': 'rotate(180deg)' }]
+      ['all', {'transform': 'rotate(180deg) translateX(100px) translateY(100px)' }]
     ],
     '.normal': [
-      ['all', {'transform': 'rotate(0deg)' }]
+      ['all', {'transform': 'rotate(0deg) scale(1.2)' }]
     ],
     '.invisible': [
       ['all', {'opacity': '0' }]
@@ -65,7 +77,7 @@ import {animate, style} from 'angular2/src/animate/worker/animation_definition';
   template: `
     <button (click)="visible=!visible">Animate</button>
     <hr />
-    <div *ngFor="#item of items">
+    <div *ngFor="#item of items, #i = index" [class]="makeClass(i)">
       lorem
     </div>
   `
@@ -76,6 +88,10 @@ export class AnimateApp {
 
   get visible() {
     return this._visible;
+  }
+
+  makeClass(index) {
+    return index % 2 == 0 ? 'red' : 'green';
   }
 
   set visible(bool) {

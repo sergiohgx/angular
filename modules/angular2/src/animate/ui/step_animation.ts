@@ -1,10 +1,10 @@
 import {PromiseWrapper} from 'angular2/src/facade/async';
-import {isPresent} from 'angular2/src/facade/lang';
+import {isPresent, isString} from 'angular2/src/facade/lang';
 import {StringMapWrapper} from 'angular2/src/facade/collection';
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
 
 import {Animation} from 'angular2/src/animate/ui/animation';
-import {AnimationPlayer} from 'angular2/src/animate/ui/animation_player';
+import {AnimationPlayer, NoOpAnimationPlayer} from 'angular2/src/animate/ui/animation_player';
 import {AnimationElement} from 'angular2/src/animate/ui/animation_element';
 import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
 import {AnimationHelperMap} from 'angular2/src/animate/ui/animation_helper_map';
@@ -15,6 +15,8 @@ import {GroupAnimation, GroupAnimationPlayer} from 'angular2/src/animate/ui/grou
 export class StepAnimation extends Animation {
   private _query: string;
   private _css: any[];
+  private _snapshot: string;
+  private _snapshotStyles: string[];
   private _duration: number;
   private _delay: number;
   private _easing: string;
@@ -22,9 +24,11 @@ export class StepAnimation extends Animation {
   private _staggerName: string;
   private _staggerDelay: number;
 
-  constructor(private _helpers: AnimationHelperMap, {query, css, duration, delay, easing, transforms, staggerName, staggerDelay}: {
+  constructor(private _helpers: AnimationHelperMap, {query, css, snapshot, snapshotStyles, duration, delay, easing, transforms, staggerName, staggerDelay}: {
     query: string,
     css: string[],
+    snapshot: string,
+    snapshotStyles: string[],
     duration: number,
     delay: number,
     easing: string,
@@ -35,6 +39,8 @@ export class StepAnimation extends Animation {
     super();
     this._query = query;
     this._css = css;
+    this._snapshot = snapshot;
+    this._snapshotStyles = snapshotStyles;
     this._duration = duration;
     this._delay = delay;
     this._easing = easing;
@@ -61,7 +67,28 @@ export class StepAnimation extends Animation {
       var easing = this._easing;
 
       var startStyles = context[CONTEXT_STORAGE_KEY];
-      var endStyles = styleLookup.lookupAndResolve(this._css).getStyles();
+
+      if (isPresent(this._snapshot)) {
+        if (this._snapshotStyles.length) {
+          startStyles = isPresent(startStyles) ? startStyles : {};
+          var gcs = DOM.getComputedStyle(element);
+          this._snapshotStyles.forEach((prop) => {
+            startStyles[prop] = gcs[prop];
+          });
+        }
+        this._helpers.registerSnapshot(element, this._snapshot, startStyles);
+        players.push(new NoOpAnimationPlayer());
+        return;
+      }
+
+      var formattedCss = this._css.map((entry) => {
+        if (isString(entry) && entry[0] == ':') {
+          entry = this._helpers.lookupSnapshot(element, entry);
+        }
+        return entry;
+      });
+
+      var endStyles = styleLookup.lookupAndResolve(formattedCss).getStyles();
       if (isPresent(startStyles)) {
         endStyles = StringMapWrapper.merge(startStyles, endStyles);
       }
