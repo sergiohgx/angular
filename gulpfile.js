@@ -35,6 +35,14 @@ var browserProvidersConf = require('./browser-providers.conf.js');
 
 var cliArgs = minimist(process.argv.slice(2));
 
+function extractBrowsersFromArgs() {
+  var browsers;
+  if (cliArgs.browsers) {
+    browsers = cliArgs.browsers.split(',').sort();
+  }
+  return browsers;
+}
+
 if (cliArgs.projects) {
   // normalize for analytics
   cliArgs.projects.split(',').sort().join(',');
@@ -448,12 +456,15 @@ gulp.task('serve.e2e.dart', ['build.js.cjs'], function(neverDone) {
 // ------------------
 // CI tests suites
 
-function runKarma(configFile, done) {
+function runKarma(configFile, done, browsers) {
   var exec = require('child_process').exec;
 
   var cmd = process.platform === 'win32' ? 'node_modules\\.bin\\karma run ' :
                                            'node node_modules/.bin/karma run ';
   cmd += configFile;
+  if (browsers) {
+    cmd += ' --browsers=' + browsers;
+  }
   exec(cmd, function(e, stdout) {
     // ignore errors, we don't want to fail the build in the interactive (non-ci) mode
     // karma server will print all test failures
@@ -582,7 +593,14 @@ gulp.task('!test.unit.js/karma-server', function(done) {
   var karma = require('karma');
 
   var watchStarted = false;
-  var server = new karma.Server({configFile: __dirname + '/karma-js.conf.js'});
+  var options = {configFile: __dirname + '/karma-js.conf.js'};
+
+  var browsers = extractBrowsersFromArgs();
+  if (browsers) {
+    options.browsers = browsers;
+  }
+
+  var server = new karma.Server(options);
   server.on('run_complete', function() {
     if (!watchStarted) {
       watchStarted = true;
@@ -596,7 +614,8 @@ gulp.task('!test.unit.js/karma-server', function(done) {
 gulp.task('!test.unit.js/karma-run', function(done) {
   // run the run command in a new process to avoid duplicate logging by both server and runner from
   // a single process
-  runKarma('karma-js.conf.js', done);
+  var browsers = extractBrowsersFromArgs();
+  runKarma('karma-js.conf.js', done, browsers);
 });
 
 gulp.task('test.unit.router', function(neverDone) {
@@ -789,7 +808,7 @@ gulp.task('watch.dart.dev', function(done) {
 gulp.task('!test.unit.dart/karma-run', function(done) {
   // run the run command in a new process to avoid duplicate logging by both server and runner from
   // a single process
-  runKarma('karma-dart.conf.js', done);
+  runKarma('karma-dart.conf.js', done, "");
 });
 
 
