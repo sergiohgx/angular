@@ -28,7 +28,8 @@ export class AnimationStyles {
       classes.push(cssToken);
     });
 
-    var styles: {[key: string]: any} = this._cache[cacheKey];
+    // TODO (matsko): reintroduce caching
+    var styles: {[key: string]: any} = null; //this._cache[cacheKey];
     if (!isPresent(styles)) {
       styles = this._cache[cacheKey] = this._lookup(classes).getStyles();
     }
