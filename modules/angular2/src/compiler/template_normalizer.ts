@@ -15,6 +15,8 @@ import {ViewEncapsulation} from 'angular2/src/core/metadata/view';
 import {AnimationDefinition} from 'angular2/src/animate/worker/animation_definition';
 import {StringMapWrapper} from 'angular2/src/facade/collection';
 
+import {AnimationStylesVisitor} from 'angular2/src/animate/worker/animation_styles_visitor';
+
 import {
   HtmlAstVisitor,
   HtmlElementAst,
@@ -72,6 +74,7 @@ export class TemplateNormalizer {
       return styleWithImports.style;
     });
 
+    var animationClasses = [];
     var animations: {[key: string]: any} = {};
     StringMapWrapper.forEach(templateMeta.animations, (entries, event) => {
       entries = <AnimationDefinition[]>(isArray(entries) ? entries : [entries]);
@@ -79,18 +82,33 @@ export class TemplateNormalizer {
         if (entry instanceof AnimationDefinition) {
           entry = entry.steps;
         }
+        var css = entry['css'];
+
+        if (isPresent(css) && css.length > 0) {
+          // TODO (matsko): keyframes
+          css.forEach((cssEntry) => {
+            if (cssEntry[0] == '.') {
+              animationClasses.push(cssEntry);
+            }
+          });
+        }
         return entry;
       });
     });
 
-    // TODO (matsko): implement parser / lexer integration
-    var animationStyles = templateMeta.animationStyles;
+    var animationStyles: {[key: string]: any} = {};
+    if (animationClasses.length > 0) {
+      var stylesVisitor = new AnimationStylesVisitor(templateMeta.styles[0]);
+      animationStyles = stylesVisitor.parse(animationClasses);
+    }
 
+    console.log(animationStyles);
     var encapsulation = templateMeta.encapsulation;
     if (encapsulation === ViewEncapsulation.Emulated && allResolvedStyles.length === 0 &&
         allStyleAbsUrls.length === 0) {
       encapsulation = ViewEncapsulation.None;
     }
+
     return new CompileTemplateMetadata({
       encapsulation: encapsulation,
       template: template,

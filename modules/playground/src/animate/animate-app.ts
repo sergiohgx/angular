@@ -23,39 +23,19 @@ import {css} from 'angular2/src/animate/worker/animation_definition';
       text-align:center;
       margin:10px;
     }
+
+    .rotated { transform: rotate(-180deg); }
+    .visible { opacity:1; }
+    .invisible { opacity:0; }
   `],
   animations: {
     'ng-enter': [
-      css(['.invisible', '.rotated', {height: '0px'}], '0s'),
-      css(['.visible', {height: '200px'}], '0.5s ease-out').stagger('40ms'),
-      css('.white', '0s'),
-      css(['.green', '.normal'], '0.5s').stagger('40ms')
+      css(['.invisible', '.rotated' ], '0s'),
+      css(['.visible', { 'transform':'rotate(0deg)' }], '0.5s ease-out').stagger('100ms'),
     ],
     'ng-leave': [
-      css(['.green', '.normal'], '0s'),
-      css('.white', '0.5s').stagger('40ms'),
-      css(['.visible', {height: '200px'}], '0s'),
-      css(['.invisible', '.rotated', {height: '0px'}], '0.5s ease-out').stagger('40ms')
-    ]
-  },
-  animationStyles: {
-    '.white': [
-      ['all', {'background': 'white' }]
-    ],
-    '.green': [
-      ['all', {'background': 'green' }]
-    ],
-    '.rotated': [
-      ['all', {'transform': 'rotate(180deg)' }]
-    ],
-    '.normal': [
-      ['all', {'transform': 'rotate(0deg)' }]
-    ],
-    '.invisible': [
-      ['all', {'opacity': '0' }]
-    ],
-    '.visible': [
-      ['all', {'opacity': '1' }]
+      css(['.visible', { 'transform':'rotate(0deg)' }], '0s'),
+      css(['.invisible', '.rotated'], '0.5s ease-out').stagger('100ms')
     ]
   },
   template: `
