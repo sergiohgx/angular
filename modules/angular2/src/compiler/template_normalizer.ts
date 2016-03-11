@@ -74,7 +74,7 @@ export class TemplateNormalizer {
       return styleWithImports.style;
     });
 
-    var animationClasses = [];
+    var animationCssTokens = [];
     var animations: {[key: string]: any} = {};
     StringMapWrapper.forEach(templateMeta.animations, (entries, event) => {
       entries = <AnimationDefinition[]>(isArray(entries) ? entries : [entries]);
@@ -88,26 +88,31 @@ export class TemplateNormalizer {
           previous = entry;
           theseAnimations.push(entry);
         }
-        var css = entry['css'];
 
-        if (isPresent(css) && css.length > 0) {
-          // TODO (matsko): keyframes
-          css.forEach((cssEntry) => {
-            if (cssEntry[0] == '.') {
-              animationClasses.push(cssEntry);
-            }
-          });
-        }
         return entry;
       });
 
-      animations[event] = theseAnimations.map((entry) => entry.steps);
+      animations[event] = theseAnimations.map((entry) => {
+        var steps = entry.steps;
+        var css = steps['css'];
+
+        if (isPresent(css) && css.length > 0) {
+          css.forEach((cssEntry) => {
+            var firstChar = cssEntry[0];
+            if (firstChar == '.' || firstChar == '@') {
+              animationCssTokens.push(cssEntry);
+            }
+          });
+        }
+
+        return steps;
+      });
     });
 
     var animationStyles: {[key: string]: any} = {};
-    if (animationClasses.length > 0) {
+    if (animationCssTokens.length > 0) {
       var stylesVisitor = new AnimationStylesVisitor(templateMeta.styles[0]);
-      animationStyles = stylesVisitor.parse(animationClasses);
+      animationStyles = stylesVisitor.parse(animationCssTokens);
     }
 
     var encapsulation = templateMeta.encapsulation;

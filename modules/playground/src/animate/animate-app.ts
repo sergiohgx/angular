@@ -29,11 +29,11 @@ import {animate, style} from 'angular2/src/animate/worker/animation_definition';
     .invisible { opacity:0; }
   `],
   animations: {
-    'ng-enter': [
+    ngEnter: [
       style(['.invisible', '.rotated' ]),
       animate(['.visible', { 'transform':'rotate(0deg)' }], '0.5s ease-out').stagger('100ms'),
     ],
-    'ng-leave': [
+    ngLeave: [
       style(['.visible', { 'transform':'rotate(0deg)' }]),
       animate(['.invisible', '.rotated'], '0.5s ease-out').stagger('100ms')
     ]
