@@ -246,7 +246,7 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeEnter(node: Node) {
-    this._animationQueue.schedule(this.componentProto, <HTMLElement>node, 'ng-enter', null);
+    this._animationQueue.schedule(this.componentProto, <HTMLElement>node, 'ngEnter', null);
   }
 
 
@@ -256,7 +256,7 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeLeave(node: Node) {
-    this._animationQueue.schedule(this.componentProto, <HTMLElement>node, 'ng-leave', null).then(() => {
+    this._animationQueue.schedule(this.componentProto, <HTMLElement>node, 'ngLeave', null).then(() => {
       DOM.remove(node);
     });
   }
