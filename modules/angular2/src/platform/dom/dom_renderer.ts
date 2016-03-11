@@ -27,7 +27,7 @@ import {ViewEncapsulation} from 'angular2/src/core/metadata';
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
 import {camelCaseToDashCase} from './util';
 
-import {AnimationRenderQueue} from 'angular2/src/animate/ui/animation_render_queue';
+import {AnimationRenderQueue, AnimationPriority} from 'angular2/src/animate/ui/animation_render_queue';
 
 const NAMESPACE_URIS =
     CONST_EXPR({'xlink': 'http://www.w3.org/1999/xlink', 'svg': 'http://www.w3.org/2000/svg'});
@@ -184,6 +184,7 @@ export class DomRenderer implements Renderer {
   setElementAttribute(renderElement: any, attributeName: string, attributeValue: string): void {
     var attrNs;
     var nsAndName = splitNamespace(attributeName);
+    var eventName;
     if (isPresent(nsAndName[0])) {
       attributeName = nsAndName[0] + ':' + nsAndName[1];
       attrNs = NAMESPACE_URIS[nsAndName[0]];
@@ -194,13 +195,16 @@ export class DomRenderer implements Renderer {
       } else {
         DOM.setAttribute(renderElement, attributeName, attributeValue);
       }
+      eventName = 'setAttribute';
     } else {
       if (isPresent(attrNs)) {
         DOM.removeAttributeNS(renderElement, attrNs, nsAndName[1]);
       } else {
         DOM.removeAttribute(renderElement, attributeName);
       }
+      eventName = 'removeAttribute';
     }
+    this._animationQueue.schedule(AnimationPriority.AttributeBased, this.componentProto, <HTMLElement>renderElement, eventName, null, { 'attributeName': attributeName, 'attributeValue': attributeValue });
   }
 
   setBindingDebugInfo(renderElement: any, propertyName: string, propertyValue: string): void {
@@ -220,11 +224,15 @@ export class DomRenderer implements Renderer {
   setElementDebugInfo(renderElement: any, info: RenderDebugInfo) {}
 
   setElementClass(renderElement: any, className: string, isAdd: boolean): void {
+    var eventName;
     if (isAdd) {
+      eventName = 'addClass';
       DOM.addClass(renderElement, className);
     } else {
+      eventName = 'removeClass';
       DOM.removeClass(renderElement, className);
     }
+    this._animationQueue.schedule(AnimationPriority.ClassBased, this.componentProto, <HTMLElement>renderElement, eventName, null, { 'className': className });
   }
 
   setElementStyle(renderElement: any, styleName: string, styleValue: string): void {
@@ -246,7 +254,7 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeEnter(node: Node) {
-    this._animationQueue.schedule(this.componentProto, <HTMLElement>node, 'ngEnter', null);
+    this._animationQueue.schedule(AnimationPriority.Structural, this.componentProto, <HTMLElement>node, 'ngEnter', null);
   }
 
 
@@ -256,9 +264,7 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeLeave(node: Node) {
-    this._animationQueue.schedule(this.componentProto, <HTMLElement>node, 'ngLeave', null).then(() => {
-      DOM.remove(node);
-    });
+    this._animationQueue.schedule(AnimationPriority.Structural, this.componentProto, <HTMLElement>node, 'ngLeave', null, null, () => DOM.remove(node));
   }
 }
 

@@ -15,7 +15,7 @@ import {WebAnimationsDriver} from 'angular2/src/animate/ui/drivers/web_animation
 import {CssAnimationsDriver} from 'angular2/src/animate/ui/drivers/css';
 import {CssMediaQueryResolver} from 'angular2/src/animate/ui/css_media_query_resolver';
 
-function resolveAnimationDriver(candidateDriverName: string, defaultDriver: AnimationDriver) {
+function _resolveAnimationDriver(candidateDriverName: string, defaultDriver: AnimationDriver) {
   var driver = defaultDriver;
   if (!isBlank(candidateDriverName)) {
     // TODO(matsko): resolve which driver
@@ -23,17 +23,38 @@ function resolveAnimationDriver(candidateDriverName: string, defaultDriver: Anim
   return driver;
 }
 
-class AnimationRenderQueueEntry {
+export enum AnimationPriority {
+  AttributeBased,
+  ClassBased,
+  Structural
+}
+
+class _AnimationRenderQueueEntry {
   constructor(public element: AnimationElement,
               public driver: AnimationDriver,
               public animation: AnimationOperation,
               public animationStyles: AnimationStyles,
               public doneFn: Function) {}
+
+  isAnimatable(): boolean { return true; }
+}
+
+class _NoOpAnimationRenderQueueEntry extends _AnimationRenderQueueEntry {
+  constructor(public doneFn: Function) {
+    super(null, null, null, null, doneFn);
+  }
+
+  isAnimatable(): boolean { return false; }
+}
+
+class _AnimationElementLookupEntry {
+  constructor(public index: number, public priority: AnimationPriority) {}
 }
 
 @Injectable()
 export class AnimationRenderQueue {
-  queue = [];
+  queue: _AnimationRenderQueueEntry[] = [];
+  queueLookup = new Map<Node, _AnimationElementLookupEntry>();
   lookup = new Map<RenderComponentType, {[key: string]: any}>();
   _defaultDriver: AnimationDriver;
 
@@ -56,7 +77,7 @@ export class AnimationRenderQueue {
     });
 
     var candidateDriver = ''; // componentProto['animationDriver'];
-    var animationDriver = resolveAnimationDriver(candidateDriver, this._defaultDriver);
+    var animationDriver = _resolveAnimationDriver(candidateDriver, this._defaultDriver);
 
     this.lookup.set(componentProto, {
       'animations': compiledAnimations,
@@ -65,41 +86,58 @@ export class AnimationRenderQueue {
     });
   }
 
-  public schedule(componentProto: RenderComponentType, element: HTMLElement, eventName: string, event: Event): Promise<any> {
-    var defer = PromiseWrapper.completer();
-    var resolve = defer['resolve'];
-    var animationDetected = false;
+  public schedule(priority: AnimationPriority, componentProto: RenderComponentType, element: HTMLElement, eventName: string, event: Event, data: {[key: string]: any} = null, doneFn: Function = null): void {
+    data = isPresent(data) ? data : {};
+    doneFn = isPresent(doneFn) ? doneFn : function() { };
 
+    var registerAnimation = false;
     var entry = this.lookup.get(componentProto);
+
     if (isPresent(entry)) {
       let animationDetails = <AnimationOperation>entry['animations'][eventName];
+
       if (isPresent(animationDetails)) {
-        this.queue.push(new AnimationRenderQueueEntry(
-          new AnimationElement(element, eventName, event),
+        let existingAnimation: _AnimationElementLookupEntry = this.queueLookup.get(element);
+        if (!isPresent(existingAnimation)) {
+          registerAnimation = true;
+        } else if (existingAnimation.priority < priority) {
+          this.queue[existingAnimation.index] = new _NoOpAnimationRenderQueueEntry(doneFn);
+          registerAnimation = true;
+        }
+      }
+
+      if (registerAnimation) {
+        this.queueLookup.set(element, new _AnimationElementLookupEntry(this.queue.length, priority));
+
+        this.queue.push(new _AnimationRenderQueueEntry(
+          new AnimationElement(element, eventName, event, data),
           entry['animationDriver'],
           animationDetails,
           entry['animationStyles'],
-          () => resolve()
+          doneFn
         ));
-        animationDetected = true;
       }
     }
 
-    if (!animationDetected) {
-      resolve();
+    if (!registerAnimation) {
+      // fallback noOp animation
+      this.queue.push(new _NoOpAnimationRenderQueueEntry(doneFn));
     }
-    return defer['promise'];
   }
 
   public flush(): void {
     if (this.queue.length == 0) return;
-    this.queue.forEach((entry: AnimationRenderQueueEntry, index: number) => {
-      var player = entry.animation.start([entry.element], entry.animationStyles, entry.driver, index);
-      entry.element.player = player;
-      player.subscribe(() => {
+    var index = 0;
+    this.queue.forEach((entry: _AnimationRenderQueueEntry) => {
+      if (entry.isAnimatable()) {
+        var player = entry.animation.start([entry.element], entry.animationStyles, entry.driver, index++);
+        entry.element.player = player;
+        player.subscribe(() => entry.doneFn());
+      } else {
         entry.doneFn();
-      });
+      }
     });
     this.queue = [];
+    this.queueLookup.clear();
   }
 }
