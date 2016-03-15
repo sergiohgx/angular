@@ -80,21 +80,22 @@ export class WebAnimationsPlayer implements AnimationPlayer {
   }
 }
 
-export class WebAnimationsDriver implements AnimationDriver {
+export class WebAnimationsDriver extends AnimationDriver {
   static isSupported(): boolean {
     return DOM.supportsWebAnimation();
   }
 
+  style(element: HTMLElement, styles: {[key: string]: string}): void {
+    StringMapWrapper.forEach(styles, (value, prop) => {
+      DOM.setStyle(element, prop, value.toString());
+    });
+  }
+
   constructor() {
+    super();
     if (!WebAnimationsDriver.isSupported()) {
       throw new Error('Browser does not support web animations');
     }
-  }
-
-  style(element: HTMLElement, styles: {[key: string]: string}) {
-    StringMapWrapper.forEach(styles, (val, prop) => {
-      DOM.setStyle(element, prop, val);
-    });
   }
 
   private _animate(element, styles: any[], options: any = {}): AnimationPlayer {
@@ -107,6 +108,7 @@ export class WebAnimationsDriver implements AnimationDriver {
                steps: {[key: string]: {[key: string]: string}},
                duration: number,
                delay: number,
+               easing: string,
                skipFill: boolean): AnimationPlayer {
 
     var formattedSteps = [];

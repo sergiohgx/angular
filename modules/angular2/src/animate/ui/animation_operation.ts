@@ -10,17 +10,18 @@ import {AnimationPlayer} from 'angular2/src/animate/ui/animation_player';
 import {AnimationHelperMap} from 'angular2/src/animate/ui/animation_helper_map';
 import {AnimationStyles} from 'angular2/src/animate/ui/animation_styles';
 import {Set, StringMapWrapper} from 'angular2/src/facade/collection';
+import {DOM} from 'angular2/src/platform/dom/dom_adapter';
 
 export class AnimationOperation extends Animation {
   private _animator: Animation;
   private _restoreProperties: Set<string> = new Set<string>();
   private _restoreClasses: Set<string> = new Set<string>();
 
-  constructor(steps: any, helpers: AnimationHelperMap) {
+  constructor(steps: any, private _helpers: AnimationHelperMap) {
     super();
     this._collectStateStyles(steps);
     steps = this._collectStateStyles(steps);
-    this._animator = AnimationOperation.normalizeStep(helpers, steps);
+    this._animator = AnimationOperation.normalizeStep(this._helpers, steps);
   }
 
   _collectStateStyles(steps: any[]): any[] {
@@ -82,7 +83,9 @@ export class AnimationOperation extends Animation {
         driver: AnimationDriver,
         startIndex: number): AnimationPlayer {
 
+    var animationElement = elements[0];
     initialStyles = isPresent(initialStyles) ? initialStyles : {};
+
     if (this._restoreProperties.size > 0 || this._restoreClasses.size > 0) {
       var restoreStyles = new Set<string>();
       this._restoreProperties.forEach((style) => {
@@ -96,12 +99,13 @@ export class AnimationOperation extends Animation {
         restoreStyles.add(prop);
       });
 
+      var gcs = DOM.getComputedStyle(animationElement.element);
       restoreStyles.forEach((prop) => {
-        initialStyles[prop] = true;
+        initialStyles[prop] = gcs[prop];
       });
     }
 
-    return this._animator.start(elements, styleLookup, initialStyles, driver, startIndex);
+    return this._animator.start([animationElement], styleLookup, initialStyles, driver, startIndex);
   }
 
   static normalizeStep(helpers, entryItem): Animation {

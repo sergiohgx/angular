@@ -26,6 +26,9 @@ import {DomEventsPlugin} from 'angular2/src/platform/dom/events/dom_events';
 import {KeyEventsPlugin} from 'angular2/src/platform/dom/events/key_events';
 import {HammerGesturesPlugin} from 'angular2/src/platform/dom/events/hammer_gestures';
 import {ANIMATIONS, DOCUMENT} from 'angular2/src/platform/dom/dom_tokens';
+import {CssAnimationsDriver} from 'angular2/src/animate/ui/drivers/css_animations';
+import {WebAnimationsDriver} from 'angular2/src/animate/ui/drivers/web_animations';
+import {AnimationDriver, NoOpAnimationDriver} from 'angular2/src/animate/ui/animation_driver';
 import {DomRootRenderer, DomRootRenderer_} from 'angular2/src/platform/dom/dom_renderer';
 import {DomSharedStylesHost} from 'angular2/src/platform/dom/shared_styles_host';
 import {SharedStylesHost} from "angular2/src/platform/dom/shared_styles_host";
@@ -65,6 +68,16 @@ function _document(): any {
   return DOM.defaultDoc();
 }
 
+function _resolveDefaultAnimationDriver(): AnimationDriver {
+  if (DOM.supportsWebAnimation()) {
+    return new WebAnimationsDriver();
+  }
+  if (DOM.supportsCssAnimation()) {
+    return new CssAnimationsDriver();
+  }
+  return new NoOpAnimationDriver();
+}
+
 /**
  * A set of providers to initialize an Angular application in a web browser.
  *
@@ -87,6 +100,7 @@ export const BROWSER_APP_COMMON_PROVIDERS: Array<any /*Type | Provider | any[]*/
   new Provider(CssMediaQueryResolver, {useClass: CssMediaQueryResolver}),
   new Provider(AnimationRenderQueue, {useClass: AnimationRenderQueue}),
   new Provider(AnimationHelperMap, {useClass: AnimationHelperMap}),
+  new Provider(AnimationDriver, {useFactory: _resolveDefaultAnimationDriver}),
   new Provider(ANIMATIONS, {useValue: animations}),
   DomSharedStylesHost,
   Testability,
