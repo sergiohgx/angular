@@ -1,5 +1,5 @@
 import {PromiseWrapper} from 'angular2/src/facade/async';
-import {isPresent, isString} from 'angular2/src/facade/lang';
+import {isPresent, isString, isStringMap} from 'angular2/src/facade/lang';
 import {StringMapWrapper} from 'angular2/src/facade/collection';
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
 
@@ -70,14 +70,6 @@ export class StepAnimation extends Animation {
       var startStyles = context[CONTEXT_STORAGE_KEY];
 
       if (isPresent(this._snapshot)) {
-        var keys = StringMapWrapper.keys(initialStyles);
-        if (keys.length > 0) {
-          startStyles = isPresent(startStyles) ? startStyles : {};
-          var gcs = DOM.getComputedStyle(element);
-          keys.forEach((prop) => {
-            startStyles[prop] = gcs[prop];
-          });
-        }
         this._helpers.registerSnapshot(element, this._snapshot, startStyles);
         players.push(new NoOpAnimationPlayer());
       }
@@ -90,7 +82,20 @@ export class StepAnimation extends Animation {
 
       var formattedCss = this._css.map((entry) => {
         if (isString(entry) && entry[0] == ':') {
-          entry = this._helpers.lookupSnapshot(element, entry);
+          if (entry == ':initial') {
+            entry = initialStyles;
+          } else {
+            entry = this._helpers.lookupSnapshot(element, entry);
+          }
+        } else if (isStringMap(entry)) {
+          var newStyles = {};
+          entry = StringMapWrapper.forEach(entry, (value, prop) => {
+            if (value === true) {
+              value = initialStyles[prop];
+            }
+            newStyles[prop] = value;
+          });
+          entry = newStyles;
         }
         return entry;
       });

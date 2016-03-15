@@ -1,5 +1,5 @@
 import {Injectable} from 'angular2/core';
-import {isBlank, isPresent} from 'angular2/src/facade/lang';
+import {Type, isBlank, isPresent} from 'angular2/src/facade/lang';
 import {Map, StringMapWrapper} from 'angular2/src/facade/collection';
 import {PromiseWrapper, ObservableWrapper} from 'angular2/src/facade/async';
 import {RenderComponentType} from 'angular2/src/core/render/api';
@@ -11,17 +11,7 @@ import {AnimationHelperMap} from 'angular2/src/animate/ui/animation_helper_map';
 import {AnimationOperation} from 'angular2/src/animate/ui/animation_operation';
 import {AnimationStyles} from 'angular2/src/animate/ui/animation_styles';
 import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
-import {WebAnimationsDriver} from 'angular2/src/animate/ui/drivers/web_animations';
-import {CssAnimationsDriver} from 'angular2/src/animate/ui/drivers/css';
 import {CssMediaQueryResolver} from 'angular2/src/animate/ui/css_media_query_resolver';
-
-function _resolveAnimationDriver(candidateDriverName: string, defaultDriver: AnimationDriver) {
-  var driver = defaultDriver;
-  if (!isBlank(candidateDriverName)) {
-    // TODO(matsko): resolve which driver
-  }
-  return driver;
-}
 
 export enum AnimationPriority {
   AttributeBased,
@@ -56,16 +46,14 @@ export class AnimationRenderQueue {
   queue: AnimationRenderQueueEntry[] = [];
   queueLookup = new Map<Node, AnimationElementLookupEntry>();
   lookup = new Map<RenderComponentType, {[key: string]: any}>();
-  _defaultDriver: AnimationDriver;
 
   constructor(private _zone: NgZone,
               private _helpers: AnimationHelperMap,
-              private _mediaQueryResolver: CssMediaQueryResolver) {
+              private _mediaQueryResolver: CssMediaQueryResolver,
+              private _defaultDriver: AnimationDriver) {
     ObservableWrapper.subscribe(this._zone.onTurnDone, (e) => {
       this.flush();
     });
-
-    this._defaultDriver = new WebAnimationsDriver();
   }
 
   public registerComponent(componentProto: RenderComponentType,
@@ -76,8 +64,9 @@ export class AnimationRenderQueue {
       compiledAnimations[event] = new AnimationOperation(animationSteps, this._helpers);
     });
 
-    var candidateDriver = ''; // componentProto['animationDriver'];
-    var animationDriver = _resolveAnimationDriver(candidateDriver, this._defaultDriver);
+    // TODO (matsko): allow specific drivers
+    // var candidateDriver = ''; // componentProto['animationDriver'];
+    var animationDriver = this._defaultDriver;
 
     this.lookup.set(componentProto, {
       'animations': compiledAnimations,
@@ -92,6 +81,7 @@ export class AnimationRenderQueue {
 
     var registerAnimation = false;
     var entry = this.lookup.get(componentProto);
+    console.log('schedule', eventName);
 
     if (isPresent(entry)) {
       let animationDetails = <AnimationOperation>entry['animations'][eventName];
@@ -126,6 +116,7 @@ export class AnimationRenderQueue {
   }
 
   public flush(): void {
+    console.log('flush');
     if (this.queue.length == 0) return;
     var index = 0;
     this.queue.forEach((entry: AnimationRenderQueueEntry) => {

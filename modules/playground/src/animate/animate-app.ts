@@ -14,14 +14,14 @@ import {animate, style, restore, save} from 'angular2/src/animate/worker/animati
     }
 
     div {
-      height:200px;
       font-size:50px;
       border:2px solid black;
       width:200px;
-      line-height:200px;
       display:inline-block;
+      vertical-align:top;
       text-align:center;
       margin:10px;
+      overflow:hidden;
     }
 
     .rotated { transform: rotate(-180deg); }
@@ -30,10 +30,10 @@ import {animate, style, restore, save} from 'angular2/src/animate/worker/animati
   `],
   animations: {
     ngEnter: [
-      style(['.invisible', { 'background': 'white', 'font-size':'50px' }]),
-      animate(['.visible', { 'transform':'rotate(-90deg)', 'background':'red' }], '0.5s ease-out').stagger('100ms'),
-      restore([{ 'font-size':'100px' }], '1s'),
-      restore('1s')
+      style({ height: '0px', opacity:0, transform:'rotate(-90deg)', color:'red', background: 'blue' }),
+      restore([{ transform: 'scale(1.3)' }],'0.5s ease-out').stagger('50ms'),
+      animate({ background: 'red' }, '0.5s'),
+      restore('0.5s ease-out')
     ],
     ngLeave: [
       style(['.visible', { 'transform':'rotate(0deg)' }]),
@@ -57,8 +57,11 @@ import {animate, style, restore, save} from 'angular2/src/animate/worker/animati
   template: `
     <button (click)="visible=!visible">Animate</button>
     <hr />
-    <div *ngFor="#item of items">
+    <div *ngFor="#item of items, #i = index">
       {{ item.value }}
+      <span *ngIf="i == 1">
+      jaosdjaosjdoajda
+      </span>
     </div>
   `
 })
