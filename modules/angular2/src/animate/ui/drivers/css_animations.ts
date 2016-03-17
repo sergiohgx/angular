@@ -144,8 +144,7 @@ export class CssAnimationsDriver extends AnimationDriver {
   }
 
   static isSupported(): boolean {
-    // TODO IE9 < doesn't support this
-    return true;
+    return DOM.supportsCssAnimation();
   }
 
   private _keyframeID: number = 0;
