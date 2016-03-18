@@ -22,7 +22,6 @@ import {DomEventsPlugin} from 'angular2/src/platform/dom/events/dom_events';
 import {KeyEventsPlugin} from 'angular2/src/platform/dom/events/key_events';
 import {HammerGesturesPlugin} from 'angular2/src/platform/dom/events/hammer_gestures';
 import {ANIMATIONS, DOCUMENT} from 'angular2/src/platform/dom/dom_tokens';
-import {CssAnimationsDriver} from 'angular2/src/animate/ui/drivers/css_animations';
 import {WebAnimationsDriver} from 'angular2/src/animate/ui/drivers/web_animations';
 import {AnimationDriver, NoOpAnimationDriver} from 'angular2/src/animate/ui/animation_driver';
 import {DomRootRenderer, DomRootRenderer_} from 'angular2/src/platform/dom/dom_renderer';
@@ -67,9 +66,6 @@ function _document(): any {
 function _resolveDefaultAnimationDriver(): AnimationDriver {
   if (DOM.supportsWebAnimation()) {
     return new WebAnimationsDriver();
-  }
-  if (DOM.supportsCssAnimation()) {
-    return new CssAnimationsDriver();
   }
   return new NoOpAnimationDriver();
 }
