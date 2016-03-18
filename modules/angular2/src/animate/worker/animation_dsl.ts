@@ -1,4 +1,4 @@
-import {isArray, isString, isStringMap} from 'angular2/src/facade/lang';
+import {isArray, isPresent, isString, isStringMap} from 'angular2/src/facade/lang';
 import {BaseException} from 'angular2/src/facade/exceptions';
 import {StringMapWrapper} from 'angular2/src/facade/collection';
 
@@ -7,11 +7,8 @@ import {AnimationStep} from 'angular2/src/animate/worker/animation_step';
 import {AnimationQuery} from 'angular2/src/animate/worker/animation_query';
 import {AnimationSequence} from 'angular2/src/animate/worker/animation_sequence';
 import {AnimationGroup} from 'angular2/src/animate/worker/animation_group';
-import {AnimationSnapshot} from 'angular2/src/animate/worker/animation_snapshot';
 import {AnimationToken, AnimationTokenType} from 'angular2/src/animate/worker/animation_step';
 import {parseTimeExpression} from 'angular2/src/animate/shared';
-
-import {AUTO, INITIAL} from 'angular2/src/animate/tokens';
 
 function _resolveDefaultPropertyMeasurement(prop): string {
   switch (prop) {
@@ -53,7 +50,7 @@ function _resolveDefaultPropertyMeasurement(prop): string {
 function parseInlineValues(values: {[key: string]: string|number}): {[key:string]: string} {
   var newValues: {[key:string]:string} = {};
   StringMapWrapper.forEach(values, (value, prop) => {
-    if (value != AUTO && value != INITIAL && !isString(value)) {
+    if (!isString(value)) {
       value = value.toString() + _resolveDefaultPropertyMeasurement(prop);
     }
     newValues[prop] = value;
@@ -72,14 +69,13 @@ function parseTokens(tokens: any[]): AnimationToken[] {
         case '@':
           type = AnimationTokenType.CSS_KEYFRAME;
           break;
-        case ':':
-          type = AnimationTokenType.SNAPSHOT;
-          break;
       }
     } else if (isStringMap(value)) {
       type = AnimationTokenType.INLINE_STYLES;
       value = parseInlineValues(value);
-    } else {
+    }
+
+    if (!isPresent(type)) {
       throw new BaseException('unsupported value "' + value + '" in animation step definition');
     }
 
@@ -122,19 +118,4 @@ export function style(tokens: {[key: string]: string|number|boolean}|string|any[
     tokenList = [tokens];
   }
   return new AnimationStep(parseTokens(tokenList));
-}
-
-export function restore(styles, time = null): AnimationDefinition {
-  var steps = [':initial'];
-  if (arguments.length == 1) {
-    time = styles;
-    styles = [];
-  } else {
-    steps = steps.concat(styles);
-  }
-  return animate(steps, time);
-}
-
-export function save(snapshot: string, snapshotProperties = []): AnimationDefinition {
-  return new AnimationSnapshot(snapshot, snapshotProperties);
 }

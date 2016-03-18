@@ -7,7 +7,6 @@ import {AnimationElement} from 'angular2/src/animate/animation_element';
 
 export abstract class DOMAnimationDriver extends AnimationDriver {
   private _nextAnimationID = 0;
-  private _snapshots: {[key: string]: any} = {};
 
   private _currentStyles = new Map<HTMLElement, {[key: string]: string}>();
 
@@ -20,26 +19,6 @@ export abstract class DOMAnimationDriver extends AnimationDriver {
 
   abstract getName(): string;
   abstract isSupported(): boolean;
-
-  createSnapshot(entry: AnimationElement, name: string, styleProperties: string[]): string {
-    var values = {};
-    var gcs = DOM.getComputedStyle(entry.element);
-    styleProperties.forEach((prop) => {
-      values[prop] = gcs[prop];
-    });
-
-    var index = this._nextAnimationID++;
-    var id = index.toString();
-    this._snapshots[id] = values;
-
-    return id;
-  }
-
-  clearSnapshots(ids: string[]): void {
-    ids.forEach((id) => {
-      this._snapshots[id] = null;
-    });
-  }
 
   prepareKeyframes(element: HTMLElement, keyframes: AnimationKeyframe[], duration: number): AnimationKeyframe[] {
     var flatStyles: {[key: string]: string} = {};
