@@ -1,33 +1,49 @@
 import {PromiseWrapper} from 'angular2/src/facade/async';
-import {Animation} from 'angular2/src/animate/ui/animation';
-import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
-import {NoOpAnimationPlayer, AnimationPlayer} from 'angular2/src/animate/ui/animation_player';
-import {AnimationElement} from 'angular2/src/animate/ui/animation_element';
-import {AnimationHelperMap} from 'angular2/src/animate/ui/animation_helper_map';
-import {AnimationStyles} from 'angular2/src/animate/ui/animation_styles';
+import {Renderer} from 'angular2/src/core/render/api';
+import {Set} from 'angular2/src/facade/collection';
 
-export class GroupAnimation extends Animation {
-  constructor(private _steps: Animation[]) {
+import {AnimationElement} from 'angular2/src/animate/animation_element';
+import {AnimationStyles} from 'angular2/src/animate/worker/animation_styles';
+import {NoOpAnimationPlayer, AnimationPlayer} from 'angular2/src/animate/animation_player';
+import {AnimationDefinition} from 'angular2/src/animate/worker/animation_definition';
+import {AnimationToken} from 'angular2/src/animate/worker/animation_step';
+import {appendSet} from 'angular2/src/animate/shared';
+
+export class AnimationGroup extends AnimationDefinition {
+  private _cssTokens = new Set<AnimationToken>();
+
+  constructor(private _steps: AnimationDefinition[]) {
     super();
+    _steps.forEach((step) => {
+      appendSet(this._cssTokens, step.getTokens());
+    });
   }
 
-  start(elements: AnimationElement[],
+  start(element: AnimationElement,
+        context: any,
         styleLookup: AnimationStyles,
-        initialStyles: {[key: string]: any},
-        driver: AnimationDriver,
+        renderer: Renderer,
         startIndex: number): AnimationPlayer {
 
     if (this._steps.length == 0) return new NoOpAnimationPlayer();
 
     var players = this._steps.map((step) => {
-      return step.start(elements, styleLookup, initialStyles, driver, startIndex);
+      return step.start(element, context, styleLookup, renderer, startIndex);
     });
 
-    return new GroupAnimationPlayer(players);
+    return new AnimationGroupPlayer(players);
+  }
+
+  stagger(timing: string): AnimationDefinition {
+    return this;
+  }
+
+  getTokens(): Set<AnimationToken> {
+    return this._cssTokens;
   }
 }
 
-export class GroupAnimationPlayer implements AnimationPlayer {
+export class AnimationGroupPlayer implements AnimationPlayer {
   private _subscriptions: Function[] = [];
 
   constructor(private _players: AnimationPlayer[]) {

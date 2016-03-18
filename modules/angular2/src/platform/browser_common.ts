@@ -14,14 +14,12 @@ import {
   APPLICATION_COMMON_PROVIDERS,
   PLATFORM_COMMON_PROVIDERS
 } from "angular2/core";
-import {animations} from 'angular2/src/animate/ui/core_animations';
 import {COMMON_DIRECTIVES, COMMON_PIPES, FORM_PROVIDERS} from "angular2/common";
 import {Testability} from 'angular2/src/core/testability/testability';
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
-import {CssMatchMedia} from 'angular2/src/animate/ui/css_match_media';
-import {CssMediaQueryResolver} from 'angular2/src/animate/ui/css_media_query_resolver';
-import {AnimationRenderQueue} from 'angular2/src/animate/ui/animation_render_queue';
-import {AnimationHelperMap} from 'angular2/src/animate/ui/animation_helper_map';
+import {CssMatchMedia} from 'angular2/src/animate/worker/css_match_media';
+import {CssMediaQueryResolver} from 'angular2/src/animate/worker/css_media_query_resolver';
+import {AnimationRenderQueue} from 'angular2/src/animate/worker/animation_render_queue';
 import {DomEventsPlugin} from 'angular2/src/platform/dom/events/dom_events';
 import {KeyEventsPlugin} from 'angular2/src/platform/dom/events/key_events';
 import {HammerGesturesPlugin} from 'angular2/src/platform/dom/events/hammer_gestures';
@@ -99,9 +97,7 @@ export const BROWSER_APP_COMMON_PROVIDERS: Array<any /*Type | Provider | any[]*/
   new Provider(CssMatchMedia, {useClass: CssMatchMedia}),
   new Provider(CssMediaQueryResolver, {useClass: CssMediaQueryResolver}),
   new Provider(AnimationRenderQueue, {useClass: AnimationRenderQueue}),
-  new Provider(AnimationHelperMap, {useClass: AnimationHelperMap}),
   new Provider(AnimationDriver, {useFactory: _resolveDefaultAnimationDriver}),
-  new Provider(ANIMATIONS, {useValue: animations}),
   DomSharedStylesHost,
   Testability,
   EventManager,

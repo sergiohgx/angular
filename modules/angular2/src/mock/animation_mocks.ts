@@ -1,3 +1,5 @@
+export class Temp {}
+/*
 import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
 import {NoOpAnimationPlayer, AnimationPlayer} from 'angular2/src/animate/ui/animation_player';
 
@@ -52,3 +54,4 @@ export class MockAnimationDriver extends AnimationDriver {
     }, duration, delay, easing, skipFill);
   }
 }
+*/

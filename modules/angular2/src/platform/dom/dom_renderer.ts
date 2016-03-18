@@ -13,6 +13,11 @@ import {
 import {BaseException, WrappedException} from 'angular2/src/facade/exceptions';
 import {DomSharedStylesHost} from './shared_styles_host';
 
+import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
+import {AnimationPlayer} from 'angular2/src/animate/animation_player';
+import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
+import {AnimationElement} from 'angular2/src/animate/animation_element';
+
 import {
   Renderer,
   RootRenderer,
@@ -27,7 +32,7 @@ import {ViewEncapsulation} from 'angular2/src/core/metadata';
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
 import {camelCaseToDashCase} from './util';
 
-import {AnimationRenderQueue, AnimationPriority} from 'angular2/src/animate/ui/animation_render_queue';
+import {AnimationRenderQueue, AnimationPriority} from 'angular2/src/animate/worker/animation_render_queue';
 
 const NAMESPACE_URIS =
     CONST_EXPR({'xlink': 'http://www.w3.org/1999/xlink', 'svg': 'http://www.w3.org/2000/svg'});
@@ -39,12 +44,13 @@ export abstract class DomRootRenderer implements RootRenderer {
 
   constructor(public document: any, public eventManager: EventManager,
               public sharedStylesHost: DomSharedStylesHost,
-              public animationQueue: AnimationRenderQueue) {}
+              public animationQueue: AnimationRenderQueue,
+              public animationDriver: AnimationDriver) {}
 
   renderComponent(componentProto: RenderComponentType): Renderer {
     var renderer = this._registeredComponents.get(componentProto.id);
     if (isBlank(renderer)) {
-      renderer = new DomRenderer(this, componentProto, this.animationQueue);
+      renderer = new DomRenderer(this, componentProto, this.animationQueue, this.animationDriver);
       this._registeredComponents.set(componentProto.id, renderer);
     }
     return renderer;
@@ -55,8 +61,9 @@ export abstract class DomRootRenderer implements RootRenderer {
 export class DomRootRenderer_ extends DomRootRenderer {
   constructor(@Inject(DOCUMENT) _document: any, _eventManager: EventManager,
               sharedStylesHost: DomSharedStylesHost,
-              animationQueue: AnimationRenderQueue) {
-    super(_document, _eventManager, sharedStylesHost, animationQueue);
+              animationQueue: AnimationRenderQueue,
+              animationDriver: AnimationDriver) {
+    super(_document, _eventManager, sharedStylesHost, animationQueue, animationDriver);
   }
 }
 
@@ -67,10 +74,11 @@ export class DomRenderer implements Renderer {
 
   constructor(private _rootRenderer: DomRootRenderer,
               private componentProto: RenderComponentType,
-              private _animationQueue:AnimationRenderQueue) {
+              private _animationQueue:AnimationRenderQueue,
+              private _animationDriver: AnimationDriver) {
     this._styles = _flattenStyles(componentProto.id, componentProto.styles, []);
 
-    this._animationQueue.registerComponent(componentProto, componentProto.animations, componentProto.animationStyles);
+    this._animationQueue.registerComponent(componentProto, this, componentProto.animations, componentProto.animationStyles);
 
     if (componentProto.encapsulation !== ViewEncapsulation.Native) {
       this._rootRenderer.sharedStylesHost.addStyles(this._styles);
@@ -265,6 +273,18 @@ export class DomRenderer implements Renderer {
    */
   animateNodeLeave(node: Node) {
     this._animationQueue.schedule(AnimationPriority.Structural, this.componentProto, <HTMLElement>node, 'ngLeave', null, null, () => DOM.remove(node));
+  }
+
+  animate(element: AnimationElement, keyframes: AnimationKeyframe[], duration: number, delay: number, easing: string, transforms: string[]): AnimationPlayer {
+    return this._animationDriver.animate(element, keyframes, duration, delay, easing, transforms);
+  }
+
+  clearSnapshots(ids: string[]): void {
+    this._animationDriver.clearSnapshots(ids);
+  }
+
+  createSnapshot(element: AnimationElement, name: string, styleProperties: string[]) {
+    return this._animationDriver.createSnapshot(element, name, styleProperties);
   }
 }
 

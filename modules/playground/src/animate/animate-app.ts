@@ -1,5 +1,5 @@
 import {Component} from 'angular2/core';
-import {animate, style, restore, save} from 'angular2/src/animate/worker/animation_definition';
+import {AUTO, INITIAL, animate, style, restore, save} from 'angular2/animate';
 
 @Component({
   selector: 'animate-app',
@@ -30,29 +30,15 @@ import {animate, style, restore, save} from 'angular2/src/animate/worker/animati
   `],
   animations: {
     ngEnter: [
-      style({ height: '0px', opacity:0, transform:'rotate(-90deg)', color:'red', background: 'blue' }),
-      restore([{ transform: 'scale(1.3)' }],'0.5s ease-out').stagger('50ms'),
-      animate({ background: 'red' }, '0.5s'),
-      restore('0.5s ease-out')
+      style({ height: 0, opacity: 0 }),
+      animate(['.visible', { height: 200 }], 500).stagger('50ms'),
+      style({ background: 'white' }),
+      animate({ background: 'red' }, '0.5s')
     ],
     ngLeave: [
-      style(['.visible', { 'transform':'rotate(0deg)' }]),
-      animate(['.invisible', '.rotated'], '0.5s ease-out').stagger('100ms')
-    ],
-    /*
-    addClass: [
-      style({ 'background':'blue' }),
-      animate({ 'background':'red' }, '0.5s')
-    ],
-    removeClass: [
-      style({ 'background':'red' }),
-      animate({ 'background':'white' }, '0.5s')
-    ],
-    setAttribute: [
-      style({ 'background':'red' }),
-      animate({ 'background':'green' }, '0.5s')
+      style({ height: '200px', opacity: '1' }),
+      animate({ height: '0', opacity: '0' }, '0.5s').stagger('50ms')
     ]
-    */
   },
   template: `
     <button (click)="visible=!visible">Animate</button>
