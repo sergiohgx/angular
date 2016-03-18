@@ -12,13 +12,3 @@ export class CssDefinition {
     return StringMapWrapper.keys(this.styles);
   }
 }
-
-export class CssKeyframeDefinition extends CssDefinition {
-  getStyles() {
-    return this.styles['100%'];
-  }
-
-  getKeyframe() {
-    return this.styles;
-  }
-}

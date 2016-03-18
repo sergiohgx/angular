@@ -4,14 +4,12 @@ import {Map, StringMapWrapper} from 'angular2/src/facade/collection';
 import {PromiseWrapper, ObservableWrapper} from 'angular2/src/facade/async';
 import {RenderComponentType} from 'angular2/src/core/render/api';
 import {NgZone} from 'angular2/src/core/zone/ng_zone';
+import {Renderer} from 'angular2/src/core/render/api';
+import {CssMediaQueryResolver} from 'angular2/src/animate/worker/css_media_query_resolver';
 
-import {Animation} from 'angular2/src/animate/ui/animation';
-import {AnimationElement} from 'angular2/src/animate/ui/animation_element';
-import {AnimationHelperMap} from 'angular2/src/animate/ui/animation_helper_map';
-import {AnimationOperation} from 'angular2/src/animate/ui/animation_operation';
-import {AnimationStyles} from 'angular2/src/animate/ui/animation_styles';
-import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
-import {CssMediaQueryResolver} from 'angular2/src/animate/ui/css_media_query_resolver';
+import {AnimationElement} from 'angular2/src/animate/animation_element';
+import {AnimationDefinition} from 'angular2/src/animate/worker/animation_definition';
+import {AnimationStyles} from 'angular2/src/animate/worker/animation_styles';
 
 export enum AnimationPriority {
   AttributeBased,
@@ -21,8 +19,8 @@ export enum AnimationPriority {
 
 export class AnimationRenderQueueEntry {
   constructor(public element: AnimationElement,
-              public driver: AnimationDriver,
-              public animation: AnimationOperation,
+              public renderer: Renderer,
+              public animation: AnimationDefinition,
               public animationStyles: AnimationStyles,
               public doneFn: Function) {}
 
@@ -48,30 +46,20 @@ export class AnimationRenderQueue {
   lookup = new Map<RenderComponentType, {[key: string]: any}>();
 
   constructor(private _zone: NgZone,
-              private _helpers: AnimationHelperMap,
-              private _mediaQueryResolver: CssMediaQueryResolver,
-              private _defaultDriver: AnimationDriver) {
-    ObservableWrapper.subscribe(this._zone.onTurnDone, (e) => {
+              private _mediaQueryResolver: CssMediaQueryResolver) {
+    ObservableWrapper.subscribe(this._zone.onMicrotaskEmpty, (e) => {
       this.flush();
     });
   }
 
   public registerComponent(componentProto: RenderComponentType,
+                           animationRenderer: Renderer,
                            animations: {[key: string]: any},
                            animationStyles: {[key: string]: any}): void {
-    var compiledAnimations = {};
-    StringMapWrapper.forEach(animations, (animationSteps, event) => {
-      compiledAnimations[event] = new AnimationOperation(animationSteps, this._helpers);
-    });
-
-    // TODO (matsko): allow specific drivers
-    // var candidateDriver = ''; // componentProto['animationDriver'];
-    var animationDriver = this._defaultDriver;
-
     this.lookup.set(componentProto, {
-      'animations': compiledAnimations,
+      'animations': animations,
       'animationStyles': new AnimationStyles(this._mediaQueryResolver, animationStyles),
-      'animationDriver': animationDriver
+      'animationRenderer': animationRenderer
     });
   }
 
@@ -81,10 +69,9 @@ export class AnimationRenderQueue {
 
     var registerAnimation = false;
     var entry = this.lookup.get(componentProto);
-    console.log('schedule', eventName);
 
     if (isPresent(entry)) {
-      let animationDetails = <AnimationOperation>entry['animations'][eventName];
+      let animationDetails = <AnimationDefinition>entry['animations'][eventName];
 
       if (isPresent(animationDetails)) {
         let existingAnimation = this.queueLookup.get(element);
@@ -99,9 +86,15 @@ export class AnimationRenderQueue {
       if (registerAnimation) {
         this.queueLookup.set(element, new AnimationElementLookupEntry(this.queue.length, priority));
 
+        var contextData = {
+          'event': event,
+          'eventName': eventName,
+          'data': data
+        };
+
         this.queue.push(new AnimationRenderQueueEntry(
-          new AnimationElement(element, eventName, event, data),
-          entry['animationDriver'],
+          new AnimationElement(element, contextData),
+          entry['animationRenderer'],
           animationDetails,
           entry['animationStyles'],
           doneFn
@@ -116,13 +109,11 @@ export class AnimationRenderQueue {
   }
 
   public flush(): void {
-    console.log('flush');
     if (this.queue.length == 0) return;
     var index = 0;
     this.queue.forEach((entry: AnimationRenderQueueEntry) => {
       if (entry.isAnimatable()) {
-        var player = entry.animation.start([entry.element], entry.animationStyles, {}, entry.driver, index++);
-        entry.element.player = player;
+        var player = entry.animation.start(entry.element, {}, entry.animationStyles, entry.renderer, index++);
         player.subscribe(() => entry.doneFn());
       } else {
         entry.doneFn();

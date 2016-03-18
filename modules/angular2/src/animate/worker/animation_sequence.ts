@@ -1,33 +1,50 @@
 import {PromiseWrapper} from 'angular2/src/facade/async';
-import {Animation} from 'angular2/src/animate/ui/animation';
-import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
-import {NoOpAnimationPlayer, AnimationPlayer} from 'angular2/src/animate/ui/animation_player';
-import {AnimationElement} from 'angular2/src/animate/ui/animation_element';
-import {AnimationHelperMap} from 'angular2/src/animate/ui/animation_helper_map';
-import {AnimationStyles} from 'angular2/src/animate/ui/animation_styles';
+import {Renderer} from 'angular2/src/core/render/api';
+import {Set} from 'angular2/src/facade/collection';
 
-export class SequenceAnimation extends Animation {
-  constructor(private _steps: Animation[]) {
+import {AnimationDefinition} from 'angular2/src/animate/worker/animation_definition';
+import {AnimationElement} from 'angular2/src/animate/animation_element';
+import {AnimationStyles} from 'angular2/src/animate/worker/animation_styles';
+import {NoOpAnimationPlayer, AnimationPlayer} from 'angular2/src/animate/animation_player';
+import {AnimationToken} from 'angular2/src/animate/worker/animation_step';
+import {appendSet} from 'angular2/src/animate/shared';
+
+export class AnimationSequence extends AnimationDefinition {
+  private _cssTokens = new Set<AnimationToken>();
+
+  constructor(private _steps: AnimationDefinition[]) {
     super();
+    _steps.forEach((step) => {
+      appendSet(this._cssTokens, step.getTokens());
+    });
   }
 
-  start(elements: AnimationElement[],
+  start(element: AnimationElement,
+        context: any,
         styleLookup: AnimationStyles,
-        initialStyles: {[key: string]: any},
-        driver: AnimationDriver,
+        renderer: Renderer,
         startIndex: number): AnimationPlayer {
-
     if (this._steps.length == 0) return new NoOpAnimationPlayer();
 
+    var i = startIndex;
     var playerFns: Function[] = this._steps.map(step => {
-      return () => step.start(elements, styleLookup, initialStyles, driver, startIndex);
+      var index = i++;
+      return () => step.start(element, context, styleLookup, renderer, index);
     });
 
-    return new SequenceAnimationPlayer(playerFns);
+    return new AnimationSequencePlayer(playerFns);
+  }
+
+  stagger(timing: string): AnimationDefinition {
+    return this;
+  }
+
+  getTokens(): Set<AnimationToken> {
+    return this._cssTokens;
   }
 }
 
-export class SequenceAnimationPlayer implements AnimationPlayer {
+export class AnimationSequencePlayer implements AnimationPlayer {
   private _currentIndex: number = 0;
   private _activePlayers: AnimationPlayer[] = [];
   private _subscriptions: Function[] = [];

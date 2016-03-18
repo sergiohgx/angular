@@ -1,8 +1,9 @@
 import {Injectable} from 'angular2/core';
 import {StringMapWrapper} from 'angular2/src/facade/collection';
-import {CssMatchMedia} from 'angular2/src/animate/ui/css_match_media';
-import {CssDefinition, CssKeyframeDefinition} from 'angular2/src/animate/ui/css_definition';
+import {CssMatchMedia} from 'angular2/src/animate/worker/css_match_media';
+import {CssDefinition} from 'angular2/src/animate/worker/css_definition';
 import {isPresent} from 'angular2/src/facade/lang';
+import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
 
 @Injectable()
 export class CssMediaQueryResolver {
@@ -19,14 +20,14 @@ export class CssMediaQueryResolver {
     return styles;
   }
 
-  resolveClassDefinition(definitions: CssDefinition[]): CssDefinition {
+  resolveClassDefinition(definitions: CssDefinition[]): {[key: string]: string} {
     var styles = definitions.length > 0
         ? this.resolveStyles(definitions)
         : {};
-    return new CssDefinition('all', styles);
+    return styles;
   }
 
-  resolveKeyframeDefinition(definitions: CssKeyframeDefinition[]): CssKeyframeDefinition {
+  resolveKeyframeDefinition(definitions: CssDefinition[]): AnimationKeyframe[] {
     var chosenDef;
     definitions.forEach((def) => {
       var allow = def.mediaQuery == 'all' || this._matchMedia.match(def.mediaQuery);
@@ -34,6 +35,14 @@ export class CssMediaQueryResolver {
         chosenDef = def;
       }
     });
-    return chosenDef;
+
+    var keyframes = [];
+    if (isPresent(chosenDef)) {
+      StringMapWrapper.forEach(chosenDef, (styles, position) => {
+        keyframes.push(new AnimationKeyframe(position, styles));
+      });
+    }
+
+    return keyframes;
   }
 }

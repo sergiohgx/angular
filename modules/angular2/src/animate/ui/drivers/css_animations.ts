@@ -1,16 +1,21 @@
 import {isPresent} from 'angular2/src/facade/lang';
 import {PromiseWrapper} from 'angular2/src/facade/async';
 import {StringMapWrapper} from 'angular2/src/facade/collection';
-import {removeEventListener} from 'angular2/src/animate/ui/util';
+import {removeEventListener} from 'angular2/src/animate/shared';
+
 import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
-import {NoOpAnimationPlayer, AnimationPlayer} from 'angular2/src/animate/ui/animation_player';
+import {AnimationPlayer} from 'angular2/src/animate/animation_player';
+import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
+import {AnimationElement} from 'angular2/src/animate/animation_element';
+
+import {DOMAnimationDriver} from 'angular2/src/animate/ui/dom_animation_driver';
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
 
-function generateKeyframes(name, steps: {[key: string]: {[key: string]: string}}) {
+function generateKeyframes(name, keyframes: AnimationKeyframe[]) {
   var css = name + ' {' + "\n";
-  StringMapWrapper.forEach(steps, (styles, position) => {
-    css += position + " {\n";
-    StringMapWrapper.forEach(styles, (value, prop) => {
+  keyframes.forEach((keyframe) => {
+    css += keyframe.position + " {\n";
+    StringMapWrapper.forEach(keyframe.styles, (value, prop) => {
       css += prop + ":" + value + ";\n";
     });
     css += " }\n";
@@ -45,12 +50,13 @@ function buildAnimationStyle(keyframeName, duration, delay, easing) {
   return style;
 }
 
-export class CssAnimationsPlayer implements AnimationPlayer {
+export class CssAnimationsPlayer extends AnimationPlayer {
   private _subscriptions: Function[] = [];
   private _boundOnFinishEvent: Function;
   private _isReversed: boolean = false;
 
-  constructor(private _element, private _keyframeSequence, private _options: any = {}) {
+  constructor(private _element: HTMLElement, private _keyframeSequence: string, private _options: any = {}) {
+    super();
     // we assign this to a member variable so we can
     // remove the callback event later on
     this._boundOnFinishEvent = () => this.end();
@@ -129,62 +135,44 @@ export class CssAnimationsPlayer implements AnimationPlayer {
   }
 }
 
-export class CssAnimationsDriver extends AnimationDriver {
+export class CssAnimationsDriver extends DOMAnimationDriver implements AnimationDriver {
+  private _keyframeID: number = 0;
+
   constructor() {
     super();
-    if (!CssAnimationsDriver.isSupported()) {
-      throw new Error('Browser does not support CSS animations');
-    }
   }
 
-  style(element: HTMLElement, styles: {[key: string]: string}): void {
-    StringMapWrapper.forEach(styles, (value, prop) => {
-      DOM.setStyle(element, prop, value.toString());
-    });
-  }
-
-  static isSupported(): boolean {
+  isSupported(): boolean {
     return DOM.supportsCssAnimation();
   }
 
-  private _keyframeID: number = 0;
+  getName(): string{
+    return 'css-animations';
+  }
 
-  private _animate(element, steps: {[key: string]: any}, duration: number, delay: number, options: any): AnimationPlayer {
+  animate(element: AnimationElement, keyframes: AnimationKeyframe[], duration: number, delay: number, easing: string, transforms: string[]): AnimationPlayer {
     var name = 'ngSequence' + this._keyframeID++;
-    var keyframeCode = generateKeyframes(name, steps);
+    var keyframeCode = generateKeyframes(name, keyframes);
     var styleNode = DOM.createStyleElement(keyframeCode);
     var head = DOM.query('head');
     DOM.appendChild(head, styleNode);
 
-    options['duration'] = duration;
-    options['delay'] = delay;
-    options['easing'] = null;
+    var options = {
+      'duration': duration,
+      'delay': delay,
+      'easing': easing
+    };
 
-    var player = new CssAnimationsPlayer(element, name, options);
+    var node = <HTMLElement>element.element;
+    var player = new CssAnimationsPlayer(node, name, options);
     player.subscribe(() => {
-      StringMapWrapper.forEach(steps, (styles, prop) => {
-        this.style(element, styles);
+      keyframes.forEach((keyframe) => {
+        StringMapWrapper.forEach(keyframe.styles, (styles, prop) => {
+          this.style(node, styles);
+        });
       });
     });
+
     return player;
-  }
-
-  animateSteps(element: HTMLElement,
-               steps: {[key: string]: {[key: string]: string}},
-               duration: number,
-               delay: number,
-               easing: string,
-               skipFill: boolean): AnimationPlayer {
-    return this._animate(element, steps, duration, delay, {});
-  }
-
-  animateFromTo(element: HTMLElement,
-                startStyles: {[key: string]: string},
-                endStyles: {[key: string]: string},
-                duration: number,
-                delay: number,
-                easing: string,
-                skipFill: boolean): AnimationPlayer {
-    return this._animate(element, { '0%': startStyles, '100%': endStyles }, duration, delay, {});
   }
 }

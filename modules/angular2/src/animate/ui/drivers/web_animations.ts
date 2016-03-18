@@ -1,15 +1,20 @@
-import {NumberWrapper} from 'angular2/src/facade/lang';
+import {isString, NumberWrapper} from 'angular2/src/facade/lang';
 import {PromiseWrapper} from 'angular2/src/facade/async';
-
-import {copy} from 'angular2/src/animate/ui/util';
-import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
-import {AnimationPlayer} from 'angular2/src/animate/ui/animation_player';
-import {DOM} from 'angular2/src/platform/dom/dom_adapter';
 import {StringMapWrapper} from 'angular2/src/facade/collection';
+
+import {DOM} from 'angular2/src/platform/dom/dom_adapter';
+import {copy} from 'angular2/src/animate/shared';
+
+import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
+import {AnimationPlayer} from 'angular2/src/animate/animation_player';
+import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
+import {AnimationElement} from 'angular2/src/animate/animation_element';
+
+import {DOMAnimationDriver} from 'angular2/src/animate/ui/dom_animation_driver';
 
 function normalizePercentage(p): number {
   var value = null;
-  if (p instanceof String) {
+  if (isString(p)) {
     var numStr = p;
     if (p[p.length - 1] == "%") {
       numStr = p.substring(0, p.length - 1);
@@ -80,66 +85,41 @@ export class WebAnimationsPlayer implements AnimationPlayer {
   }
 }
 
-export class WebAnimationsDriver extends AnimationDriver {
-  static isSupported(): boolean {
+export class WebAnimationsDriver extends DOMAnimationDriver implements AnimationDriver {
+  constructor() {
+    super();
+  }
+
+  getName(): string {
+    return 'web-animations';
+  }
+
+  isSupported(): boolean {
     return DOM.supportsWebAnimation();
   }
 
-  style(element: HTMLElement, styles: {[key: string]: string}): void {
-    StringMapWrapper.forEach(styles, (value, prop) => {
-      DOM.setStyle(element, prop, value.toString());
-    });
-  }
-
-  constructor() {
-    super();
-    if (!WebAnimationsDriver.isSupported()) {
-      throw new Error('Browser does not support web animations');
-    }
-  }
-
-  private _animate(element, styles: any[], options: any = {}): AnimationPlayer {
-    options['fill'] = 'forwards';
-    var player = element.animate(styles, options);
-    return new WebAnimationsPlayer(player, options);
-  }
-
-  animateSteps(element: HTMLElement,
-               steps: {[key: string]: {[key: string]: string}},
-               duration: number,
-               delay: number,
-               easing: string,
-               skipFill: boolean): AnimationPlayer {
+  animate(element: AnimationElement, keyframes: AnimationKeyframe[], duration: number, delay: number, easing: string, transforms: string[]): AnimationPlayer {
+    var node = element.element;
+    keyframes = this.prepareKeyframes(node, keyframes, duration);
 
     var formattedSteps = [];
-    StringMapWrapper.forEach(steps, (value, key) => {
+    keyframes.forEach((keyframe) => {
       var data = {};
-      StringMapWrapper.forEach(value, (val, prop) => {
+      StringMapWrapper.forEach(keyframe.styles, (val, prop) => {
         data[prop] = val;
       });
-      data['offset'] = normalizePercentage(key);
+      data['offset'] = normalizePercentage(keyframe.position);
       formattedSteps.push(data);
     });
 
-    return this._animate(element, formattedSteps, {
-      duration: duration,
-      delay: delay
-    });
-  }
+    var options = {
+      'duration': duration,
+      'delay': delay,
+      'easing': easing,
+      'fill': 'forwards'
+    };
 
-  animateFromTo(element: HTMLElement,
-                startStyles: {[key: string]: string},
-                endStyles: {[key: string]: string},
-                duration: number,
-                delay: number,
-                easing: string,
-                skipFill: boolean = false): AnimationPlayer {
-
-    var formattedSteps = [startStyles, endStyles];
-    return this._animate(element, formattedSteps, {
-      duration: duration,
-      delay: delay,
-      easing: easing
-    });
+    var player = node['animate'](formattedSteps, options);
+    return new WebAnimationsPlayer(player, options);
   }
 }
