@@ -1,5 +1,5 @@
 import {Component} from 'angular2/core';
-import {AUTO, INITIAL, animate, style, restore, save} from 'angular2/animate';
+import {animate, style} from 'angular2/animate';
 
 @Component({
   selector: 'animate-app',

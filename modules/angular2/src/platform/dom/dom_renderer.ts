@@ -278,14 +278,6 @@ export class DomRenderer implements Renderer {
   animate(element: AnimationElement, keyframes: AnimationKeyframe[], duration: number, delay: number, easing: string, transforms: string[]): AnimationPlayer {
     return this._animationDriver.animate(element, keyframes, duration, delay, easing, transforms);
   }
-
-  clearSnapshots(ids: string[]): void {
-    this._animationDriver.clearSnapshots(ids);
-  }
-
-  createSnapshot(element: AnimationElement, name: string, styleProperties: string[]) {
-    return this._animationDriver.createSnapshot(element, name, styleProperties);
-  }
 }
 
 function moveNodesAfterSibling(sibling, nodes) {

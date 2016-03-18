@@ -13,8 +13,7 @@ import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
 export enum AnimationTokenType {
   CSS_CLASS,
   CSS_KEYFRAME,
-  INLINE_STYLES,
-  SNAPSHOT
+  INLINE_STYLES
 }
 
 export class AnimationToken {
