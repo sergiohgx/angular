@@ -5,7 +5,6 @@ export class AnimationKeyframe {
   }
 
   merge(styles: {[key: string]: string}, reverse: boolean = false): void {
-    console.log('merge', styles, this.styles);
     this.styles = reverse
         ? StringMapWrapper.merge(styles, this.styles)
         : StringMapWrapper.merge(this.styles, styles);

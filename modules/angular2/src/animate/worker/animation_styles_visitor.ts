@@ -30,7 +30,7 @@ export class AnimationStylesVisitor implements CssASTVisitor {
   private _stylesheet: CssStyleSheetAST;
 
   private _definitions: {[key: string]: any};
-  private _activeClasses: {[key: string]: boolean};
+  private _activeTokens: {[key: string]: boolean};
   private _currentSelector: string = null;
   private _currentDefinition: {[key: string]: any} = null;
 
@@ -46,11 +46,11 @@ export class AnimationStylesVisitor implements CssASTVisitor {
     this._stylesheet = output.ast;
   }
 
-  parse(activeClasses: string[], context?: any): {[key: string]: any} {
+  parse(activeTokens: string[], context?: any): {[key: string]: any} {
     this._definitions = {};
-    this._activeClasses = makeIntoTable(activeClasses);
+    this._activeTokens = makeIntoTable(activeTokens);
     this._stylesheet.visit(this, context);
-    this._activeClasses = null;
+    this._activeTokens = null;
     this._currentSelector = null;
     this._currentDefinition = null;
     var defs = this._definitions;
@@ -59,11 +59,36 @@ export class AnimationStylesVisitor implements CssASTVisitor {
   }
 
   visitCssKeyframeRule(ast: CssKeyframeRuleAST, context?: any): void {
+    var name = '@' + ast.name.strValue;
+    if (isPresent(this._activeTokens[name])) {
+      this._currentSelector = name;
+      if (!isPresent(this._definitions[this._currentSelector])) {
+        this._definitions[this._currentSelector] = [];
+      }
+      this._currentDefinition = {};
+      this._definitions[this._currentSelector].push([
+        // TODO (matsko): media queries
+        'all',
+        this._currentDefinition
+      ]);
+    }
+
     ast.block.visit(this, context);
+
+    this._currentSelector = null;
+    this._currentDefinition = null;
   }
 
   visitCssKeyframeDefinition(ast: CssKeyframeDefinitionAST, context?: any): void {
+    var parentDefinition = this._currentDefinition;
+    if (isPresent(parentDefinition)) {
+      var position = ast.name.strValue;
+      this._currentDefinition = this._currentDefinition[position] = {};
+    }
     ast.block.visit(this, context);
+    if (isPresent(parentDefinition)) {
+      this._currentDefinition = parentDefinition;
+    }
   }
 
   visitCssMediaQueryRule(ast: CssMediaQueryRuleAST, context?: any): void {
@@ -78,7 +103,7 @@ export class AnimationStylesVisitor implements CssASTVisitor {
   visitCssSelector(ast: CssSelectorAST, context?: any): void {
     if (!ast.isComplex) {
       var selector = valueFromTokens(ast.tokens, "");
-      if (isPresent(this._activeClasses[selector])) {
+      if (isPresent(this._activeTokens[selector])) {
         this._currentSelector = selector;
         if (!isPresent(this._definitions[this._currentSelector])) {
           this._definitions[this._currentSelector] = [];
