@@ -5,7 +5,7 @@ import {PromiseWrapper, ObservableWrapper} from 'angular2/src/facade/async';
 import {RenderComponentType} from 'angular2/src/core/render/api';
 import {NgZone} from 'angular2/src/core/zone/ng_zone';
 import {Renderer} from 'angular2/src/core/render/api';
-import {CssMediaQueryResolver} from 'angular2/src/animate/worker/css_media_query_resolver';
+import {CssStylesResolver} from 'angular2/src/animate/worker/css_styles_resolver';
 
 import {AnimationElement} from 'angular2/src/animate/animation_element';
 import {AnimationDefinition} from 'angular2/src/animate/worker/animation_definition';
@@ -46,7 +46,7 @@ export class AnimationRenderQueue {
   lookup = new Map<RenderComponentType, {[key: string]: any}>();
 
   constructor(private _zone: NgZone,
-              private _mediaQueryResolver: CssMediaQueryResolver) {
+              private _stylesResolver: CssStylesResolver) {
     ObservableWrapper.subscribe(this._zone.onMicrotaskEmpty, (e) => {
       this.flush();
     });
@@ -58,7 +58,7 @@ export class AnimationRenderQueue {
                            animationStyles: {[key: string]: any}): void {
     this.lookup.set(componentProto, {
       'animations': animations,
-      'animationStyles': new AnimationStyles(this._mediaQueryResolver, animationStyles),
+      'animationStyles': new AnimationStyles(this._stylesResolver, animationStyles),
       'animationRenderer': animationRenderer
     });
   }
