@@ -24,7 +24,11 @@ import {AUTO, INITIAL, animate, style, restore, save} from 'angular2/animate';
       overflow:hidden;
     }
 
-    .rotated { transform: rotate(-180deg); }
+    @keyframes flip {
+      from { transform: rotate(-360deg); }
+      to { transform: rotate(0deg); }
+    }
+
     .visible { opacity:1; }
     .invisible { opacity:0; }
   `],
@@ -33,7 +37,7 @@ import {AUTO, INITIAL, animate, style, restore, save} from 'angular2/animate';
       style({ height: 0, opacity: 0 }),
       animate(['.visible', { height: 200 }], 500).stagger('50ms'),
       style({ background: 'white' }),
-      animate({ background: 'red' }, '0.5s')
+      animate([{ background: 'red' }, '@flip'], '0.5s')
     ],
     ngLeave: [
       style({ height: '200px', opacity: '1' }),
