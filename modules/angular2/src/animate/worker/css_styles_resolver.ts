@@ -1,18 +1,15 @@
 import {Injectable} from 'angular2/core';
 import {StringMapWrapper} from 'angular2/src/facade/collection';
-import {CssMatchMedia} from 'angular2/src/animate/worker/css_match_media';
 import {CssDefinition} from 'angular2/src/animate/worker/css_definition';
 import {isPresent} from 'angular2/src/facade/lang';
 import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
 
-@Injectable()
-export class CssMediaQueryResolver {
-  constructor(private _matchMedia: CssMatchMedia) {}
-
+export class CssStylesResolver {
   resolveStyles(definitions: CssDefinition[]): {[key: string]: any} {
     var styles = {};
     definitions.forEach((def) => {
-      var allow = !isPresent(def.mediaQuery) || def.mediaQuery == 'all' || this._matchMedia.match(def.mediaQuery);
+      // TODO (matsko): bring back support for media queries
+      var allow = !isPresent(def.mediaQuery) || def.mediaQuery == 'all';
       if (allow) {
         styles = StringMapWrapper.merge(styles, def.styles);
       }
@@ -30,7 +27,7 @@ export class CssMediaQueryResolver {
   resolveKeyframeDefinition(definitions: CssDefinition[]): AnimationKeyframe[] {
     var chosenDef;
     definitions.forEach((def) => {
-      var allow = def.mediaQuery == 'all' || this._matchMedia.match(def.mediaQuery);
+      var allow = !isPresent(def.mediaQuery) || def.mediaQuery == 'all';
       if (allow) {
         chosenDef = def;
       }

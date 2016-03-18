@@ -1,4 +1,4 @@
-import {CssMediaQueryResolver} from 'angular2/src/animate/worker/css_media_query_resolver';
+import {CssStylesResolver} from 'angular2/src/animate/worker/css_styles_resolver';
 import {CssDefinition} from 'angular2/src/animate/worker/css_definition';
 import {BaseException} from 'angular2/src/facade/exceptions';
 import {MapWrapper, StringMapWrapper} from 'angular2/src/facade/collection';
@@ -11,7 +11,7 @@ export class AnimationStyles {
   private definitions: {[name: string]: CssDefinition[]} = {};
   private _cache: {[name: string]: any} = {};
 
-  constructor(private _resolver: CssMediaQueryResolver, styles: {[key: string]: any}) {
+  constructor(private _resolver: CssStylesResolver, styles: {[key: string]: any}) {
     StringMapWrapper.forEach(styles, (entries, token) => {
       var arr = this.definitions[token] = this.definitions[token] || [];
       entries.forEach((entry) => {
