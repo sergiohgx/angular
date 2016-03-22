@@ -1,1 +1,1 @@
-export * from 'angular2/src/animate/module';
+export * from 'angular2/src/animate/worker/animation_dsl';
