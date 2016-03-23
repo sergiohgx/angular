@@ -1,5 +1,5 @@
 import {Injectable} from 'angular2/core';
-import {Type, isBlank, isPresent} from 'angular2/src/facade/lang';
+import {Type, isBlank, isPresent, isArray} from 'angular2/src/facade/lang';
 import {Map, StringMapWrapper} from 'angular2/src/facade/collection';
 import {PromiseWrapper, ObservableWrapper} from 'angular2/src/facade/async';
 import {RenderComponentType} from 'angular2/src/core/render/api';
@@ -7,9 +7,10 @@ import {NgZone} from 'angular2/src/core/zone/ng_zone';
 import {Renderer} from 'angular2/src/core/render/api';
 import {CssStylesResolver} from 'angular2/src/animate/worker/css_styles_resolver';
 
-import {AnimationElement} from 'angular2/src/animate/animation_element';
-import {AnimationDefinition} from 'angular2/src/animate/worker/animation_definition';
 import {AnimationStyles} from 'angular2/src/animate/worker/animation_styles';
+import {AnimationPlayer, NoOpAnimationPlayer} from 'angular2/src/animate/animation_player';
+import {AnimationFactory, AnimationCompiler} from 'angular2/src/compiler/animation_compiler';
+import {AnimationMetadata, AnimationStepsMetadata, AnimationSequenceMetadata} from 'angular2/src/core/metadata/animate';
 
 export enum AnimationPriority {
   AttributeBased,
@@ -18,21 +19,27 @@ export enum AnimationPriority {
 }
 
 export class AnimationRenderQueueEntry {
-  constructor(public element: AnimationElement,
-              public renderer: Renderer,
-              public animation: AnimationDefinition,
-              public animationStyles: AnimationStyles,
+  constructor(private _element: Node,
+              private _renderer: Renderer,
+              private _animation: AnimationFactory,
               public doneFn: Function) {}
 
-  isAnimatable(): boolean { return true; }
+  start(index: number): AnimationPlayer {
+    var player = this._animation.start(this._element, this._renderer, index);
+    player.subscribe(() => this.doneFn());
+    return player;
+  }
 }
 
 export class NoOpAnimationRenderQueueEntry extends AnimationRenderQueueEntry {
   constructor(public doneFn: Function) {
-    super(null, null, null, null, doneFn);
+    super(null, null, null, doneFn);
   }
 
-  isAnimatable(): boolean { return false; }
+  start(index: number): AnimationPlayer {
+    this.doneFn();
+    return new NoOpAnimationPlayer();
+  }
 }
 
 export class AnimationElementLookupEntry {
@@ -42,11 +49,15 @@ export class AnimationElementLookupEntry {
 @Injectable()
 export class AnimationRenderQueue {
   queue: AnimationRenderQueueEntry[] = [];
+  activeAnimations: AnimationPlayer[] = [];
+
   queueLookup = new Map<Node, AnimationElementLookupEntry>();
   lookup = new Map<RenderComponentType, {[key: string]: any}>();
 
-  constructor(private _zone: NgZone,
-              private _stylesResolver: CssStylesResolver) {
+  private _compiler = new AnimationCompiler();
+  private _stylesResolver = new CssStylesResolver();
+
+  constructor(private _zone: NgZone) {
     ObservableWrapper.subscribe(this._zone.onMicrotaskEmpty, (e) => {
       this.flush();
     });
@@ -54,12 +65,29 @@ export class AnimationRenderQueue {
 
   public registerComponent(componentProto: RenderComponentType,
                            animationRenderer: Renderer,
-                           animations: {[key: string]: any},
+                           animations: {[key: string]: AnimationMetadata},
                            animationStyles: {[key: string]: any}): void {
+
+    var compiledStyles = new AnimationStyles(this._stylesResolver, animationStyles);
+    var compiledAnimations = {};
+
+    StringMapWrapper.forEach(animations, (data, name) => {
+      var entry = animations[name];
+      var animation: AnimationStepsMetadata;
+
+      if (entry instanceof AnimationStepsMetadata) {
+        animation = <AnimationStepsMetadata>entry;
+      } else {
+        var entries: AnimationMetadata[] = isArray(entry) ? <AnimationMetadata[]>entry : [entry];
+        animation = new AnimationSequenceMetadata(entries);
+      }
+
+      compiledAnimations[name] = this._compiler.compileAnimation(animation, compiledStyles);
+    });
+
     this.lookup.set(componentProto, {
-      'animations': animations,
-      'animationStyles': new AnimationStyles(this._stylesResolver, animationStyles),
-      'animationRenderer': animationRenderer
+      'animations': compiledAnimations,
+      'renderer': animationRenderer
     });
   }
 
@@ -71,7 +99,7 @@ export class AnimationRenderQueue {
     var entry = this.lookup.get(componentProto);
 
     if (isPresent(entry)) {
-      let animationDetails = <AnimationDefinition>entry['animations'][eventName];
+      let animationDetails = <AnimationFactory>entry['animations'][eventName];
 
       if (isPresent(animationDetails)) {
         let existingAnimation = this.queueLookup.get(element);
@@ -85,40 +113,36 @@ export class AnimationRenderQueue {
 
       if (registerAnimation) {
         this.queueLookup.set(element, new AnimationElementLookupEntry(this.queue.length, priority));
-
-        var contextData = {
-          'event': event,
-          'eventName': eventName,
-          'data': data
-        };
-
         this.queue.push(new AnimationRenderQueueEntry(
-          new AnimationElement(element, contextData),
-          entry['animationRenderer'],
+          element,
+          entry['renderer'],
           animationDetails,
-          entry['animationStyles'],
           doneFn
         ));
       }
     }
 
+    // fallback "fake" animation
     if (!registerAnimation) {
-      // fallback noOp animation
       this.queue.push(new NoOpAnimationRenderQueueEntry(doneFn));
     }
   }
 
   public flush(): void {
     if (this.queue.length == 0) return;
+
     var index = 0;
     this.queue.forEach((entry: AnimationRenderQueueEntry) => {
-      if (entry.isAnimatable()) {
-        var player = entry.animation.start(entry.element, {}, entry.animationStyles, entry.renderer, index++);
-        player.subscribe(() => entry.doneFn());
-      } else {
-        entry.doneFn();
-      }
+      var player = entry.start(index++);
+
+      this.activeAnimations.push(player);
+
+      player.subscribe(() => {
+        var index = this.activeAnimations.indexOf(player);
+        // TODO (matsko): clean up this player when the animation is done
+      });
     });
+
     this.queue = [];
     this.queueLookup.clear();
   }

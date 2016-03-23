@@ -12,13 +12,10 @@ import {UrlResolver} from 'angular2/src/compiler/url_resolver';
 import {extractStyleUrls, isStyleUrlResolvable} from './style_url_resolver';
 import {Injectable} from 'angular2/src/core/di';
 import {ViewEncapsulation} from 'angular2/src/core/metadata/view';
-import {AnimationDefinition} from 'angular2/src/animate/worker/animation_definition';
 import {StringMapWrapper} from 'angular2/src/facade/collection';
 
-import {AnimationStylesVisitor} from 'angular2/src/animate/worker/animation_styles_visitor';
 import {isString, isStringMap} from 'angular2/src/facade/lang';
-import {AnimationSequence} from 'angular2/src/animate/worker/animation_sequence';
-import {AnimationToken, AnimationTokenType} from 'angular2/src/animate/worker/animation_step';
+import {AnimationStylesVisitor} from 'angular2/src/animate/worker/animation_styles_visitor';
 
 import {
   HtmlAstVisitor,
@@ -77,38 +74,8 @@ export class TemplateNormalizer {
       return styleWithImports.style;
     });
 
-    var animations: AnimationDefinition;
-    var animationCssTokens = [];
-    var animData = templateMeta.animations;
-
-    var compiledAnimations: {[key: string]: any} = {};
-    StringMapWrapper.forEach(templateMeta.animations, (value, name) => {
-      var animation: AnimationDefinition;
-
-      if (isPresent(value)) {
-        if (isArray(value)) {
-          animation = new AnimationSequence(value);
-        } else if (value instanceof AnimationDefinition) {
-          animation = <AnimationDefinition>value;
-        } else {
-          // TODO (matsko): make a better animation
-          throw new BaseException(`Invalid animation value provided`);
-        }
-
-        compiledAnimations[name] = animation;
-        animation.getTokens().forEach((token: AnimationToken) => {
-          if (token.type == AnimationTokenType.CSS_CLASS || token.type == AnimationTokenType.CSS_KEYFRAME) {
-            animationCssTokens.push(token.value);
-          }
-        });
-      }
-    });
-
-    var animationStyles: {[key: string]: any} = {};
-    if (animationCssTokens.length > 0) {
-      var stylesVisitor = new AnimationStylesVisitor(templateMeta.styles[0]);
-      animationStyles = stylesVisitor.parse(animationCssTokens);
-    }
+    var stylesVisitor = new AnimationStylesVisitor(templateMeta.styles[0]);
+    var animationStyles: {[key: string]: any} = stylesVisitor.parse();
 
     var encapsulation = templateMeta.encapsulation;
     if (encapsulation === ViewEncapsulation.Emulated && allResolvedStyles.length === 0 &&
@@ -122,7 +89,7 @@ export class TemplateNormalizer {
       templateUrl: templateAbsUrl,
       styles: allResolvedStyles,
       styleUrls: allStyleAbsUrls,
-      animations: compiledAnimations,
+      animations: templateMeta.animations,
       animationStyles: animationStyles,
       ngContentSelectors: visitor.ngContentSelectors
     });

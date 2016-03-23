@@ -3,7 +3,6 @@ import {Set, Map, StringMapWrapper, ListWrapper} from 'angular2/src/facade/colle
 import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
 import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
-import {AnimationElement} from 'angular2/src/animate/animation_element';
 
 export abstract class DOMAnimationDriver extends AnimationDriver {
   private _nextAnimationID = 0;

@@ -9,8 +9,6 @@ export abstract class AnimationPlayer {
   abstract end(): void;
   abstract getDuration(): number;
   abstract getDelay(): number;
-  abstract getPosition(): number;
-  abstract setPosition(pos: number): void;
 }
 
 export class NoOpAnimationPlayer implements AnimationPlayer {
@@ -43,6 +41,130 @@ export class NoOpAnimationPlayer implements AnimationPlayer {
   end(): void { }
   getDuration(): number { return 0; }
   getDelay(): number { return 0; }
-  getPosition(): number { return 0; }
-  setPosition(pos: number): void { }
+}
+
+export class AnimationGroupPlayer implements AnimationPlayer {
+  private _subscriptions: Function[] = [];
+
+  constructor(private _players: AnimationPlayer[]) {
+    var count = 0;
+    var total = this._players.length;
+    var progress = () => {
+      if (++count >= total) {
+        this._onFinish();
+      }
+    };
+    this._players.forEach(player => player.subscribe(progress));
+  }
+
+  _onFinish() {
+    this._subscriptions.forEach(subscription => subscription());
+    this._subscriptions = [];
+  }
+
+  subscribe(fn: Function): void {
+    this._subscriptions.push(fn);
+  }
+
+  then(fn: Function): Promise<any> {
+    var defer = PromiseWrapper.completer();
+    var resolve: Function = defer['resolve'];
+    this.subscribe(() => resolve());
+    return <Promise<any>>defer['promise'];
+  }
+
+  play() {
+    this._players.forEach(player => player.play());
+  }
+
+  pause(): void {
+    this._players.forEach(player => player.pause());
+  }
+
+  reverse(): void {
+    this._players.forEach(player => player.reverse());
+  }
+
+  end(): void {
+    this._players.forEach(player => player.end());
+  }
+
+  getDuration(): number {
+    return this._players.reduce((duration, player) => {
+      return Math.max(duration, player.getDuration());
+    }, 0);
+  }
+
+  getDelay(): number {
+    return this._players.reduce((delay, player) => {
+      return Math.max(delay, player.getDelay());
+    }, 0);
+  }
+}
+
+export class AnimationSequencePlayer implements AnimationPlayer {
+  private _currentIndex: number = 0;
+  private _activePlayers: AnimationPlayer[] = [];
+  private _subscriptions: Function[] = [];
+
+  constructor(private _playerFns: Function[]) {
+    this._onNext();
+  }
+
+  _onNext() {
+    if (this._currentIndex >= this._playerFns.length) {
+      this._onFinish();
+    } else {
+      var next = this._playerFns[this._currentIndex++];
+      var player = next();
+      this._activePlayers.push(player);
+      player.subscribe(() => this._onNext());
+    }
+  }
+
+  _onFinish() {
+    this._subscriptions.forEach(subscription => subscription());
+    this._subscriptions = [];
+  }
+
+  subscribe(fn: Function): void {
+    this._subscriptions.push(fn);
+  }
+
+  then(fn: Function): Promise<any> {
+    var defer = PromiseWrapper.completer();
+    var resolve: Function = defer['resolve'];
+    this.subscribe(() => {
+      resolve();
+    });
+    return <Promise<any>>defer['promise'];
+  }
+
+  play(): void {
+    this._activePlayers.forEach(player => player.play());
+  }
+
+  pause(): void {
+    this._activePlayers.forEach(player => player.pause());
+  }
+
+  reverse(): void {
+    this._activePlayers.forEach(player => player.reverse());
+  }
+
+  end(): void {
+    this._activePlayers.forEach(player => player.end());
+  }
+
+  getDuration(): number {
+    return this._activePlayers.reduce((duration, player) => {
+      return Math.max(duration, player.getDuration());
+    }, 0);
+  }
+
+  getDelay(): number {
+    return this._activePlayers.reduce((delay, player) => {
+      return Math.max(delay, player.getDelay());
+    }, 0);
+  }
 }
