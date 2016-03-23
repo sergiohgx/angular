@@ -25,20 +25,8 @@ function normalizePercentage(p): number {
 export class WebAnimationsPlayer implements AnimationPlayer {
   private _subscriptions: Function[] = [];
 
-  constructor(private _player: any, private _options: any) {
+  constructor(private _player: any) {
     this._player.onfinish = () => this._onFinish();
-  }
-
-  getDuration() {
-    return this.options['duration'];
-  }
-
-  getDelay() {
-    return this.options['delay'];
-  }
-
-  get options() {
-    return this._options;
   }
 
   private _onFinish() {
@@ -102,14 +90,13 @@ export class WebAnimationsDriver extends DOMAnimationDriver implements Animation
       formattedSteps.push(data);
     });
 
-    var options = {
+    var player = elm['animate'](formattedSteps, {
       'duration': duration,
       'delay': delay,
       'easing': easing,
       'fill': 'forwards'
-    };
+    });
 
-    var player = elm['animate'](formattedSteps, options);
-    return new WebAnimationsPlayer(player, options);
+    return new WebAnimationsPlayer(player);
   }
 }

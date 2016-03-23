@@ -74,8 +74,11 @@ export class TemplateNormalizer {
       return styleWithImports.style;
     });
 
-    var stylesVisitor = new AnimationStylesVisitor(templateMeta.styles[0]);
-    var animationStyles: {[key: string]: any} = stylesVisitor.parse();
+    var animationStyles: {[key: string]: any} = {};
+    if (templateMeta.styles.length > 0) {
+      var stylesVisitor = new AnimationStylesVisitor(templateMeta.styles[0]);
+      animationStyles = stylesVisitor.parse();
+    }
 
     var encapsulation = templateMeta.encapsulation;
     if (encapsulation === ViewEncapsulation.Emulated && allResolvedStyles.length === 0 &&
