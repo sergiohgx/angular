@@ -7,8 +7,6 @@ export abstract class AnimationPlayer {
   abstract pause(): void;
   abstract reverse(): void;
   abstract end(): void;
-  abstract getDuration(): number;
-  abstract getDelay(): number;
 }
 
 export class NoOpAnimationPlayer implements AnimationPlayer {
@@ -39,8 +37,6 @@ export class NoOpAnimationPlayer implements AnimationPlayer {
   pause(): void { }
   reverse(): void { }
   end(): void { }
-  getDuration(): number { return 0; }
-  getDelay(): number { return 0; }
 }
 
 export class AnimationGroupPlayer implements AnimationPlayer {
@@ -87,18 +83,6 @@ export class AnimationGroupPlayer implements AnimationPlayer {
 
   end(): void {
     this._players.forEach(player => player.end());
-  }
-
-  getDuration(): number {
-    return this._players.reduce((duration, player) => {
-      return Math.max(duration, player.getDuration());
-    }, 0);
-  }
-
-  getDelay(): number {
-    return this._players.reduce((delay, player) => {
-      return Math.max(delay, player.getDelay());
-    }, 0);
   }
 }
 
@@ -154,17 +138,5 @@ export class AnimationSequencePlayer implements AnimationPlayer {
 
   end(): void {
     this._activePlayers.forEach(player => player.end());
-  }
-
-  getDuration(): number {
-    return this._activePlayers.reduce((duration, player) => {
-      return Math.max(duration, player.getDuration());
-    }, 0);
-  }
-
-  getDelay(): number {
-    return this._activePlayers.reduce((delay, player) => {
-      return Math.max(delay, player.getDelay());
-    }, 0);
   }
 }
