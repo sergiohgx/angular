@@ -3,12 +3,10 @@ import {PromiseWrapper} from 'angular2/src/facade/async';
 import {StringMapWrapper} from 'angular2/src/facade/collection';
 
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
-import {copy} from 'angular2/src/animate/shared';
 
 import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
 import {AnimationPlayer} from 'angular2/src/animate/animation_player';
 import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
-import {AnimationElement} from 'angular2/src/animate/animation_element';
 
 import {DOMAnimationDriver} from 'angular2/src/animate/ui/dom_animation_driver';
 
@@ -75,14 +73,6 @@ export class WebAnimationsPlayer implements AnimationPlayer {
   reverse(): void {
     this._player.reverse();
   }
-
-  setPosition(pos: number): void {
-    this._player.currentTime = pos;
-  }
-
-  getPosition(): number {
-    return this._player.currentTime;
-  }
 }
 
 export class WebAnimationsDriver extends DOMAnimationDriver implements AnimationDriver {
@@ -98,9 +88,9 @@ export class WebAnimationsDriver extends DOMAnimationDriver implements Animation
     return DOM.supportsWebAnimation();
   }
 
-  animate(element: AnimationElement, keyframes: AnimationKeyframe[], duration: number, delay: number, easing: string, transforms: string[]): AnimationPlayer {
-    var node = element.element;
-    keyframes = this.prepareKeyframes(node, keyframes, duration);
+  animate(element: Node, keyframes: AnimationKeyframe[], duration: number, delay: number, easing: string): AnimationPlayer {
+    var elm = <HTMLElement>element;
+    keyframes = this.prepareKeyframes(elm, keyframes, duration);
 
     var formattedSteps = [];
     keyframes.forEach((keyframe) => {
@@ -119,7 +109,7 @@ export class WebAnimationsDriver extends DOMAnimationDriver implements Animation
       'fill': 'forwards'
     };
 
-    var player = node['animate'](formattedSteps, options);
+    var player = elm['animate'](formattedSteps, options);
     return new WebAnimationsPlayer(player, options);
   }
 }

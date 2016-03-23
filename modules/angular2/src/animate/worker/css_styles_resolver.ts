@@ -35,8 +35,8 @@ export class CssStylesResolver {
 
     var keyframes = [];
     if (isPresent(chosenDef)) {
-      StringMapWrapper.forEach(chosenDef, (styles, position) => {
-        keyframes.push(new AnimationKeyframe(position, styles));
+      StringMapWrapper.forEach(chosenDef['styles'], (positionStyles, position) => {
+        keyframes.push(new AnimationKeyframe(position, positionStyles));
       });
     }
 

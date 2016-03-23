@@ -35,13 +35,13 @@ import {animate, style} from 'angular2/animate';
   animations: {
     ngEnter: [
       style({ height: 0, opacity: 0 }),
-      animate(['.visible', { height: 200 }], 500).stagger('50ms'),
+      animate(['.visible', { height: 200 }], 500),
       style({ background: 'white' }),
       animate([{ background: 'red' }, '@flip'], '0.5s')
     ],
     ngLeave: [
       style({ height: '200px', opacity: '1' }),
-      animate({ height: '0', opacity: '0' }, '0.5s').stagger('50ms')
+      animate({ height: '0', opacity: '0' }, '0.5s')
     ]
   },
   template: `

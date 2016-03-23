@@ -16,7 +16,6 @@ import {DomSharedStylesHost} from './shared_styles_host';
 import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
 import {AnimationPlayer} from 'angular2/src/animate/animation_player';
 import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
-import {AnimationElement} from 'angular2/src/animate/animation_element';
 
 import {
   Renderer,
@@ -275,8 +274,8 @@ export class DomRenderer implements Renderer {
     this._animationQueue.schedule(AnimationPriority.Structural, this.componentProto, <HTMLElement>node, 'ngLeave', null, null, () => DOM.remove(node));
   }
 
-  animate(element: AnimationElement, keyframes: AnimationKeyframe[], duration: number, delay: number, easing: string, transforms: string[]): AnimationPlayer {
-    return this._animationDriver.animate(element, keyframes, duration, delay, easing, transforms);
+  animate(element: Node, keyframes: AnimationKeyframe[], duration: number, delay: number, easing: string): AnimationPlayer {
+    return this._animationDriver.animate(element, keyframes, duration, delay, easing);
   }
 }
 
