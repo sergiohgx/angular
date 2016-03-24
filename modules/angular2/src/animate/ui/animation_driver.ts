@@ -1,4 +1,4 @@
-import {NoOpAnimationPlayer, AnimationPlayer} from 'angular2/src/animate/animation_player';
+import {NoOpAnimationPlayer, AnimationPlayer} from 'angular2/src/core/animation/animation_player';
 import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
 
 export abstract class AnimationDriver {

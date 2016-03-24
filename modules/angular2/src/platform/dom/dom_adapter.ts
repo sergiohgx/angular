@@ -107,7 +107,6 @@ export abstract class DomAdapter {
   abstract templateAwareRoot(el);
   abstract createHtmlDocument(): HTMLDocument;
   abstract defaultDoc(): HTMLDocument;
-  abstract matchMedia(mediaQuery: string): boolean;
   abstract getBoundingClientRect(el);
   abstract getTitle(): string;
   abstract setTitle(newTitle: string);

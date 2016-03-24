@@ -1,11 +1,10 @@
 import {isString, NumberWrapper} from 'angular2/src/facade/lang';
-import {PromiseWrapper} from 'angular2/src/facade/async';
 import {StringMapWrapper} from 'angular2/src/facade/collection';
 
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
 
 import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
-import {AnimationPlayer} from 'angular2/src/animate/animation_player';
+import {AnimationPlayer} from 'angular2/src/core/animation/animation_player';
 import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
 
 import {DOMAnimationDriver} from 'angular2/src/animate/ui/dom_animation_driver';
@@ -26,6 +25,8 @@ export class WebAnimationsPlayer implements AnimationPlayer {
   private _subscriptions: Function[] = [];
 
   constructor(private _player: any) {
+    // this is required to make the player startable at a later time
+    this._player.cancel();
     this._player.onfinish = () => this._onFinish();
   }
 
@@ -35,15 +36,8 @@ export class WebAnimationsPlayer implements AnimationPlayer {
     });
   }
 
-  subscribe(fn): void {
+  onDone(fn): void {
     this._subscriptions.push(fn);
-  }
-
-  then(fn: Function): Promise<any> {
-    var defer = PromiseWrapper.completer();
-    var resolve: Function = defer['resolve'];
-    this.subscribe(() => resolve());
-    return <Promise<any>>defer['promise'];
   }
 
   play(): void {
@@ -54,12 +48,17 @@ export class WebAnimationsPlayer implements AnimationPlayer {
     this._player.pause();
   }
 
-  end(): void {
+  finish(): void {
     this._player.stop();
   }
 
   reverse(): void {
     this._player.reverse();
+  }
+
+  restart(): void {
+    this._player.cancel();
+    this._player.start();
   }
 }
 
@@ -83,8 +82,10 @@ export class WebAnimationsDriver extends DOMAnimationDriver implements Animation
     var formattedSteps = [];
     keyframes.forEach((keyframe) => {
       var data = {};
-      StringMapWrapper.forEach(keyframe.styles, (val, prop) => {
-        data[prop] = val;
+      keyframe.styles.forEach((entry) => {
+        StringMapWrapper.forEach(entry.styles, (val, prop) => {
+          data[prop] = val;
+        });
       });
       data['offset'] = normalizePercentage(keyframe.position);
       formattedSteps.push(data);

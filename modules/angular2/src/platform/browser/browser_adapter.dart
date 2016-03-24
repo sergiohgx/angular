@@ -398,7 +398,6 @@ class BrowserDomAdapter extends GenericBrowserDomAdapter {
       document.implementation.createHtmlDocument('fakeTitle');
 
   HtmlDocument defaultDoc() => document;
-  bool matchMedia(String mediaQuery) => window.matchMedia(mediaQuery).matches;
   Rectangle getBoundingClientRect(el) => el.getBoundingClientRect();
   String getTitle() => document.title;
   void setTitle(String newTitle) {
@@ -505,13 +504,12 @@ class BrowserDomAdapter extends GenericBrowserDomAdapter {
     window.cancelAnimationFrame(id);
   }
 
-  // TODO(matsko): make sure that this is ok for older browsers
   bool supportsCssAnimation() {
-    return true;
+    return this._hasProperty.apply([window, 'AnimationEvent']);
   }
 
-  supportsWebAnimation() {
-    return false;
+  bool supportsWebAnimation() {
+    return this._hasProperty.apply([document.body, 'animate']);
   }
 
   num performanceNow() {

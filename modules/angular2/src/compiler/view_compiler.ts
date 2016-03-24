@@ -404,7 +404,7 @@ class RuntimeViewFactory implements ViewFactory<any, any> {
       if (embeddedTemplateIndex === 0) {
         if (isBlank(renderComponentType)) {
           renderComponentType = viewManager.createRenderComponentType(
-              this.component.template.encapsulation, this.styles, this.component.template.animations, this.component.template.animationStyles);
+              this.component.template.encapsulation, this.styles, this.component.template.animations);
         }
         renderer = parentRenderer.renderComponent(renderComponentType);
       } else {

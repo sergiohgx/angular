@@ -3,7 +3,7 @@ import {
   CompileDirectiveMetadata,
   CompileTemplateMetadata
 } from './directive_metadata';
-import {isPresent, isBlank, isArray} from 'angular2/src/facade/lang';
+import {isPresent} from 'angular2/src/facade/lang';
 import {BaseException} from 'angular2/src/facade/exceptions';
 import {PromiseWrapper} from 'angular2/src/facade/async';
 
@@ -12,10 +12,6 @@ import {UrlResolver} from 'angular2/src/compiler/url_resolver';
 import {extractStyleUrls, isStyleUrlResolvable} from './style_url_resolver';
 import {Injectable} from 'angular2/src/core/di';
 import {ViewEncapsulation} from 'angular2/src/core/metadata/view';
-import {StringMapWrapper} from 'angular2/src/facade/collection';
-
-import {isString, isStringMap} from 'angular2/src/facade/lang';
-import {AnimationStylesVisitor} from 'angular2/src/animate/worker/animation_styles_visitor';
 
 import {
   HtmlAstVisitor,
@@ -74,12 +70,6 @@ export class TemplateNormalizer {
       return styleWithImports.style;
     });
 
-    var animationStyles: {[key: string]: any} = {};
-    if (templateMeta.styles.length > 0) {
-      var stylesVisitor = new AnimationStylesVisitor(templateMeta.styles[0]);
-      animationStyles = stylesVisitor.parse();
-    }
-
     var encapsulation = templateMeta.encapsulation;
     if (encapsulation === ViewEncapsulation.Emulated && allResolvedStyles.length === 0 &&
         allStyleAbsUrls.length === 0) {
@@ -93,7 +83,6 @@ export class TemplateNormalizer {
       styles: allResolvedStyles,
       styleUrls: allStyleAbsUrls,
       animations: templateMeta.animations,
-      animationStyles: animationStyles,
       ngContentSelectors: visitor.ngContentSelectors
     });
   }

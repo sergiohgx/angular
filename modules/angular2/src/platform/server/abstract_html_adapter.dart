@@ -385,6 +385,15 @@ abstract class AbstractHtml5LibAdapter implements DomAdapter {
     return false;
   }
 
+  bool supportsCssAnimation() {
+    return false;
+  }
+
+  bool supportsWebAnimation() {
+    return false;
+  }
+
+
   getHistory() {
     throw 'not implemented';
   }

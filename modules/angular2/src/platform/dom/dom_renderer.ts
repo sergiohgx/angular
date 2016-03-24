@@ -1,6 +1,7 @@
 import {Inject, Injectable, OpaqueToken} from 'angular2/src/core/di';
 import {
   isPresent,
+  isFunction,
   isBlank,
   Json,
   RegExpWrapper,
@@ -13,9 +14,17 @@ import {
 import {BaseException, WrappedException} from 'angular2/src/facade/exceptions';
 import {DomSharedStylesHost} from './shared_styles_host';
 
+import {StringMapWrapper} from 'angular2/src/facade/collection';
+
+import {AnimationCompiler} from 'angular2/src/compiler/animation/compiler';
+import {AnimationFactory} from 'angular2/src/compiler/animation/animation_factory';
+
 import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
-import {AnimationPlayer} from 'angular2/src/animate/animation_player';
+import {AnimationPlayer} from 'angular2/src/core/animation/animation_player';
 import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
+import {AnimationStyles} from 'angular2/src/animate/worker/animation_styles';
+
+import {NgZone} from 'angular2/src/core/zone/ng_zone';
 
 import {
   Renderer,
@@ -31,7 +40,7 @@ import {ViewEncapsulation} from 'angular2/src/core/metadata';
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
 import {camelCaseToDashCase} from './util';
 
-import {AnimationRenderQueue, AnimationPriority} from 'angular2/src/animate/worker/animation_render_queue';
+import {AnimationPriority, AnimationQueue} from 'angular2/src/core/animation/animation_queue';
 
 const NAMESPACE_URIS =
     CONST_EXPR({'xlink': 'http://www.w3.org/1999/xlink', 'svg': 'http://www.w3.org/2000/svg'});
@@ -43,13 +52,14 @@ export abstract class DomRootRenderer implements RootRenderer {
 
   constructor(public document: any, public eventManager: EventManager,
               public sharedStylesHost: DomSharedStylesHost,
-              public animationQueue: AnimationRenderQueue,
+              public zone: NgZone,
+              public animationCompiler: AnimationCompiler,
               public animationDriver: AnimationDriver) {}
 
   renderComponent(componentProto: RenderComponentType): Renderer {
     var renderer = this._registeredComponents.get(componentProto.id);
     if (isBlank(renderer)) {
-      renderer = new DomRenderer(this, componentProto, this.animationQueue, this.animationDriver);
+      renderer = new DomRenderer(this, componentProto, this.zone, this.animationCompiler, this.animationDriver);
       this._registeredComponents.set(componentProto.id, renderer);
     }
     return renderer;
@@ -60,9 +70,10 @@ export abstract class DomRootRenderer implements RootRenderer {
 export class DomRootRenderer_ extends DomRootRenderer {
   constructor(@Inject(DOCUMENT) _document: any, _eventManager: EventManager,
               sharedStylesHost: DomSharedStylesHost,
-              animationQueue: AnimationRenderQueue,
+              zone: NgZone,
+              animationCompiler: AnimationCompiler,
               animationDriver: AnimationDriver) {
-    super(_document, _eventManager, sharedStylesHost, animationQueue, animationDriver);
+    super(_document, _eventManager, sharedStylesHost, zone, animationCompiler, animationDriver);
   }
 }
 
@@ -70,14 +81,24 @@ export class DomRenderer implements Renderer {
   private _contentAttr: string;
   private _hostAttr: string;
   private _styles: string[];
+  private _animationQueue: AnimationQueue;
+
+  private _animations: {[key: string]: AnimationFactory};
 
   constructor(private _rootRenderer: DomRootRenderer,
               private componentProto: RenderComponentType,
-              private _animationQueue:AnimationRenderQueue,
+              zone: NgZone,
+              animationCompiler: AnimationCompiler,
               private _animationDriver: AnimationDriver) {
-    this._styles = _flattenStyles(componentProto.id, componentProto.styles, []);
 
-    this._animationQueue.registerComponent(componentProto, this, componentProto.animations, componentProto.animationStyles);
+    this._styles = _flattenStyles(componentProto.id, componentProto.styles, []);
+    this._animationQueue = new AnimationQueue(zone);
+
+    var styles = new AnimationStyles({});
+
+    StringMapWrapper.forEach(componentProto.animations, (entry, name) => {
+      this._animations[name] = animationCompiler.compileAnimation(entry, styles);
+    });
 
     if (componentProto.encapsulation !== ViewEncapsulation.Native) {
       this._rootRenderer.sharedStylesHost.addStyles(this._styles);
@@ -88,6 +109,18 @@ export class DomRenderer implements Renderer {
     } else {
       this._contentAttr = null;
       this._hostAttr = null;
+    }
+  }
+
+  _scheduleAnimation(name: string, priority: AnimationPriority, element: any, doneFn = null): void {
+    var animation = this._animations[name];
+    doneFn = isFunction(doneFn) ? doneFn : () => {};
+
+    if (isPresent(animation)) {
+      var player = animation.create(element, this);
+      this._animationQueue.schedule(element, priority, player, doneFn);
+    } else {
+      doneFn();
     }
   }
 
@@ -211,7 +244,7 @@ export class DomRenderer implements Renderer {
       }
       eventName = 'removeAttribute';
     }
-    this._animationQueue.schedule(AnimationPriority.AttributeBased, this.componentProto, <HTMLElement>renderElement, eventName, null, { 'attributeName': attributeName, 'attributeValue': attributeValue });
+    this._scheduleAnimation(eventName, AnimationPriority.AttributeBased, <HTMLElement>renderElement);
   }
 
   setBindingDebugInfo(renderElement: any, propertyName: string, propertyValue: string): void {
@@ -239,7 +272,7 @@ export class DomRenderer implements Renderer {
       eventName = 'removeClass';
       DOM.removeClass(renderElement, className);
     }
-    this._animationQueue.schedule(AnimationPriority.ClassBased, this.componentProto, <HTMLElement>renderElement, eventName, null, { 'className': className });
+    this._scheduleAnimation(eventName, AnimationPriority.ClassBased, <HTMLElement>renderElement);
   }
 
   setElementStyle(renderElement: any, styleName: string, styleValue: string): void {
@@ -261,7 +294,7 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeEnter(node: Node) {
-    this._animationQueue.schedule(AnimationPriority.Structural, this.componentProto, <HTMLElement>node, 'ngEnter', null);
+    this._scheduleAnimation('ngEnter', AnimationPriority.Structural, <HTMLElement>node);
   }
 
 
@@ -271,7 +304,9 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeLeave(node: Node) {
-    this._animationQueue.schedule(AnimationPriority.Structural, this.componentProto, <HTMLElement>node, 'ngLeave', null, null, () => DOM.remove(node));
+    this._scheduleAnimation('ngLeave', AnimationPriority.Structural, <HTMLElement>node, () => {
+      DOM.remove(node);
+    });
   }
 
   animate(element: Node, keyframes: AnimationKeyframe[], duration: number, delay: number, easing: string): AnimationPlayer {
