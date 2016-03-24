@@ -1,3 +1,5 @@
+import {isPresent} from "angular2/src/facade/lang";
+
 import {
   AsyncTestCompleter,
   describe,
@@ -17,10 +19,12 @@ import {
 import {WebAnimationsPlayer} from 'angular2/src/animate/ui/drivers/web_animations';
 
 class MockWebAnimationsElementPlayer {
-  public captures = {};
+  public captures: {[key: string]: any[]} = {};
 
   _capture(method: string, data: any) {
-    this.captures[method] = this.captures[method] || [];
+    if (!isPresent(this.captures[method])) {
+      this.captures[method] = [];
+    }
     this.captures[method].push(data);
   }
 
@@ -35,7 +39,6 @@ export function main() {
   describe('WebAnimationsPlayer', () => {
     var player, captures;
     beforeEach(() => {
-      var mockElement = el('<div></div');
       var mockPlayer = new MockWebAnimationsElementPlayer();
       captures = mockPlayer.captures;
       player = new WebAnimationsPlayer(mockPlayer);

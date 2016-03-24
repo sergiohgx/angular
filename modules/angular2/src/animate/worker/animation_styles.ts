@@ -7,11 +7,14 @@ import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
 
 export class AnimationStyles {
   private definitions: {[name: string]: CssDefinition[]} = {};
-  private _cache: {[name: string]: any} = {};
+  private _resolver = new CssStylesResolver();
 
-  constructor(private _resolver: CssStylesResolver, styles: {[key: string]: any}) {
-    StringMapWrapper.forEach(styles, (entries, token) => {
-      var arr = this.definitions[token] = this.definitions[token] || [];
+  constructor(styles: {[key: string]: any[]}) {
+    StringMapWrapper.forEach(styles, (entries: any[], token) => {
+      var arr = this.definitions[token];
+      if (!isPresent(arr)) {
+        arr = this.definitions[token] = [];
+      }
       entries.forEach((entry) => {
         arr.push(new CssDefinition(entry[0], entry[1]));
       });
@@ -27,7 +30,7 @@ export class AnimationStyles {
   }
 
   lookupClass(className: string): AnimationKeyframe {
-    return new AnimationKeyframe('100%', this._resolver.resolveClassDefinition(this._lookup(className)));
+    return AnimationKeyframe.fromStyles('100%', this._resolver.resolveClassDefinition(this._lookup(className)));
   }
 
   lookupKeyframe(keyframeName: string): AnimationKeyframe[] {

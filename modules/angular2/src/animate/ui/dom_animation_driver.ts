@@ -3,16 +3,15 @@ import {Set, Map, StringMapWrapper, ListWrapper} from 'angular2/src/facade/colle
 import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
 import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
+import {BaseException} from 'angular2/src/facade/exceptions';
 
 export abstract class DOMAnimationDriver extends AnimationDriver {
-  private _nextAnimationID = 0;
-
   private _currentStyles = new Map<HTMLElement, {[key: string]: string}>();
 
   constructor() {
     super();
     if (!this.isSupported()) {
-      throw new Error('Browser driver ' + this.getName() + ' is not supported');
+      throw new BaseException(`Browser driver ${this.getName()} is not supported`);
     }
   }
 
@@ -36,17 +35,19 @@ export abstract class DOMAnimationDriver extends AnimationDriver {
         endingKeyframe = kf;
       }
 
-      StringMapWrapper.forEach(kf.styles, (value, prop) => {
-        collectedProperties.add(prop);
-        flatStyles[prop] = value;
+      kf.styles.forEach((entry) => {
+        StringMapWrapper.forEach(entry.styles, (value, prop) => {
+          collectedProperties.add(prop);
+          flatStyles[prop] = value;
+        });
       });
     });
 
     if (duration == 0) {
       this._currentStyles.set(element, flatStyles);
       return [
-        new AnimationKeyframe('0%', flatStyles),
-        new AnimationKeyframe('100%', flatStyles)
+        AnimationKeyframe.fromStyles('0%', flatStyles),
+        AnimationKeyframe.fromStyles('100%', flatStyles)
       ];
     }
 
@@ -75,8 +76,8 @@ export abstract class DOMAnimationDriver extends AnimationDriver {
     this._currentStyles.set(element, finalStyles);
 
     return [
-      new AnimationKeyframe('0%', startStyles),
-      new AnimationKeyframe('100%', finalStyles)
+      AnimationKeyframe.fromStyles('0%', startStyles),
+      AnimationKeyframe.fromStyles('100%', finalStyles)
     ];
   }
 

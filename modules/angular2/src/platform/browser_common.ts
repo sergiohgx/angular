@@ -17,13 +17,13 @@ import {
 import {COMMON_DIRECTIVES, COMMON_PIPES, FORM_PROVIDERS} from "angular2/common";
 import {Testability} from 'angular2/src/core/testability/testability';
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
-import {AnimationRenderQueue} from 'angular2/src/animate/worker/animation_render_queue';
 import {DomEventsPlugin} from 'angular2/src/platform/dom/events/dom_events';
 import {KeyEventsPlugin} from 'angular2/src/platform/dom/events/key_events';
 import {HammerGesturesPlugin} from 'angular2/src/platform/dom/events/hammer_gestures';
 import {ANIMATIONS, DOCUMENT} from 'angular2/src/platform/dom/dom_tokens';
 import {WebAnimationsDriver} from 'angular2/src/animate/ui/drivers/web_animations';
 import {AnimationDriver, NoOpAnimationDriver} from 'angular2/src/animate/ui/animation_driver';
+import {AnimationCompiler, RuntimeAnimationCompiler} from 'angular2/src/compiler/animation/compiler';
 import {DomRootRenderer, DomRootRenderer_} from 'angular2/src/platform/dom/dom_renderer';
 import {DomSharedStylesHost} from 'angular2/src/platform/dom/shared_styles_host';
 import {SharedStylesHost} from "angular2/src/platform/dom/shared_styles_host";
@@ -88,8 +88,8 @@ export const BROWSER_APP_COMMON_PROVIDERS: Array<any /*Type | Provider | any[]*/
   new Provider(DomRootRenderer, {useClass: DomRootRenderer_}),
   new Provider(RootRenderer, {useExisting: DomRootRenderer}),
   new Provider(SharedStylesHost, {useExisting: DomSharedStylesHost}),
-  new Provider(AnimationRenderQueue, {useClass: AnimationRenderQueue}),
   new Provider(AnimationDriver, {useFactory: _resolveDefaultAnimationDriver}),
+  new Provider(AnimationCompiler, {useExisting: RuntimeAnimationCompiler}),
   DomSharedStylesHost,
   Testability,
   EventManager,

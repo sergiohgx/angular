@@ -1,4 +1,3 @@
-import {Injectable} from 'angular2/core';
 import {StringMapWrapper} from 'angular2/src/facade/collection';
 import {CssDefinition} from 'angular2/src/animate/worker/css_definition';
 import {isPresent} from 'angular2/src/facade/lang';
@@ -36,7 +35,7 @@ export class CssStylesResolver {
     var keyframes = [];
     if (isPresent(chosenDef)) {
       StringMapWrapper.forEach(chosenDef['styles'], (positionStyles, position) => {
-        keyframes.push(new AnimationKeyframe(position, positionStyles));
+        keyframes.push(AnimationKeyframe.fromStyles(position, positionStyles));
       });
     }
 

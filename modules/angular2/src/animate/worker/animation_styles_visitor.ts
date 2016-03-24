@@ -29,7 +29,7 @@ import {
 export class AnimationStylesVisitor implements CssASTVisitor {
   private _stylesheet: CssStyleSheetAST;
 
-  private _definitions: {[key: string]: any};
+  private _definitions: {[key: string]: any[]};
   private _currentSelector: string = null;
   private _currentDefinition: {[key: string]: any} = null;
 
@@ -45,7 +45,7 @@ export class AnimationStylesVisitor implements CssASTVisitor {
     this._stylesheet = output.ast;
   }
 
-  parse(context?: any): {[key: string]: any} {
+  parse(context?: any): {[key: string]: any[]} {
     this._definitions = {};
     this._stylesheet.visit(this, context);
     this._currentSelector = null;
