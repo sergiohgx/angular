@@ -28,6 +28,7 @@ class MockWebAnimationsElementPlayer {
     this.captures[method].push(data);
   }
 
+  cancel() { this._capture('cancel', null); }
   play() { this._capture('play', null); }
   pause() { this._capture('pause', null); }
   reverse() { this._capture('reverse', null); }
@@ -56,9 +57,9 @@ export function main() {
       expect(captures['play'].length).toEqual(1);
     });
 
-    it('should end the animation', () => {
+    it('should finish the animation', () => {
       expect(captures['stop']).toBeFalsy();
-      player.end();
+      player.finish();
       expect(captures['stop'].length).toEqual(1);
     });
 
@@ -75,9 +76,9 @@ export function main() {
     it('should trigger the subscribe functions when complete', () => {
       var count = 0;
       var method = () => { count++; }
-      player.subscribe(method);
-      player.subscribe(method);
-      player.subscribe(method);
+      player.onDone(method);
+      player.onDone(method);
+      player.onDone(method);
 
       expect(count).toEqual(0);
       captures['onfinish'][0]();

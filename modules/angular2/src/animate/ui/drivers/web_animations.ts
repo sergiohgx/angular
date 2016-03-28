@@ -31,9 +31,7 @@ export class WebAnimationsPlayer implements AnimationPlayer {
   }
 
   private _onFinish() {
-    this._subscriptions.forEach((fn) => {
-      fn();
-    });
+    this._subscriptions.forEach(fn => fn());
   }
 
   onDone(fn): void {

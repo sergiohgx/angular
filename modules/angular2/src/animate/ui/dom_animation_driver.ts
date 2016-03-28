@@ -63,14 +63,18 @@ export abstract class DOMAnimationDriver extends AnimationDriver {
     });
 
     if (isPresent(startingKeyframe)) {
-      StringMapWrapper.forEach(startingKeyframe.styles, (val, prop) => {
-        startStyles[prop] = val;
-        finalStyles[prop] = val;
+      startingKeyframe.styles.forEach((entry) => {
+        StringMapWrapper.forEach(entry.styles, (val, prop) => {
+          startStyles[prop] = val;
+          finalStyles[prop] = val;
+        });
       });
     }
 
-    StringMapWrapper.forEach(endingKeyframe.styles, (val, prop) => {
-      finalStyles[prop] = val;
+    endingKeyframe.styles.forEach((entry) => {
+      StringMapWrapper.forEach(entry.styles, (val, prop) => {
+        finalStyles[prop] = val;
+      });
     });
 
     this._currentStyles.set(element, finalStyles);

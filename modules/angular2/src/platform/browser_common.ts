@@ -89,7 +89,7 @@ export const BROWSER_APP_COMMON_PROVIDERS: Array<any /*Type | Provider | any[]*/
   new Provider(RootRenderer, {useExisting: DomRootRenderer}),
   new Provider(SharedStylesHost, {useExisting: DomSharedStylesHost}),
   new Provider(AnimationDriver, {useFactory: _resolveDefaultAnimationDriver}),
-  new Provider(AnimationCompiler, {useExisting: RuntimeAnimationCompiler}),
+  new Provider(AnimationCompiler, {useClass: RuntimeAnimationCompiler}),
   DomSharedStylesHost,
   Testability,
   EventManager,
