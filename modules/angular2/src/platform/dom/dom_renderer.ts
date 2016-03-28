@@ -18,6 +18,7 @@ import {StringMapWrapper} from 'angular2/src/facade/collection';
 
 import {AnimationCompiler} from 'angular2/src/compiler/animation/compiler';
 import {AnimationFactory} from 'angular2/src/compiler/animation/animation_factory';
+import {AnimationQueue} from 'angular2/src/core/animation/animation_queue';
 
 import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
 import {AnimationPlayer} from 'angular2/src/core/animation/animation_player';
@@ -40,12 +41,14 @@ import {ViewEncapsulation} from 'angular2/src/core/metadata';
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
 import {camelCaseToDashCase} from './util';
 
-import {AnimationPriority, AnimationQueue} from 'angular2/src/core/animation/animation_queue';
-
 const NAMESPACE_URIS =
     CONST_EXPR({'xlink': 'http://www.w3.org/1999/xlink', 'svg': 'http://www.w3.org/2000/svg'});
 const TEMPLATE_COMMENT_TEXT = 'template bindings={}';
 var TEMPLATE_BINDINGS_EXP = /^template bindings=(.*)$/g;
+
+var ANIMATION_PRIORITY_ATTR = 0;
+var ANIMATION_PRIORITY_CLASS = 1;
+var ANIMATION_PRIORITY_STRUCTURAL = 2;
 
 export abstract class DomRootRenderer implements RootRenderer {
   private _registeredComponents: Map<string, DomRenderer> = new Map<string, DomRenderer>();
@@ -81,9 +84,9 @@ export class DomRenderer implements Renderer {
   private _contentAttr: string;
   private _hostAttr: string;
   private _styles: string[];
-  private _animationQueue: AnimationQueue;
 
-  private _animations: {[key: string]: AnimationFactory};
+  private _animations: {[key: string]: AnimationFactory} = {};
+  private _animationQueue: AnimationQueue;
 
   constructor(private _rootRenderer: DomRootRenderer,
               private componentProto: RenderComponentType,
@@ -112,9 +115,8 @@ export class DomRenderer implements Renderer {
     }
   }
 
-  _scheduleAnimation(name: string, priority: AnimationPriority, element: any, doneFn = null): void {
+  private _scheduleAnimation(name: string, priority: number, element: any, doneFn: Function): void {
     var animation = this._animations[name];
-    doneFn = isFunction(doneFn) ? doneFn : () => {};
 
     if (isPresent(animation)) {
       var player = animation.create(element, this);
@@ -244,7 +246,7 @@ export class DomRenderer implements Renderer {
       }
       eventName = 'removeAttribute';
     }
-    this._scheduleAnimation(eventName, AnimationPriority.AttributeBased, <HTMLElement>renderElement);
+    this._scheduleAnimation(eventName, ANIMATION_PRIORITY_ATTR, <HTMLElement>renderElement, () => {});
   }
 
   setBindingDebugInfo(renderElement: any, propertyName: string, propertyValue: string): void {
@@ -272,7 +274,7 @@ export class DomRenderer implements Renderer {
       eventName = 'removeClass';
       DOM.removeClass(renderElement, className);
     }
-    this._scheduleAnimation(eventName, AnimationPriority.ClassBased, <HTMLElement>renderElement);
+    this._scheduleAnimation(eventName, ANIMATION_PRIORITY_CLASS, <HTMLElement>renderElement, () => {});
   }
 
   setElementStyle(renderElement: any, styleName: string, styleValue: string): void {
@@ -294,7 +296,7 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeEnter(node: Node) {
-    this._scheduleAnimation('ngEnter', AnimationPriority.Structural, <HTMLElement>node);
+    this._scheduleAnimation('ngEnter', ANIMATION_PRIORITY_STRUCTURAL, <HTMLElement>node, () => {});
   }
 
 
@@ -304,7 +306,7 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeLeave(node: Node) {
-    this._scheduleAnimation('ngLeave', AnimationPriority.Structural, <HTMLElement>node, () => {
+    this._scheduleAnimation('ngLeave', ANIMATION_PRIORITY_STRUCTURAL, <HTMLElement>node, () => {
       DOM.remove(node);
     });
   }

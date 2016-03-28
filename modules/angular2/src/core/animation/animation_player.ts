@@ -86,17 +86,20 @@ export class AnimationSequencePlayer implements AnimationPlayer {
   private _subscriptions: Function[] = [];
 
   constructor(private _players: AnimationPlayer[]) {
-    this._onNext();
+    this._onNext(false);
   }
 
-  _onNext() {
+  _onNext(autostart: boolean) {
     if (this._currentIndex >= this._players.length) {
       this._onFinish();
     } else {
       var player = this._players[this._currentIndex++];
-      player.onDone(() => this._onNext());
+      player.onDone(() => this._onNext(true));
 
       this._activePlayer = player;
+      if (autostart) {
+        player.play();
+      }
     }
   }
 

@@ -4,14 +4,8 @@ import {ObservableWrapper} from 'angular2/src/facade/async';
 import {NgZone} from 'angular2/src/core/zone/ng_zone';
 import {AnimationPlayer} from 'angular2/src/core/animation/animation_player';
 
-export enum AnimationPriority {
-  AttributeBased,
-  ClassBased,
-  Structural
-}
-
 class _AnimationQueueEntry {
-  constructor(public index: number, public priority: AnimationPriority) {}
+  constructor(public index: number, public priority: number) {}
 }
 
 export class AnimationQueue {
@@ -24,7 +18,7 @@ export class AnimationQueue {
     });
   }
 
-  public schedule(element: any, priority: AnimationPriority, player: AnimationPlayer, doneFn: Function): void {
+  public schedule(element: any, priority: number, player: AnimationPlayer, doneFn: Function): void {
     var index = this.queue.length;
     var queueEntry = new _AnimationQueueEntry(index, priority);
     var existingAnimation = this.lookup.get(element);

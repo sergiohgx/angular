@@ -1,5 +1,5 @@
 import {BaseException} from 'angular2/src/facade/exceptions';
-import {isString, isPresent, RegExpWrapper, NumberWrapper} from 'angular2/src/facade/lang';
+import {isString, isPresent, isArray, RegExpWrapper, NumberWrapper} from 'angular2/src/facade/lang';
 
 import {
   AnimationWithStepsMetadata,
@@ -75,14 +75,18 @@ export abstract class AnimationCompiler {
 export class RuntimeAnimationCompiler implements AnimationCompiler {
   private _parser = new AnimationParser();
 
-  _parseAnimationNode(entry: AnimationSequenceMetadata | AnimationGroupMetadata | AnimationStepMetadata, styles: AnimationStyles): AnimationAst {
+  _parseAnimationNode(entry: any[] | AnimationSequenceMetadata | AnimationGroupMetadata | AnimationStepMetadata, styles: AnimationStyles): AnimationAst {
     if (entry instanceof AnimationStepMetadata) {
       var timings = parseTimeExpression(entry.timings);
       var keyframes = this._parser.normalizeAnimationIntoKeyframes(entry.tokens, styles);
       return new AnimationStepAst(keyframes, timings[0], timings[1], timings[2]);
     }
 
-    var steps: AnimationAst[] = (<AnimationSequenceMetadata | AnimationGroupMetadata>entry).steps.map(step => this._parseAnimationNode(step, styles));
+    var stepData = isArray(entry)
+        ? <any[]>entry
+        : (<AnimationSequenceMetadata | AnimationGroupMetadata>entry).steps;
+
+    var steps: AnimationAst[] = stepData.map(step => this._parseAnimationNode(step, styles));
 
     if (entry instanceof AnimationGroupMetadata) {
       return new AnimationGroupAst(steps);

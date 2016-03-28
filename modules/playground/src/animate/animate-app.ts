@@ -23,25 +23,16 @@ import {animate, style} from 'angular2/animate';
       margin:10px;
       overflow:hidden;
     }
-
-    @keyframes flip {
-      from { transform: rotate(-360deg); }
-      to { transform: rotate(0deg); }
-    }
-
-    .visible { opacity:1; }
-    .invisible { opacity:0; }
   `],
   animations: {
     ngEnter: [
       style({ height: 0, opacity: 0 }),
-      animate(['.visible', { height: 200 }], 500),
       style({ background: 'white' }),
-      animate([{ background: 'red' }, '@flip'], '0.5s')
+      animate({ background: 'red', height: 100, opacity:1 }, '0.5s')
     ],
     ngLeave: [
       style({ height: '200px', opacity: '1' }),
-      animate({ height: '0', opacity: '0' }, '0.5s')
+      animate({ height: 0, opacity: '0' }, '0.5s')
     ]
   },
   template: `
