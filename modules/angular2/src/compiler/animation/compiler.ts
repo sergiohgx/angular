@@ -18,8 +18,8 @@ export var ONE_SECOND = 1000;
 
 
 export function parseTimeExpression(exp: string|number): any[] {
-  var duration: number = null;
-  var delay: number = null;
+  var duration: number = 0;
+  var delay: number = 0;
   var easing: string = null;
   if (isString(exp)) {
     var values = (<string>exp).split(' ');
@@ -86,7 +86,35 @@ export class RuntimeAnimationCompiler implements AnimationCompiler {
         ? <any[]>entry
         : (<AnimationSequenceMetadata | AnimationGroupMetadata>entry).steps;
 
-    var steps: AnimationAst[] = stepData.map(step => this._parseAnimationNode(step, styles));
+    var previousStyleStep: AnimationStepAst;
+    var steps: AnimationAst[] = [];
+    stepData.forEach((entry) => {
+      entry = this._parseAnimationNode(entry, styles);
+
+      var skipStep = false;
+      var isStyleStep = false;
+      if (entry instanceof AnimationStepAst) {
+        var step = <AnimationStepAst>entry;
+        isStyleStep = step.duration == 0 && step.delay == 0 && step.keyframes.length == 1;
+        if (isStyleStep) {
+          if (isPresent(previousStyleStep)) {
+            var styleData = step.keyframes[0].styles[0].styles;
+            previousStyleStep.keyframes[0].styles[0].addStyles(styleData, false);
+            skipStep = true;
+          } else {
+            previousStyleStep = step;
+          }
+        }
+      }
+
+      if (!isStyleStep) {
+        previousStyleStep = null;
+      }
+
+      if (!skipStep) {
+        steps.push(entry);
+      }
+    });
 
     if (entry instanceof AnimationGroupMetadata) {
       return new AnimationGroupAst(steps);

@@ -20,7 +20,7 @@ export class AnimationKeyframe {
   }
 
   addStyles(styles: {[key: string]: string}): void {
-    for (var i = this.styles.length; i >= 0; i--) {
+    for (var i = this.styles.length - 1; i >= 0; i--) {
       let entry = this.styles[i];
       if (isStringMap(entry.styles)) {
         entry.addStyles(styles);

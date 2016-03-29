@@ -1,6 +1,6 @@
 import {isPresent} from 'angular2/src/facade/lang';
 import {Set, Map, StringMapWrapper, ListWrapper} from 'angular2/src/facade/collection';
-import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
+import {AnimationKeyframe, KeyframeStyles} from 'angular2/src/animate/animation_keyframe';
 import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
 import {DOM} from 'angular2/src/platform/dom/dom_adapter';
 import {BaseException} from 'angular2/src/facade/exceptions';
@@ -25,7 +25,9 @@ export abstract class DOMAnimationDriver extends AnimationDriver {
       flatStyles = isPresent(flatStyles) ? flatStyles : {};
     }
 
-    var startingKeyframe, endingKeyframe;
+    var startingKeyframe: AnimationKeyframe;
+    var endingKeyframe: AnimationKeyframe;
+
     var collectedProperties = new Set<string>();
     keyframes.forEach((kf) => {
       // TODO (matsko): support offsetted start/end keyframes
@@ -71,7 +73,8 @@ export abstract class DOMAnimationDriver extends AnimationDriver {
       });
     }
 
-    endingKeyframe.styles.forEach((entry) => {
+    var endingStyles: KeyframeStyles[] = endingKeyframe.styles;
+    endingStyles.forEach((entry) => {
       StringMapWrapper.forEach(entry.styles, (val, prop) => {
         finalStyles[prop] = val;
       });
