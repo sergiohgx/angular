@@ -63,21 +63,23 @@ import {
   HostListener
 } from 'angular2/src/core/metadata';
 
-import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
-import {MockAnimationDriver, MockAnimationPlayer} from 'angular2/src/mock/animation/animation_driver';
+import {AnimationDriver} from 'angular2/src/core/animation/animation_driver';
+import {MockAnimationDriver} from 'angular2/src/mock/animation/mock_animation_driver';
+import {MockAnimationPlayer} from 'angular2/src/mock/animation/mock_animation_player';
 import {style, animate, group} from 'angular2/animate';
 
 export function main() {
   ddescribe('animation tests', function() {
     beforeEachProviders(() => [
       provide(AnimationDriver, { useClass: MockAnimationDriver }),
+      // TODO (matsko): remove this line once Tobias' changedetection refactor PR is in
       provide(ChangeDetectorGenConfig, { useValue: new ChangeDetectorGenConfig(true, false, false)})
     ]);
 
-    var makeAnimationCmp = (tcb: TestComponentBuilder, tpl: string, method: string, animation: {[key: string]: any[]}) => {
+    var makeAnimationCmp = (tcb: TestComponentBuilder, tpl: string, animationName: string, animation: {[key: string]: any[]}) => {
       var animations = {};
-      if (!isPresent(animations[method])) {
-        animations[method] = animation;
+      if (!isPresent(animations[animationName])) {
+        animations[animationName] = animation;
       }
 
       var fixture: ComponentFixture;
@@ -152,9 +154,8 @@ export function main() {
      */
     });
 
-    /*
     describe('animation operations', () => {
-      it('should animate the element when the expression changes',
+      iit('should animate the element when the expression changes',
        inject([TestComponentBuilder, AnimationDriver, NgZone], fakeAsync((tcb: TestComponentBuilder, driver: MockAnimationDriver, zone: MockNgZone) => {
         var fixture: ComponentFixture;
         tcb.overrideAnimations(IfCmp, {
@@ -374,7 +375,6 @@ export function main() {
         })));
       });
     });
-     */
   });
 }
 
