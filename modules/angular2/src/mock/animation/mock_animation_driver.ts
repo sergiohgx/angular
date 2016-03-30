@@ -1,7 +1,8 @@
-import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
-import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
-import {NoOpAnimationPlayer, AnimationPlayer} from 'angular2/src/core/animation/animation_player';
+import {AnimationDriver} from 'angular2/src/core/animation/animation_driver';
+import {AnimationKeyframe} from 'angular2/src/core/animation/animation_keyframe';
+import {AnimationPlayer} from 'angular2/src/core/animation/animation_player';
 import {StringMapWrapper} from 'angular2/src/facade/collection';
+import {MockAnimationPlayer} from 'angular2/src/mock/animation/mock_animation_player';
 
 function combineStyles(keyframes: AnimationKeyframe[]) {
   var allStyles = {};
@@ -13,37 +14,6 @@ function combineStyles(keyframes: AnimationKeyframe[]) {
     });
   });
   return allStyles;
-}
-
-export class MockAnimationPlayer extends NoOpAnimationPlayer {
-  log = [];
-
-  play(): void {
-    this.log.push('play');
-    super.play();
-  }
-
-  pause(): void {
-    this.log.push('pause');
-    super.pause();
-  }
-
-  reverse(): void {
-    this.log.push('reverse');
-    super.reverse();
-  }
-
-  restart(): void {
-    this.log.push('restart');
-    super.restart();
-  }
-
-  finish(): void {
-    this.log.push('finish');
-    this.flush();
-  }
-
-  tick() { }
 }
 
 export class MockAnimationDriver extends AnimationDriver {

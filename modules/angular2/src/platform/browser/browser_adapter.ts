@@ -341,7 +341,6 @@ export class BrowserDomAdapter extends GenericBrowserDomAdapter {
   setGlobalVar(path: string, value: any) { setValueOnPath(global, path, value); }
   requestAnimationFrame(callback): number { return window.requestAnimationFrame(callback); }
   cancelAnimationFrame(id: number) { window.cancelAnimationFrame(id); }
-  supportsCssAnimation(): boolean { return isPresent(window['AnimationEvent']); }
   supportsWebAnimation(): boolean { return isFunction(document.body['animate']); }
   performanceNow(): number {
     // performance.now() is not available in all browsers, see

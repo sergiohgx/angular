@@ -16,14 +16,14 @@ import {DomSharedStylesHost} from './shared_styles_host';
 
 import {StringMapWrapper} from 'angular2/src/facade/collection';
 
-import {AnimationCompiler} from 'angular2/src/compiler/animation/compiler';
-import {AnimationFactory} from 'angular2/src/compiler/animation/animation_factory';
+import {AnimationCompiler} from 'angular2/src/core/animation/animation_compiler';
+import {AnimationFactory} from 'angular2/src/core/animation/animation_factory';
 import {AnimationQueue} from 'angular2/src/core/animation/animation_queue';
+import {CoreAnimationEvents} from 'angular2/src/core/metadata/animations';
 
-import {AnimationKeyframe} from 'angular2/src/animate/animation_keyframe';
+import {AnimationKeyframe} from 'angular2/src/core/animation/animation_keyframe';
 import {AnimationPlayer} from 'angular2/src/core/animation/animation_player';
-import {AnimationDriver} from 'angular2/src/animate/ui/animation_driver';
-import {AnimationStyles} from 'angular2/src/animate/worker/animation_styles';
+import {AnimationDriver} from 'angular2/src/core/animation/animation_driver';
 
 import {NgZone} from 'angular2/src/core/zone/ng_zone';
 
@@ -46,9 +46,9 @@ const NAMESPACE_URIS =
 const TEMPLATE_COMMENT_TEXT = 'template bindings={}';
 var TEMPLATE_BINDINGS_EXP = /^template bindings=(.*)$/g;
 
-var ANIMATION_PRIORITY_ATTR = 0;
-var ANIMATION_PRIORITY_CLASS = 1;
-var ANIMATION_PRIORITY_STRUCTURAL = 2;
+const ANIMATION_PRIORITY_ATTR = 0;
+const ANIMATION_PRIORITY_CLASS = 1;
+const ANIMATION_PRIORITY_STRUCTURAL = 2;
 
 export abstract class DomRootRenderer implements RootRenderer {
   private _registeredComponents: Map<string, DomRenderer> = new Map<string, DomRenderer>();
@@ -97,10 +97,8 @@ export class DomRenderer implements Renderer {
     this._styles = _flattenStyles(componentProto.id, componentProto.styles, []);
     this._animationQueue = new AnimationQueue(zone);
 
-    var styles = new AnimationStyles({});
-
     StringMapWrapper.forEach(componentProto.animations, (entry, name) => {
-      this._animations[name] = animationCompiler.compileAnimation(entry, styles);
+      this._animations[name] = animationCompiler.compileAnimation(entry);
     });
 
     if (componentProto.encapsulation !== ViewEncapsulation.Native) {
@@ -224,9 +222,10 @@ export class DomRenderer implements Renderer {
   }
 
   setElementAttribute(renderElement: any, attributeName: string, attributeValue: string): void {
+    var animationName;
     var attrNs;
     var nsAndName = splitNamespace(attributeName);
-    var eventName;
+
     if (isPresent(nsAndName[0])) {
       attributeName = nsAndName[0] + ':' + nsAndName[1];
       attrNs = NAMESPACE_URIS[nsAndName[0]];
@@ -237,16 +236,16 @@ export class DomRenderer implements Renderer {
       } else {
         DOM.setAttribute(renderElement, attributeName, attributeValue);
       }
-      eventName = 'setAttribute';
+      animationName = CoreAnimationEvents.SET_ATTRIBUTE;
     } else {
       if (isPresent(attrNs)) {
         DOM.removeAttributeNS(renderElement, attrNs, nsAndName[1]);
       } else {
         DOM.removeAttribute(renderElement, attributeName);
       }
-      eventName = 'removeAttribute';
+      animationName = CoreAnimationEvents.REMOVE_ATTRIBUTE;
     }
-    this._scheduleAnimation(eventName, ANIMATION_PRIORITY_ATTR, <HTMLElement>renderElement, () => {});
+    this._scheduleAnimation(animationName, ANIMATION_PRIORITY_ATTR, <HTMLElement>renderElement, () => {});
   }
 
   setBindingDebugInfo(renderElement: any, propertyName: string, propertyValue: string): void {
@@ -266,15 +265,15 @@ export class DomRenderer implements Renderer {
   setElementDebugInfo(renderElement: any, info: RenderDebugInfo) {}
 
   setElementClass(renderElement: any, className: string, isAdd: boolean): void {
-    var eventName;
+    var animationName;
     if (isAdd) {
-      eventName = 'addClass';
+      animationName = CoreAnimationEvents.ADD_CLASS;
       DOM.addClass(renderElement, className);
     } else {
-      eventName = 'removeClass';
+      animationName = CoreAnimationEvents.REMOVE_CLASS;
       DOM.removeClass(renderElement, className);
     }
-    this._scheduleAnimation(eventName, ANIMATION_PRIORITY_CLASS, <HTMLElement>renderElement, () => {});
+    this._scheduleAnimation(animationName, ANIMATION_PRIORITY_CLASS, <HTMLElement>renderElement, () => {});
   }
 
   setElementStyle(renderElement: any, styleName: string, styleValue: string): void {
@@ -296,7 +295,7 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeEnter(node: Node) {
-    this._scheduleAnimation('ngEnter', ANIMATION_PRIORITY_STRUCTURAL, <HTMLElement>node, () => {});
+    this._scheduleAnimation(CoreAnimationEvents.ENTER, ANIMATION_PRIORITY_STRUCTURAL, <HTMLElement>node, () => {});
   }
 
 
@@ -306,7 +305,7 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeLeave(node: Node) {
-    this._scheduleAnimation('ngLeave', ANIMATION_PRIORITY_STRUCTURAL, <HTMLElement>node, () => {
+    this._scheduleAnimation(CoreAnimationEvents.LEAVE, ANIMATION_PRIORITY_STRUCTURAL, <HTMLElement>node, () => {
       DOM.remove(node);
     });
   }

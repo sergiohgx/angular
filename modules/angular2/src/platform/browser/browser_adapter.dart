@@ -504,10 +504,6 @@ class BrowserDomAdapter extends GenericBrowserDomAdapter {
     window.cancelAnimationFrame(id);
   }
 
-  bool supportsCssAnimation() {
-    return this._hasProperty.apply([window, 'AnimationEvent']);
-  }
-
   bool supportsWebAnimation() {
     return this._hasProperty.apply([document.body, 'animate']);
   }

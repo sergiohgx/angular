@@ -16,31 +16,14 @@ import {
   beforeEachProviders
 } from 'angular2/testing_internal';
 
-import {WebAnimationsPlayer} from 'angular2/src/animate/ui/drivers/web_animations';
-
-class MockWebAnimationsElementPlayer {
-  public captures: {[key: string]: any[]} = {};
-
-  _capture(method: string, data: any) {
-    if (!isPresent(this.captures[method])) {
-      this.captures[method] = [];
-    }
-    this.captures[method].push(data);
-  }
-
-  cancel() { this._capture('cancel', null); }
-  play() { this._capture('play', null); }
-  pause() { this._capture('pause', null); }
-  reverse() { this._capture('reverse', null); }
-  stop() { this._capture('stop', null); }
-  set onfinish(fn) { this._capture('onfinish', fn); }
-}
+import {WebAnimationsPlayer} from 'angular2/src/platform/dom/animation/web_animations_player';
+import {MockDomAnimatePlayer} from 'angular2/src/mock/animation/mock_dom_animate_player';
 
 export function main() {
   describe('WebAnimationsPlayer', () => {
     var player, captures;
     beforeEach(() => {
-      var mockPlayer = new MockWebAnimationsElementPlayer();
+      var mockPlayer = new MockDomAnimatePlayer();
       captures = mockPlayer.captures;
       player = new WebAnimationsPlayer(mockPlayer);
     });

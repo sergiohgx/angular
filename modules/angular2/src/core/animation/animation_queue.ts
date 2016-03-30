@@ -10,7 +10,7 @@ class _AnimationQueueEntry {
 
 export class AnimationQueue {
   queue: AnimationPlayer[] = [];
-  lookup = new Map<any, _AnimationQueueEntry>();
+  animationsPerElement = new Map<any, _AnimationQueueEntry>();
 
   constructor(private _zone: NgZone) {
     ObservableWrapper.subscribe(this._zone.onMicrotaskEmpty, (e) => {
@@ -21,7 +21,7 @@ export class AnimationQueue {
   public schedule(element: any, priority: number, player: AnimationPlayer, doneFn: Function): void {
     var index = this.queue.length;
     var queueEntry = new _AnimationQueueEntry(index, priority);
-    var existingAnimation = this.lookup.get(element);
+    var existingAnimation = this.animationsPerElement.get(element);
 
     if (isPresent(existingAnimation)) {
       if (existingAnimation.priority > priority) {
@@ -34,7 +34,7 @@ export class AnimationQueue {
 
     player.onDone(() => doneFn());
     this.queue[index] = player;
-    this.lookup.set(element, queueEntry);
+    this.animationsPerElement.set(element, queueEntry);
   }
 
   public flush(): void {
@@ -46,6 +46,6 @@ export class AnimationQueue {
     });
 
     this.queue = [];
-    this.lookup.clear();
+    this.animationsPerElement.clear();
   }
 }

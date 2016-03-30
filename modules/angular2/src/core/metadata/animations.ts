@@ -2,6 +2,15 @@ import {isArray, isString, isStringMap} from 'angular2/src/facade/lang';
 import {BaseException} from 'angular2/src/facade/exceptions';
 import {CONST} from 'angular2/src/facade/lang';
 
+export abstract class CoreAnimationEvents {
+  static ENTER = 'ngEnter';
+  static LEAVE = 'ngLeave';
+  static ADD_CLASS = 'addClass';
+  static REMOVE_CLASS = 'removeClass';
+  static SET_ATTRIBUTE = 'setAttribute';
+  static REMOVE_ATTRIBUTE = 'removeAttribute';
+}
+
 @CONST()
 export class AnimationStepMetadata {
   constructor(public tokens: any[], public timings: string|number) {}
