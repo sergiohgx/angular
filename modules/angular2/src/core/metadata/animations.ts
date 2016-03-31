@@ -39,12 +39,10 @@ export class AnimationGroupMetadata implements AnimationWithStepsMetadata {
   }
 }
 
-export function animate(tokens: {[key: string]: string|number|boolean}|string|any[], timing: string|number): AnimationStepMetadata {
+export function animate(tokens: {[key: string]: string|number}|{[key: string]: string|number}[], timing: string|number): AnimationStepMetadata {
   var tokenList: any[];
-  if (isString(tokens)) {
-    tokenList = [<string>tokens];
-  } else if (isArray(tokens)) {
-    tokenList = <string[]>tokens;
+  if (isArray(tokens)) {
+    tokenList = <{[key: string]: string|number}[]>tokens;
   } else if (isStringMap(tokens)) {
     tokenList = [tokens];
   }
@@ -59,6 +57,6 @@ export function sequence(steps: Array<AnimationSequenceMetadata | AnimationGroup
   return new AnimationSequenceMetadata(steps);
 }
 
-export function style(tokens: {[key: string]: string|number|boolean}|string|any[]): AnimationStepMetadata {
+export function style(tokens: {[key: string]: string|number}): AnimationStepMetadata {
   return animate(tokens, '0s');
 }

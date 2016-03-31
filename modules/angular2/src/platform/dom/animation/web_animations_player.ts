@@ -38,4 +38,8 @@ export class WebAnimationsPlayer implements AnimationPlayer {
     this._player.cancel();
     this.play();
   }
+
+  close(): void {
+    this._player.cancel();
+  }
 }

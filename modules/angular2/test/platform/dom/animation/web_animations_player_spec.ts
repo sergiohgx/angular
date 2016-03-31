@@ -1,5 +1,3 @@
-import {isPresent} from "angular2/src/facade/lang";
-
 import {
   AsyncTestCompleter,
   describe,

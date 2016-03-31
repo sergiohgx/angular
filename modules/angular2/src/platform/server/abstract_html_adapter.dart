@@ -7,6 +7,7 @@ import 'package:angular2/platform/common_dom.dart';
 import 'package:angular2/src/compiler/xhr.dart';
 
 import 'package:angular2/src/facade/lang.dart' show isBlank, isPresent;
+import 'package:angular2/src/platform/dom/animation/dom_animate_player.dart' show DomAnimatePlayer;
 
 const _attrToPropMap = const {
   'innerHtml': 'innerHTML',
@@ -452,6 +453,10 @@ abstract class AbstractHtml5LibAdapter implements DomAdapter {
   }
 
   supportsAnimation() {
+    throw 'not implemented';
+  }
+
+  DomAnimatePlayer animate(element, keyframes, options) {
     throw 'not implemented';
   }
 }

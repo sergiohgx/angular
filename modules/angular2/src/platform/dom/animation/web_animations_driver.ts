@@ -1,4 +1,5 @@
 import {StringMapWrapper} from 'angular2/src/facade/collection';
+import {DOM} from 'angular2/src/platform/dom/dom_adapter';
 
 import {AnimationDriver} from 'angular2/src/core/animation/animation_driver';
 import {AnimationPlayer} from 'angular2/src/core/animation/animation_player';
@@ -20,7 +21,7 @@ export class WebAnimationsDriver implements AnimationDriver {
       formattedSteps.push(data);
     });
 
-    var player = elm['animate'](formattedSteps, {
+    var player = DOM.animate(elm, formattedSteps, {
       'duration': duration,
       'delay': delay,
       'easing': easing,

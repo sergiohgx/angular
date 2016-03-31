@@ -31,6 +31,22 @@ function squashKeyframeStyles(keyframes: AnimationKeyframeAst[]): AnimationKeyfr
   return styles;
 }
 
+function retrieveLookupStylesFromKeyframes(lookup: {[key: string]: string}, keyframes: AnimationKeyframeAst[]): {[key: string]: string} {
+  var values: {[key: string]: string} = {};
+  keyframes.forEach((keyframe: AnimationKeyframeAst) => {
+    keyframe.styles.forEach((styleData: AnimationKeyframeStylesAst) => {
+      StringMapWrapper.forEach(styleData.styles, (val, prop) => {
+        var value = lookup[prop];
+        if (!isPresent(value)) {
+          throw new BaseException('...');
+        }
+        values[prop] = value;
+      });
+    });
+  });
+  return values;
+}
+
 function createInstantAnimationFromKeyframe(styles: AnimationKeyframeStylesAst[]): AnimationStepAst {
   return new AnimationStepAst([
     new AnimationKeyframeAst(INITIAL_KEYFRAME, styles),
@@ -61,9 +77,11 @@ function normalizeKeyframeStylesFromStartToEnd(styles: {[key: string]: string},
   b.forEach((keyframe: AnimationKeyframeAst) => {
     keyframe.styles.forEach((styleData: AnimationKeyframeStylesAst) => {
       StringMapWrapper.forEach(styleData.styles, (value, prop) => {
-        if (!isPresent(end[prop])) {
-          value = styles[prop];
-          if (!isPresent(value)) {
+        if (!isPresent(start[prop])) {
+          var startingValue = styles[prop];
+          if (isPresent(startingValue)) {
+            start[prop] = startingValue;
+          } else {
             throw new BaseException('...');
           }
         }
@@ -145,10 +163,15 @@ export class RuntimeAnimationCompiler implements AnimationCompiler {
     var lastAnimationKeyframe;
     var steps: AnimationAst[] = [];
     stepData.forEach((entry) => {
-      entry = this._parseAnimationNode(entry, collectedStyles);
-
-      if (entry instanceof AnimationStepAst) {
+      if (entry instanceof AnimationStepMetadata) {
+        entry = this._parseAnimationNode(entry, collectedStyles);
         var step = <AnimationStepAst>entry;
+
+        // CASE 0: [style() -> style()]
+        // this case occurs when a style step is followed by a previous style step
+        // or when the first style step is run. We want to concatenate all subsequent
+        // style steps together into a single style step such that we have the correct
+        // starting keyframe data to pass into the animation player.
         if (step.duration == 0 && step.delay == 0) {
           let flatKeyframes = squashKeyframeStyles(step.keyframes);
           lastKeyframeStylesArray = isPresent(lastKeyframeStylesArray)
@@ -157,14 +180,31 @@ export class RuntimeAnimationCompiler implements AnimationCompiler {
 
           lastAnimationKeyframe = null;
         } else {
-          let lastAnimationStyles;
-          if (isPresent(lastKeyframeStylesArray)) {
-            lastAnimationStyles = new AnimationKeyframeAst(INITIAL_KEYFRAME, lastKeyframeStylesArray);
+          // CASE 1: [style(), animate() -> group(animate) / sequence(animate)]
+          // this is a special case when an inner group/sequence is run and it needs
+          // to figure out what the animation styles are for what it's animating towards
+          if (!isPresent(lastKeyframeStylesArray) && !isPresent(lastAnimationKeyframe)) {
+            let lastMarkedStyles = retrieveLookupStylesFromKeyframes(collectedStyles, entry.keyframes);
+            lastKeyframeStylesArray = [new AnimationKeyframeStylesAst(lastMarkedStyles)];
           }
 
-          let normalizedKeyframeStyles = isPresent(lastAnimationStyles)
-              ? normalizeKeyframeStylesFromStartToEnd(collectedStyles, lastAnimationStyles, step.keyframes)
-              : normalizeKeyframeStylesFromEnd(collectedStyles, lastAnimationKeyframe, step.keyframes);
+          let normalizedKeyframeStyles;
+          if (isPresent(lastKeyframeStylesArray)) {
+            // CASE 2: [style(), style() -> animate()]
+            // this occurs when one or more style() steps are run before an animation step
+            // is fired. We need to normalize the styles so that we animate ALL the style
+            // properties that were concatenated beforehand (otherwise the player will complain)
+            let lastAnimationStyles = [new AnimationKeyframeAst(INITIAL_KEYFRAME, lastKeyframeStylesArray)];
+            normalizedKeyframeStyles = normalizeKeyframeStylesFromStartToEnd(collectedStyles,
+                                                                             lastAnimationStyles, step.keyframes)
+          } else {
+           // CASE 3: [animate() -> animate()]
+           // this occurs when one or more style() steps are run before an animation step
+           // is fired. We need to normalize the styles so that we animate ALL the style
+           // properties that were concatenated beforehand (otherwise the player will complain)
+           normalizedKeyframeStyles = normalizeKeyframeStylesFromEnd(collectedStyles,
+                                                                     [lastAnimationKeyframe], step.keyframes);
+          }
 
           let normalizedKeyframes = [
             new AnimationKeyframeAst(INITIAL_KEYFRAME, [normalizedKeyframeStyles[0]]),
@@ -187,13 +227,26 @@ export class RuntimeAnimationCompiler implements AnimationCompiler {
           });
         });
       } else {
+        // CASE 4: [style(), style() -> group(animate)/sequence(animate)]
+        // This occurs when a series of style steps are run but do not get a chance
+        // to animate because an inner group or sequence kicks in. When this occurs
+        // we need to create an empty style step which will then apply the collected
+        // style data to the element so that it appears on screen (otherwise it is not
+        // possible to determine how and when to apply styles to an inner sequence or an
+        // inner group since they may have different timing, easing and staggering values
         if (isPresent(lastKeyframeStylesArray)) {
           steps.push(createInstantAnimationFromKeyframe(lastKeyframeStylesArray));
           lastKeyframeStylesArray = null;
         }
-        steps.push(entry);
+        steps.push(this._parseAnimationNode(entry, collectedStyles));
       }
     });
+
+    // CASE 5: [style(), style() -> EOF]
+    // This occurs when no animation actually gets run, but a series
+    // of style() steps were issued. There is no point in running an
+    // animation here when this happens so we do not add the remaining
+    // style data to the animation steps.
 
     if (entry instanceof AnimationGroupMetadata) {
       return new AnimationGroupAst(steps);
@@ -202,7 +255,8 @@ export class RuntimeAnimationCompiler implements AnimationCompiler {
     return new AnimationSequenceAst(steps);
   }
 
-  compileAnimation(metadata: AnimationSequenceMetadata | AnimationGroupMetadata | AnimationStepMetadata): AnimationFactory {
+  compileAnimation(metadata: any): AnimationFactory {
+    metadata = <AnimationSequenceMetadata | AnimationGroupMetadata | AnimationStepMetadata>metadata;
     var startingStyles: {[key: string]: string} = {};
     return new RuntimeAnimationFactory(this._parseAnimationNode(metadata, startingStyles));
   }

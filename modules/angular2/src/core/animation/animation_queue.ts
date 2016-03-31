@@ -38,13 +38,7 @@ export class AnimationQueue {
   }
 
   public flush(): void {
-    this.queue.forEach((player: AnimationPlayer) => {
-      player.onDone(() => {
-        //player.close();
-      });
-      player.play();
-    });
-
+    this.queue.forEach(player => player.play());
     this.queue = [];
     this.animationsPerElement.clear();
   }

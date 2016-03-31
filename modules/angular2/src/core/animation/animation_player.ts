@@ -7,6 +7,7 @@ export abstract class AnimationPlayer {
   abstract reverse(): void;
   abstract restart(): void;
   abstract finish(): void;
+  abstract close(): void;
 }
 
 export class NoOpAnimationPlayer implements AnimationPlayer {
@@ -27,9 +28,10 @@ export class NoOpAnimationPlayer implements AnimationPlayer {
     });
     this._queue = [];
   }
-  play(): void { }
-  pause(): void { }
-  reverse(): void { }
-  restart(): void { }
-  finish(): void { }
+  play(): void {}
+  pause(): void {}
+  reverse(): void {}
+  restart(): void {}
+  finish(): void {}
+  close(): void {}
 }

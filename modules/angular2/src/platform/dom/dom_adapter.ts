@@ -1,4 +1,5 @@
 import {isBlank, Type} from 'angular2/src/facade/lang';
+import {DomAnimatePlayer} from 'angular2/src/platform/dom/animation/dom_animate_player';
 
 export var DOM: DomAdapter = null;
 
@@ -141,4 +142,5 @@ export abstract class DomAdapter {
   abstract getAnimationPrefix(): string;
   abstract getTransitionEnd(): string;
   abstract supportsAnimation(): boolean;
+  abstract animate(element, keyframes, options): DomAnimatePlayer;
 }

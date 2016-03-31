@@ -4,16 +4,16 @@ import {AnimationPlayer} from 'angular2/src/core/animation/animation_player';
 import {StringMapWrapper} from 'angular2/src/facade/collection';
 import {MockAnimationPlayer} from 'angular2/src/mock/animation/mock_animation_player';
 
-function combineStyles(keyframes: AnimationKeyframe[]) {
-  var allStyles = {};
-  keyframes.forEach((kf) => {
-    kf.styles.forEach((entry) => {
+function serializeKeyframes(keyframes: AnimationKeyframe[]) {
+  return keyframes.map(keyframe => {
+    var styles = {};
+    keyframe.styles.forEach((entry) => {
       StringMapWrapper.forEach(entry.styles, (val, prop) => {
-        allStyles[prop] = val;
+        styles[prop] = val;
       });
     });
+    return [keyframe.position, styles];
   });
-  return allStyles;
 }
 
 export class MockAnimationDriver extends AnimationDriver {
@@ -23,7 +23,7 @@ export class MockAnimationDriver extends AnimationDriver {
     this.log.push({
       'element': element,
       'keyframes': keyframes,
-      'keyframeStyles': combineStyles(keyframes),
+      'keyframeLookup': serializeKeyframes(keyframes),
       'duration': duration,
       'delay': delay,
       'easing': easing,

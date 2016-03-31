@@ -70,7 +70,8 @@ class Component extends ComponentMetadata {
       dynamic pipes,
       ViewEncapsulation encapsulation,
       List<String> styles,
-      List<String> styleUrls})
+      List<String> styleUrls,
+      Map<String, dynamic> animations})
       : super(
             selector: selector,
             inputs: inputs,
@@ -92,7 +93,8 @@ class Component extends ComponentMetadata {
             pipes: pipes,
             encapsulation: encapsulation,
             styles: styles,
-            styleUrls: styleUrls);
+            styleUrls: styleUrls,
+            animations: animations);
 }
 
 /**
@@ -106,7 +108,8 @@ class View extends ViewMetadata {
       dynamic pipes,
       ViewEncapsulation encapsulation,
       List<String> styles,
-      List<String> styleUrls})
+      List<String> styleUrls,
+      Map<String, dynamic> animations})
       : super(
             templateUrl: templateUrl,
             template: template,
@@ -114,7 +117,8 @@ class View extends ViewMetadata {
             pipes: pipes,
             encapsulation: encapsulation,
             styles: styles,
-            styleUrls: styleUrls);
+            styleUrls: styleUrls,
+            animations: animations);
 }
 
 /**

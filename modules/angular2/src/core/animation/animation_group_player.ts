@@ -44,5 +44,9 @@ export class AnimationGroupPlayer implements AnimationPlayer {
   finish(): void {
     this._players.forEach(player => player.finish());
   }
+
+  close(): void {
+    this._players.forEach(player => player.close());
+  }
 }
 

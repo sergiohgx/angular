@@ -29,4 +29,9 @@ export class MockAnimationPlayer extends NoOpAnimationPlayer {
   }
 
   tick() { }
+
+  close(): void {
+    this.log.push('close');
+    super.close();
+  }
 }

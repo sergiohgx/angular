@@ -1,4 +1,4 @@
-import {AnimationPlayer} from 'angular2/src/core/animation/animation_player';
+import {NoOpAnimationPlayer,AnimationPlayer} from 'angular2/src/core/animation/animation_player';
 
 export class AnimationSequencePlayer implements AnimationPlayer {
   private _currentIndex: number = 0;
@@ -11,6 +11,7 @@ export class AnimationSequencePlayer implements AnimationPlayer {
 
   _onNext(autostart: boolean) {
     if (this._currentIndex >= this._players.length) {
+      this._activePlayer = new NoOpAnimationPlayer();
       this._onFinish();
     } else {
       var player = this._players[this._currentIndex++];
@@ -50,5 +51,9 @@ export class AnimationSequencePlayer implements AnimationPlayer {
 
   finish(): void {
     this._players.forEach(player => player.finish());
+  }
+
+  close(): void {
+    this._players.forEach(player => player.close());
   }
 }

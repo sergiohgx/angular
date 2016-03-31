@@ -2,6 +2,7 @@ import {MapWrapper, ListWrapper} from 'angular2/src/facade/collection';
 import {isBlank, isPresent, isFunction, global, setValueOnPath, DateWrapper} from 'angular2/src/facade/lang';
 import {setRootDomAdapter} from 'angular2/src/platform/dom/dom_adapter';
 import {GenericBrowserDomAdapter} from './generic_browser_adapter';
+import {DomAnimatePlayer} from 'angular2/src/platform/dom/animation/dom_animate_player';
 
 var _attrToPropMap = {
   'class': 'className',
@@ -350,6 +351,9 @@ export class BrowserDomAdapter extends GenericBrowserDomAdapter {
     } else {
       return DateWrapper.toMillis(DateWrapper.now());
     }
+  }
+  animate(element, keyframes, options): DomAnimatePlayer {
+    return element.animate(keyframes, options);
   }
 }
 

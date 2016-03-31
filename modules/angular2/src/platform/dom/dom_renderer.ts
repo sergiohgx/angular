@@ -80,12 +80,48 @@ export class DomRootRenderer_ extends DomRootRenderer {
   }
 }
 
+class _AnimationFactoryEntry {
+  private _predicateExp = /^(\w+)\((.+?)\)$/g;
+  private _predicate = (k=null,v=null) => true;
+
+  public eventName;
+
+  constructor(public name: string, public factory: AnimationFactory) {
+    var matches = RegExpWrapper.firstMatch(this._predicateExp, name);
+    if (isPresent(matches)) {
+      this.eventName = matches[1];
+      var innerData = matches[2].split('=');
+      let key = innerData[0];
+      if (innerData.length == 1) {
+        this._predicate = (data, val = null) => data == key;
+      } else {
+        let value = innerData[1];
+        let first = value[0];
+        if (first == '"' || first == "'") {
+          value = value.substring(1);
+        }
+        let last = value[value.length-1];
+        if (last == '"' || last == "'") {
+          value = value.substring(0, value.length - 1);
+        }
+        this._predicate = (data, val = null) => data == key && val == value;
+      }
+    } else {
+      this.eventName = name;
+    }
+  }
+
+  allow(key: string = null, value: string = null) {
+    return this._predicate(key, value);
+  }
+}
+
 export class DomRenderer implements Renderer {
   private _contentAttr: string;
   private _hostAttr: string;
   private _styles: string[];
 
-  private _animations: {[key: string]: AnimationFactory} = {};
+  private _animations: {[key: string]: _AnimationFactoryEntry} = {};
   private _animationQueue: AnimationQueue;
 
   constructor(private _rootRenderer: DomRootRenderer,
@@ -98,7 +134,8 @@ export class DomRenderer implements Renderer {
     this._animationQueue = new AnimationQueue(zone);
 
     StringMapWrapper.forEach(componentProto.animations, (entry, name) => {
-      this._animations[name] = animationCompiler.compileAnimation(entry);
+      var animationEntry = new _AnimationFactoryEntry(name, animationCompiler.compileAnimation(entry));
+      this._animations[animationEntry.eventName] = animationEntry;
     });
 
     if (componentProto.encapsulation !== ViewEncapsulation.Native) {
@@ -113,12 +150,14 @@ export class DomRenderer implements Renderer {
     }
   }
 
-  private _scheduleAnimation(name: string, priority: number, element: any, doneFn: Function): void {
-    var animation = this._animations[name];
-
-    if (isPresent(animation)) {
-      var player = animation.create(element, this);
-      this._animationQueue.schedule(element, priority, player, doneFn);
+  private _scheduleAnimation(name: string, key: string, value: string, priority: number, element: any, doneFn: Function): void {
+    var entry = this._animations[name];
+    if (isPresent(entry) && entry.allow(key, value)) {
+      var player = entry.factory.create(element, this);
+      this._animationQueue.schedule(element, priority, player, () => {
+        player.close();
+        doneFn();
+      });
     } else {
       doneFn();
     }
@@ -245,7 +284,7 @@ export class DomRenderer implements Renderer {
       }
       animationName = CoreAnimationEvents.REMOVE_ATTRIBUTE;
     }
-    this._scheduleAnimation(animationName, ANIMATION_PRIORITY_ATTR, <HTMLElement>renderElement, () => {});
+    this._scheduleAnimation(animationName, attributeName, attributeValue, ANIMATION_PRIORITY_ATTR, <HTMLElement>renderElement, () => {});
   }
 
   setBindingDebugInfo(renderElement: any, propertyName: string, propertyValue: string): void {
@@ -273,7 +312,7 @@ export class DomRenderer implements Renderer {
       animationName = CoreAnimationEvents.REMOVE_CLASS;
       DOM.removeClass(renderElement, className);
     }
-    this._scheduleAnimation(animationName, ANIMATION_PRIORITY_CLASS, <HTMLElement>renderElement, () => {});
+    this._scheduleAnimation(animationName, '.' + className, null, ANIMATION_PRIORITY_CLASS, <HTMLElement>renderElement, () => {});
   }
 
   setElementStyle(renderElement: any, styleName: string, styleValue: string): void {
@@ -295,7 +334,7 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeEnter(node: Node) {
-    this._scheduleAnimation(CoreAnimationEvents.ENTER, ANIMATION_PRIORITY_STRUCTURAL, <HTMLElement>node, () => {});
+    this._scheduleAnimation(CoreAnimationEvents.ENTER, null, null, ANIMATION_PRIORITY_STRUCTURAL, <HTMLElement>node, () => {});
   }
 
 
@@ -305,7 +344,7 @@ export class DomRenderer implements Renderer {
    * @param node
    */
   animateNodeLeave(node: Node) {
-    this._scheduleAnimation(CoreAnimationEvents.LEAVE, ANIMATION_PRIORITY_STRUCTURAL, <HTMLElement>node, () => {
+    this._scheduleAnimation(CoreAnimationEvents.LEAVE, null, null, ANIMATION_PRIORITY_STRUCTURAL, <HTMLElement>node, () => {
       DOM.remove(node);
     });
   }

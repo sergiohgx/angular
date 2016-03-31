@@ -4,6 +4,7 @@ import 'package:angular2/animate.dart' show AnimationStepMetadata, AnimationSequ
 @Component(
   selector: 'animate-app',
   styleUrls: const ['css/animate-app.css'],
+  templateUrl: './animate-app.html',
   animations: const {
     "ngEnter": const AnimationSequenceMetadata(const [
       const AnimationStepMetadata(const [

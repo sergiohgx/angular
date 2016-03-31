@@ -4,7 +4,6 @@ import {RegExpWrapper, isPresent, isNumber, isString, isStringMap, NumberWrapper
 import {BaseException} from 'angular2/src/facade/exceptions';
 import {TERMINAL_KEYFRAME, AnimationKeyframeAst} from 'angular2/src/compiler/animation/animation_keyframe_ast';
 
-import {AnimationAst} from 'angular2/src/compiler/animation/animation_ast';
 import {AnimationKeyframeStylesAst} from 'angular2/src/compiler/animation/animation_keyframe_styles_ast';
 
 var ONE_SECOND = 1000;

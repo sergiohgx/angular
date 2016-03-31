@@ -6,6 +6,7 @@ import 'generic_browser_adapter.dart' show GenericBrowserDomAdapter;
 import 'package:angular2/src/facade/browser.dart';
 import 'package:angular2/src/facade/lang.dart' show isBlank, isPresent;
 import 'dart:js' as js;
+import 'package:angular2/src/platform/dom/animation/dom_animate_player.dart' show DomAnimatePlayer;
 
 // WARNING: Do not expose outside this class. Parsing HTML using this
 // sanitizer is a security risk.
@@ -510,6 +511,10 @@ class BrowserDomAdapter extends GenericBrowserDomAdapter {
 
   num performanceNow() {
     return window.performance.now();
+  }
+
+  DomAnimatePlayer animate(element, keyframes, options) {
+    return element.animate(keyframes, options);
   }
 
   parse(s) {

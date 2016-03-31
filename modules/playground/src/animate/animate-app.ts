@@ -1,18 +1,19 @@
 import {Component} from 'angular2/core';
-import {animate, style} from 'angular2/animate';
+import {group, animate, style} from 'angular2/animate';
 
 @Component({
   selector: 'animate-app',
   styleUrls: ['css/animate-app.css'],
+  templateUrl: './animate-app.html',
   animations: {
     ngEnter: [
       style({ height: 0, opacity: 0 }),
       style({ background: 'white' }),
-      animate({ background: 'red', height: 100, opacity:1 }, '0.5s')
-    ],
-    ngLeave: [
-      style({ height: '200px', opacity: '1' }),
-      animate({ height: 0, opacity: '0' }, '0.5s')
+      style({ background: 'gold' }),
+      group([
+        animate({ height: 100, opacity:1 }, '0.5s'),
+        animate({ background: 'red' }, '2s')
+      ])
     ]
   }
 })

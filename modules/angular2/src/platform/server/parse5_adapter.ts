@@ -16,6 +16,8 @@ import {
 import {BaseException, WrappedException} from 'angular2/src/facade/exceptions';
 import {SelectorMatcher, CssSelector} from 'angular2/src/compiler/selector';
 import {XHR} from 'angular2/src/compiler/xhr';
+import {Parse5DomAnimatePlayer} from 'angular2/src/platform/server/animation/parse5_dom_animate_player';
+import {DomAnimatePlayer} from 'angular2/src/platform/dom/animation/dom_animate_player';
 
 var _attrToPropMap: {[key: string]: string} = {
   'class': 'className',
@@ -552,9 +554,11 @@ export class Parse5DomAdapter extends DomAdapter {
   setGlobalVar(path: string, value: any) { setValueOnPath(global, path, value); }
   requestAnimationFrame(callback): number { return setTimeout(callback, 0); }
   cancelAnimationFrame(id: number) { clearTimeout(id); }
-  supportsCssAnimation(): boolean { return true; }
   supportsWebAnimation(): boolean { return true; }
   performanceNow(): number { return DateWrapper.toMillis(DateWrapper.now()); }
+  animate(element, keyframes, options): DomAnimatePlayer {
+    return new Parse5DomAnimatePlayer();
+  }
   getAnimationPrefix(): string { return ''; }
   getTransitionEnd(): string { return 'transitionend'; }
   supportsAnimation(): boolean { return true; }
