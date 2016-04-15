@@ -23,8 +23,6 @@ import {HammerGesturesPlugin} from 'angular2/src/platform/dom/events/hammer_gest
 import {DOCUMENT} from 'angular2/src/platform/dom/dom_tokens';
 import {WebAnimationsDriver} from 'angular2/src/platform/dom/animation/web_animations_driver';
 import {AnimationDriver, NoOpAnimationDriver} from 'angular2/src/core/render/animation_driver';
-import {AnimationCompiler} from 'angular2/src/core/animation/animation_compiler';
-import {RuntimeAnimationCompiler} from 'angular2/src/compiler/animation/runtime_animation_compiler';
 import {DomRootRenderer, DomRootRenderer_} from 'angular2/src/platform/dom/dom_renderer';
 import {DomSharedStylesHost} from 'angular2/src/platform/dom/shared_styles_host';
 import {SharedStylesHost} from "angular2/src/platform/dom/shared_styles_host";
@@ -97,7 +95,6 @@ export const BROWSER_APP_COMMON_PROVIDERS: Array<any /*Type | Provider | any[]*/
   new Provider(RootRenderer, {useExisting: DomRootRenderer}),
   new Provider(SharedStylesHost, {useExisting: DomSharedStylesHost}),
   new Provider(AnimationDriver, {useFactory: _resolveDefaultAnimationDriver}),
-  new Provider(AnimationCompiler, {useClass: RuntimeAnimationCompiler}),
   DomSharedStylesHost,
   Testability,
   EventManager,

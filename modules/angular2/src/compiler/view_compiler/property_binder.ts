@@ -118,6 +118,14 @@ function bindAndWriteToRenderer(boundProps: BoundElementPropertyAst[], context: 
         }
         renderValue = renderValue.isBlank().conditional(o.NULL_EXPR, strValue);
         break;
+      case PropertyBindingType.Animation:
+        renderMethod = 'setElementClass';
+        // this.doAnimation(this.elem, key, current, prev);
+        updateStmts.push(
+          o.THIS_EXPR
+            .callMethod("doAnimation", [renderNode, o.literal(boundProp.name), renderValue, previusValue])
+            .toStmt());
+        break;
     }
     updateStmts.push(
         o.THIS_EXPR.prop('renderer')

@@ -49,6 +49,7 @@ import {
 } from './exceptions';
 import {StaticNodeDebugInfo, DebugContext} from './debug_context';
 import {ElementInjector} from './element_injector';
+import {AnimationRegistry} from "../../compiler/animation/animation_registry";
 
 export const HOST_VIEW_ELEMENT_NAME = '$hostViewEl';
 
@@ -96,7 +97,8 @@ export abstract class AppView<T> {
               public locals: {[key: string]: any}, public viewManager: AppViewManager_,
               public parentInjector: Injector, public declarationAppElement: AppElement,
               public cdMode: ChangeDetectionStrategy, literalArrayCacheSize: number,
-              literalMapCacheSize: number, public staticNodeDebugInfos: StaticNodeDebugInfo[]) {
+              literalMapCacheSize: number, public staticNodeDebugInfos: StaticNodeDebugInfo[],
+              public animationRegistry: AnimationRegistry) {
     this.ref = new ViewRef_(this);
     if (type === ViewType.COMPONENT || type === ViewType.HOST) {
       this.renderer = viewManager.renderComponent(componentType);
@@ -105,6 +107,12 @@ export abstract class AppView<T> {
     }
     this._literalArrayCache = ListWrapper.createFixedSize(literalArrayCacheSize);
     this._literalMapCache = ListWrapper.createFixedSize(literalMapCacheSize);
+  }
+  
+  doAnimation(element: any, key: string, currentState: string, previousState: string) {
+    var factory = this.animationRegistry.resolveAnimation(key, currentState, previousState);
+    var player = factory.create(element, this.renderer);
+    player.play();
   }
 
   create(givenProjectableNodes: Array<any | any[]>, rootSelector: string) {
