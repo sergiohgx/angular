@@ -51,6 +51,8 @@ import {
 import {StaticNodeDebugInfo, DebugContext} from './debug_context';
 import {ElementInjector} from './element_injector';
 
+export const HOST_VIEW_ELEMENT_NAME = '$hostViewEl';
+
 const EMPTY_CONTEXT = CONST_EXPR(new Object());
 
 var _scope_check: WtfScopeFn = wtfCreateScope(`AppView#check(ascii id)`);

@@ -1919,6 +1919,26 @@ function declareTests(isJit: boolean) {
            }));
       });
     }
+
+    it('should support triggering animations via an animation property change',
+       inject([TestComponentBuilder, AsyncTestCompleter], (tcb: TestComponentBuilder,
+                                                           async) => {
+         tcb.overrideView(SomeCmp,
+                new ViewMetadata({template: '<div *ngIf="value" @prop="value"></div>'}))
+             .createAsync(SomeCmp)
+             .then((fixture) => {
+               let cmp = fixture.debugElement.componentInstance;
+               let useEl = DOM.firstChild(fixture.debugElement.nativeElement);
+
+               cmp.value = "true";
+               fixture.detectChanges();
+
+               cmp.value = "true123";
+               fixture.detectChanges();
+
+               async.done();
+             });
+       }));
   });
 }
 

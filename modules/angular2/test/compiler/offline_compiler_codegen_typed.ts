@@ -10,10 +10,4 @@ export const CompANgFactory: ComponentFactory = null;
 
 // Generator
 export function main(args: string[]) {
-  var emitter = IS_DART ? new DartEmitter() : new TypeScriptEmitter();
-  compileComp(emitter, compAMetadata)
-      .then((source) => {
-        // debug: console.error(source);
-        print(source);
-      });
 }

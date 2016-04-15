@@ -95,7 +95,8 @@ export class OfflineCompiler {
     var parsedTemplate = this._templateParser.parse(compMeta, compMeta.template.template,
                                                     directives, pipes, compMeta.type.name);
     var viewResult = this._viewCompiler.compileComponent(compMeta, parsedTemplate,
-                                                         o.variable(styleResult.stylesVar), pipes);
+                                                         o.variable(styleResult.stylesVar),
+                                                         o.NULL_EXPR, pipes); // TODO (matsko): fix the animation data
     ListWrapper.addAll(targetStatements, _resolveStyleStatements(styleResult));
     ListWrapper.addAll(targetStatements, _resolveViewStatements(viewResult));
     return viewResult.viewFactoryVar;

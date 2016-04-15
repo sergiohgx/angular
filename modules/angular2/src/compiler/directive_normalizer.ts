@@ -5,6 +5,7 @@ import {
   CompileProviderMetadata,
   CompileTokenMetadata
 } from './compile_metadata';
+
 import {isPresent, isBlank, isArray} from 'angular2/src/facade/lang';
 import {BaseException} from 'angular2/src/facade/exceptions';
 import {PromiseWrapper} from 'angular2/src/facade/async';
@@ -14,7 +15,6 @@ import {UrlResolver} from 'angular2/src/compiler/url_resolver';
 import {extractStyleUrls, isStyleUrlResolvable} from './style_url_resolver';
 import {Injectable} from 'angular2/src/core/di';
 import {ViewEncapsulation} from 'angular2/src/core/metadata/view';
-
 
 import {
   HtmlAstVisitor,
@@ -27,6 +27,7 @@ import {
   HtmlExpansionCaseAst,
   htmlVisitAll
 } from './html_ast';
+
 import {HtmlParser} from './html_parser';
 
 import {preparseElement, PreparsedElement, PreparsedElementType} from './template_preparser';
@@ -112,6 +113,7 @@ export class DirectiveNormalizer {
       templateUrl: templateAbsUrl,
       styles: allResolvedStyles,
       styleUrls: allStyleAbsUrls,
+      animations: templateMeta.animations,
       ngContentSelectors: visitor.ngContentSelectors
     });
   }

@@ -126,8 +126,7 @@ export class RuntimeCompiler implements ComponentResolver {
 
                 var childPromises = [];
                 compiledTemplate.init(this._compileComponent(compMeta, parsedTemplate, styles,
-                                                             pipes, compilingComponentsPath,
-                                                             childPromises));
+                                                             pipes, compilingComponentsPath, childPromises));
                 return PromiseWrapper.all(childPromises).then((_) => { return compiledTemplate; });
               });
       this._compiledTemplateDone.set(cacheKey, done);
@@ -136,12 +135,15 @@ export class RuntimeCompiler implements ComponentResolver {
   }
 
   private _compileComponent(compMeta: CompileDirectiveMetadata, parsedTemplate: TemplateAst[],
-                            styles: string[], pipes: CompilePipeMetadata[],
+                            styles: string[],
+                            pipes: CompilePipeMetadata[],
                             compilingComponentsPath: any[],
                             childPromises: Promise<any>[]): Function {
     var compileResult = this._viewCompiler.compileComponent(
         compMeta, parsedTemplate,
-        new ir.ExternalExpr(new CompileIdentifierMetadata({runtime: styles})), pipes);
+        new ir.ExternalExpr(new CompileIdentifierMetadata({runtime: styles})),
+        new ir.ExternalExpr(new CompileIdentifierMetadata({runtime: compMeta.template.animations})),
+        pipes);
     compileResult.dependencies.forEach((dep) => {
       var childCompilingComponentsPath = ListWrapper.clone(compilingComponentsPath);
 

@@ -92,6 +92,7 @@ export interface ComponentDecorator extends TypeDecorator {
     renderer?: string,
     styles?: string[],
     styleUrls?: string[],
+    animations?: {[key: string]: any}
   }): ViewDecorator;
 }
 
@@ -112,6 +113,7 @@ export interface ViewDecorator extends TypeDecorator {
     renderer?: string,
     styles?: string[],
     styleUrls?: string[],
+    animations?: {[key: string]: any}
   }): ViewDecorator;
 }
 
@@ -225,6 +227,7 @@ export interface ComponentMetadataFactory {
     template?: string,
     styleUrls?: string[],
     styles?: string[],
+    animations?: {[key: string]: any},
     directives?: Array<Type | any[]>,
     pipes?: Array<Type | any[]>,
     encapsulation?: ViewEncapsulation
@@ -250,6 +253,7 @@ export interface ComponentMetadataFactory {
     template?: string,
     styleUrls?: string[],
     styles?: string[],
+    animations?: {[key: string]: any},
     directives?: Array<Type | any[]>,
     pipes?: Array<Type | any[]>,
     encapsulation?: ViewEncapsulation
@@ -307,6 +311,7 @@ export interface ViewMetadataFactory {
     encapsulation?: ViewEncapsulation,
     styles?: string[],
     styleUrls?: string[],
+    animations?: {[key: string]: any}
   }): ViewDecorator;
   new (obj: {
     templateUrl?: string,
@@ -316,6 +321,7 @@ export interface ViewMetadataFactory {
     encapsulation?: ViewEncapsulation,
     styles?: string[],
     styleUrls?: string[],
+    animations?: {[key: string]: any}
   }): ViewMetadata;
 }
 

@@ -8,10 +8,4 @@ export const CompANgFactory: ComponentFactory = null;
 
 // Generator
 export function main(args: string[]) {
-  var emitter = new JavaScriptEmitter();
-  compileComp(emitter, compAMetadata)
-      .then((source) => {
-        // debug: console.error(source);
-        print(source);
-      });
 }
