@@ -40,7 +40,10 @@ export {
   wtfEndTimeRange,
   WtfScopeFn
 } from './src/profile/profile';
+
 export {Type, enableProdMode} from "./src/facade/lang";
 export {EventEmitter} from "./src/facade/async";
 export {ExceptionHandler, WrappedException, BaseException} from "./src/facade/exceptions";
 export * from './private_export';
+
+export * from './src/animation/metadata';

@@ -22,6 +22,8 @@ import {ObservableWrapper} from '../../../src/facade/async';
 import {ViewEncapsulation} from '@angular/core';
 import {deserializeGenericEvent} from './event_deserializer';
 
+import {AnimationKeyframe, AnimationPlayer, AnimationStyles} from '../../../core_private';
+
 @Injectable()
 export class WebWorkerRootRenderer implements RootRenderer {
   private _messageBroker;
@@ -245,6 +247,12 @@ export class WebWorkerRenderer implements Renderer, RenderStoreObject {
       this._rootRenderer.globalEvents.unlisten(eventNameWithTarget(target, name), callback);
       this._runOnService('listenDone', [new FnArg(unlistenCallbackId, null)]);
     };
+  }
+
+  animate(element: any, startingStyles: AnimationStyles, keyframes: AnimationKeyframe[], duration: number, delay: number,
+          easing: string): AnimationPlayer {
+      // TODO
+      return null;
   }
 }
 

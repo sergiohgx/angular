@@ -41,7 +41,13 @@ import {
   pureProxy7,
   pureProxy8,
   pureProxy9,
-  pureProxy10
+  pureProxy10,
+  AnimationKeyframe as AnimationKeyframe_,
+  AnimationStyles as AnimationStyles_,
+  NoOpAnimationPlayer as NoOpAnimationPlayer_,
+  AnimationGroupPlayer as AnimationGroupPlayer_,
+  AnimationSequencePlayer as AnimationSequencePlayer_,
+  AnimationStyleUtil as AnimationStyleUtil_
 } from '../core_private';
 
 import {CompileIdentifierMetadata, CompileTokenMetadata} from './compile_metadata';
@@ -83,6 +89,12 @@ var impCheckBinding = checkBinding;
 var impCastByValue = castByValue;
 var impEMPTY_ARRAY = EMPTY_ARRAY;
 var impEMPTY_MAP = EMPTY_MAP;
+var impAnimationGroupPlayer = AnimationGroupPlayer_;
+var impAnimationSequencePlayer = AnimationSequencePlayer_;
+var impAnimationKeyframe = AnimationKeyframe_;
+var impAnimationStyles = AnimationStyles_;
+var impAnimationStyleUtil = AnimationStyleUtil_;
+var impNoOpAnimationPlayer = NoOpAnimationPlayer_;
 
 export class Identifiers {
   static ViewUtils = new CompileIdentifierMetadata(
@@ -204,6 +216,36 @@ export class Identifiers {
     name: 'SecurityContext',
     moduleUrl: assetUrl('core', 'security'),
     runtime: SecurityContext,
+  });
+  static AnimationKeyframe = new CompileIdentifierMetadata({
+    name: 'AnimationKeyframe',
+    moduleUrl: assetUrl('core','animation/animation_keyframe'),
+    runtime: impAnimationKeyframe
+  });
+  static AnimationStyles = new CompileIdentifierMetadata({
+    name: 'AnimationStyles',
+    moduleUrl: assetUrl('core','animation/animation_styles'),
+    runtime: impAnimationStyles
+  });
+  static NoOpAnimationPlayer = new CompileIdentifierMetadata({
+    name: 'NoOpAnimationPlayer',
+    moduleUrl: assetUrl('core','animation/animation_player'),
+    runtime: impNoOpAnimationPlayer
+  });
+  static AnimationGroupPlayer = new CompileIdentifierMetadata({
+    name: 'AnimationGroupPlayer',
+    moduleUrl: assetUrl('core','animation/animation_group_player'),
+    runtime: impAnimationGroupPlayer
+  });
+  static AnimationSequencePlayer = new CompileIdentifierMetadata({
+    name: 'AnimationSequencePlayer',
+    moduleUrl: assetUrl('core','animation/animation_sequence_player'),
+    runtime: impAnimationSequencePlayer
+  });
+  static AnimationStyleUtil = new CompileIdentifierMetadata({
+    name: 'AnimationStyleUtil',
+    moduleUrl: assetUrl('core','animation/animation_style_util'),
+    runtime: impAnimationStyleUtil
   });
 }
 

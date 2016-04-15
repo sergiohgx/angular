@@ -10,7 +10,12 @@ import {
   OpaqueToken,
   Testability
 } from '@angular/core';
-import {wtfInit, SanitizationService} from '../core_private';
+import {
+  wtfInit,
+  SanitizationService,
+  AnimationDriver,
+  NoOpAnimationDriver
+} from '../core_private';
 import {COMMON_DIRECTIVES, COMMON_PIPES, FORM_PROVIDERS} from '@angular/common';
 import {
   DomSanitizationService,
@@ -18,6 +23,7 @@ import {
 } from './security/dom_sanitization_service';
 
 import {IS_DART} from './facade/lang';
+import {WebAnimationsDriver} from './dom/web_animations_driver';
 import {BrowserDomAdapter} from './browser/browser_adapter';
 import {BrowserGetTestability} from './browser/testability';
 import {getDOM} from './dom/dom_adapter';
@@ -34,8 +40,6 @@ import {
   HammerGesturesPlugin
 } from './dom/events/hammer_gestures';
 import {DomSharedStylesHost} from './dom/shared_styles_host';
-import {AnimationBuilder} from './animate/animation_builder';
-import {BrowserDetails} from './animate/browser_details';
 
 export {Title} from './browser/title';
 export {BrowserDomAdapter} from './browser/browser_adapter';
@@ -71,6 +75,13 @@ export const BROWSER_SANITIZATION_PROVIDERS: Array<any> = /*@ts2dart_const*/[
   /* @ts2dart_Provider */ {provide: DomSanitizationService, useClass: DomSanitizationServiceImpl},
 ];
 
+function _resolveDefaultAnimationDriver(): AnimationDriver {
+  if (getDOM().supportsWebAnimation()) {
+    return new WebAnimationsDriver();
+  }
+  return new NoOpAnimationDriver();
+}
+
 /**
  * A set of providers to initialize an Angular application in a web browser.
  *
@@ -92,10 +103,9 @@ export const BROWSER_APP_COMMON_PROVIDERS: Array<any /*Type | Provider | any[]*/
       /* @ts2dart_Provider */ {provide: DomRootRenderer, useClass: DomRootRenderer_},
       /* @ts2dart_Provider */ {provide: RootRenderer, useExisting: DomRootRenderer},
       /* @ts2dart_Provider */ {provide: SharedStylesHost, useExisting: DomSharedStylesHost},
+      /* @ts2dart_Provider */ {provide: AnimationDriver, useFactory: _resolveDefaultAnimationDriver},
       DomSharedStylesHost,
       Testability,
-      BrowserDetails,
-      AnimationBuilder,
       EventManager,
       ELEMENT_PROBE_PROVIDERS
     ];

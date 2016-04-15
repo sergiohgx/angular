@@ -33,6 +33,7 @@ cd -
 # Fix this by separating the metadata extraction into a separate binary that does
 # not depend on Angular.
 $(npm bin)/tsc -p ${TSCONFIG}
+NODE_PATH=$NODE_PATH:./dist/all
 NG_TC="node dist/all/@angular/compiler_cli/src/main"
 $NG_TC -p modules/tsconfig.json
 

@@ -8,8 +8,6 @@ import {
 import {DirectiveResolver, ViewResolver, XHR} from '@angular/compiler';
 import {BROWSER_APP_COMMON_PROVIDERS} from '../src/browser_common';
 import {BrowserDomAdapter} from '../src/browser/browser_adapter';
-import {AnimationBuilder} from '../src/animate/animation_builder';
-import {MockAnimationBuilder} from './animation_builder_mock';
 import {MockDirectiveResolver} from '@angular/compiler/testing';
 import {MockViewResolver} from '@angular/compiler/testing';
 import {MockLocationStrategy} from '@angular/common/testing';
@@ -22,6 +20,7 @@ import {ELEMENT_PROBE_PROVIDERS} from '../src/dom/debug/ng_probe';
 import {TestComponentRenderer} from '@angular/compiler/testing';
 import {DOMTestComponentRenderer} from './dom_test_component_renderer';
 import {IS_DART} from '../src/facade/lang';
+import {AnimationDriver, NoOpAnimationDriver} from '../core_private';
 
 function initBrowserTests() {
   BrowserDomAdapter.makeCurrent();
@@ -53,7 +52,7 @@ export const ADDITIONAL_TEST_BROWSER_PROVIDERS: Array<any /*Type | Provider | an
       TestComponentBuilder,
       /*@ts2dart_Provider*/ {provide: NgZone, useFactory: createNgZone},
       /*@ts2dart_Provider*/ {provide: LocationStrategy, useClass: MockLocationStrategy},
-      /*@ts2dart_Provider*/ {provide: AnimationBuilder, useClass: MockAnimationBuilder},
+      /*@ts2dart_Provider*/ {provide: AnimationDriver, useClass: AnimationDriver},
       /*@ts2dart_Provider*/ {provide: TestComponentRenderer, useClass: DOMTestComponentRenderer}
     ];
 

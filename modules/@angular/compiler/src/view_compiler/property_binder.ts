@@ -24,6 +24,7 @@ import {camelCaseToDashCase} from '../util';
 import {convertCdExpressionToIr} from './expression_converter';
 
 import {CompileBinding} from './compile_binding';
+import {BaseException} from '@angular/core';
 
 
 function createBindFieldExpr(exprIndex: number): o.ReadPropExpr {
@@ -95,36 +96,78 @@ function bindAndWriteToRenderer(boundProps: BoundElementPropertyAst[], context: 
     var fieldExpr = createBindFieldExpr(bindingIndex);
     var currValExpr = createCurrValueExpr(bindingIndex);
     var renderMethod: string;
+    var oldRenderValue: o.Expression = sanitizedValue(boundProp, fieldExpr);
     var renderValue: o.Expression = sanitizedValue(boundProp, currValExpr);
     var updateStmts = [];
     switch (boundProp.type) {
       case PropertyBindingType.Property:
-        renderMethod = 'setElementProperty';
         if (view.genConfig.logBindingUpdate) {
-          updateStmts.push(logBindingUpdateStmt(renderNode, boundProp.name, currValExpr));
+          updateStmts.push(logBindingUpdateStmt(renderNode, boundProp.name, renderValue));
         }
+        updateStmts.push(
+            o.THIS_EXPR.prop('renderer')
+                .callMethod('setElementProperty', [renderNode, o.literal(boundProp.name), renderValue])
+                .toStmt()
+        );
         break;
       case PropertyBindingType.Attribute:
-        renderMethod = 'setElementAttribute';
-        renderValue =
-            renderValue.isBlank().conditional(o.NULL_EXPR, renderValue.callMethod('toString', []));
+        renderValue = renderValue.isBlank().conditional(o.NULL_EXPR, renderValue.callMethod('toString', []));
+        updateStmts.push(
+            o.THIS_EXPR.prop('renderer')
+                .callMethod('setElementAttribute', [renderNode, o.literal(boundProp.name), renderValue])
+                .toStmt()
+        );
         break;
       case PropertyBindingType.Class:
-        renderMethod = 'setElementClass';
+        updateStmts.push(
+            o.THIS_EXPR.prop('renderer')
+                .callMethod('setElementClass', [renderNode, o.literal(boundProp.name), renderValue])
+                .toStmt()
+        );
         break;
       case PropertyBindingType.Style:
-        renderMethod = 'setElementStyle';
         var strValue: o.Expression = renderValue.callMethod('toString', []);
         if (isPresent(boundProp.unit)) {
           strValue = strValue.plus(o.literal(boundProp.unit));
         }
         renderValue = renderValue.isBlank().conditional(o.NULL_EXPR, strValue);
+        updateStmts.push(
+            o.THIS_EXPR.prop('renderer')
+                .callMethod('setElementStyle', [renderNode, o.literal(boundProp.name), renderValue])
+                .toStmt()
+        );
+        break;
+      case PropertyBindingType.Animation:
+        var animationName = boundProp.name;
+        var animation = view.componentView.animations.get(animationName);
+        if (!isPresent(animation)) {
+          throw new BaseException(`Internal Error: couldn't find an animation entry for ${boundProp.name}`);
+        }
+
+        var PLAYER_VAR = o.variable('playerResult');
+        updateStmts.push(
+          PLAYER_VAR.set(animation.fnVariable.callFn([
+            o.THIS_EXPR.prop('renderer'),
+            renderNode,
+            oldRenderValue,
+            renderValue
+          ])).toDeclStmt());
+
+        updateStmts.push(
+          o.THIS_EXPR.callMethod('registerActiveAnimation', [o.literal(animationName), PLAYER_VAR]).toStmt());
+
+        updateStmts.push(
+          PLAYER_VAR.callMethod('onDone', [
+            o.fn([], [
+              o.THIS_EXPR.callMethod('registerActiveAnimation',
+                [o.literal(animationName), o.NULL_EXPR]).toStmt()
+            ])
+          ]).toStmt());
+
+        updateStmts.push(
+          PLAYER_VAR.callMethod('play', []).toStmt());
         break;
     }
-    updateStmts.push(
-        o.THIS_EXPR.prop('renderer')
-            .callMethod(renderMethod, [renderNode, o.literal(boundProp.name), renderValue])
-            .toStmt());
 
     bind(view, currValExpr, fieldExpr, boundProp.value, context, updateStmts,
          view.detectChangesRenderPropertiesMethod);
