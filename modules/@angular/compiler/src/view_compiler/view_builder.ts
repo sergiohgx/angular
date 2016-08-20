@@ -565,10 +565,11 @@ function generateDetectChangesMethod(view: CompileView): o.Statement[] {
       view.updateViewQueriesMethod.isEmpty() && view.afterViewLifecycleCallbacksMethod.isEmpty()) {
     return stmts;
   }
+  ListWrapper.addAll(stmts, view.animationBindingsMethod.finish());
   ListWrapper.addAll(stmts, view.detectChangesInInputsMethod.finish());
-  stmts.push(
-      o.THIS_EXPR.callMethod('detectContentChildrenChanges', [DetectChangesVars.throwOnChange])
-          .toStmt());
+  //stmts.push(
+      //o.THIS_EXPR.callMethod('detectContentChildrenChanges', [DetectChangesVars.throwOnChange])
+          //.toStmt());
   var afterContentStmts = view.updateContentQueriesMethod.finish().concat(
       view.afterContentLifecycleCallbacksMethod.finish());
   if (afterContentStmts.length > 0) {
