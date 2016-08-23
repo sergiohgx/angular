@@ -981,7 +981,7 @@ function declareTests({useJit}: {useJit: boolean}) {
            var calls = 0;
            var cmp = fixture.debugElement.componentInstance;
            cmp.callback = (e: any) => {
-             isAnimationRunning = e['running'];
+             isAnimationRunning = e['totalTime'] > 0;
              calls++;
            };
 
@@ -1017,7 +1017,7 @@ function declareTests({useJit}: {useJit: boolean}) {
            var calls = 0;
            var cmp = fixture.debugElement.componentInstance;
            cmp.callback = (e: any) => {
-             isAnimationRunning = e['running'];
+             isAnimationRunning = e['totalTime'] > 0;
              calls++;
            };
            cmp.exp = 'one';
@@ -1070,6 +1070,42 @@ function declareTests({useJit}: {useJit: boolean}) {
            flushMicrotasks();
            expect(eventData['fromState']).toEqual('one');
            expect(eventData['toState']).toEqual('two');
+         }));
+
+      it('should emit the `totalTime` values for an animation callback', fakeAsync(() => {
+           TestBed.overrideComponent(DummyIfCmp, {
+             set: {
+               template: `
+              <div [@trigger]="exp" (@trigger.start)="callback1($event)"></div>
+              <div [@noTrigger]="exp2" (@noTrigger.start)="callback2($event)"></div>
+            `,
+               animations: [
+                 trigger(
+                     'trigger',
+                     [transition(
+                         '* => *',
+                         [animate('1s 750ms', style({})), animate('2000ms 0ms', style({}))])]),
+                 trigger('noTrigger', [])
+               ]
+             }
+           });
+
+           const driver = TestBed.get(AnimationDriver) as InnerContentTrackingAnimationDriver;
+           let fixture = TestBed.createComponent(DummyIfCmp);
+           var eventData1: any = {};
+           var eventData2: any = {};
+           var cmp = fixture.debugElement.componentInstance;
+           cmp.callback1 = (e: any) => { eventData1 = e; };
+           cmp.callback2 = (e: any) => { eventData2 = e; };
+           cmp.exp = 'one';
+           fixture.detectChanges();
+           flushMicrotasks();
+           expect(eventData1['totalTime']).toEqual(3750);
+
+           cmp.exp2 = 'two';
+           fixture.detectChanges();
+           flushMicrotasks();
+           expect(eventData2['totalTime']).toEqual(0);
          }));
 
       it('should throw an error if an animation output is referenced is not defined within the component',

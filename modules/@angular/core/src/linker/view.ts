@@ -81,22 +81,16 @@ export abstract class AppView<T> {
   }
 
   queueAnimation(
-      element: any, animationName: string, player: AnimationPlayer, fromState: string,
-      toState: string): void {
-    var actualAnimationDetected = !(player instanceof NoOpAnimationPlayer);
-    var animationData = {
-      'fromState': fromState,
-      'toState': toState,
-      'running': actualAnimationDetected
-    };
+      element: any, animationName: string, player: AnimationPlayer, totalTime: number,
+      fromState: string, toState: string): void {
+    var params = {'fromState': fromState, 'toState': toState, 'totalTime': totalTime};
     this.animationPlayers.set(element, animationName, player);
     player.onDone(() => {
       // TODO: make this into a datastructure for done|start
-      this.triggerAnimationOutput(element, animationName, 'done', animationData);
+      this.triggerAnimationOutput(element, animationName, 'done', params);
       this.animationPlayers.remove(element, animationName);
     });
-    player.onStart(
-        () => { this.triggerAnimationOutput(element, animationName, 'start', animationData); });
+    player.onStart(() => { this.triggerAnimationOutput(element, animationName, 'start', params); });
   }
 
   triggerQueuedAnimations() {
