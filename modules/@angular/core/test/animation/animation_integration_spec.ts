@@ -28,6 +28,8 @@ export function main() {
 function declareTests({useJit}: {useJit: boolean}) {
   describe('animation tests', function() {
     beforeEach(() => {
+      InnerContentTrackingAnimationPlayer.initLog = [];
+
       TestBed.configureCompiler({useJit: useJit});
       TestBed.configureTestingModule({
         declarations: [DummyLoadingCmp, DummyIfCmp],
@@ -959,6 +961,90 @@ function declareTests({useJit}: {useJit: boolean}) {
            var player = <InnerContentTrackingAnimationPlayer>animation['player'];
            expect(player.playAttempts).toEqual(1);
          }));
+
+      fit('should always trigger animations on the parent first before starting the child', fakeAsync(() => {
+        TestBed.overrideComponent(DummyIfCmp, {
+          set: {
+            template: `
+              <div *ngIf="exp" [@outer]="exp">
+                outer
+                <div *ngIf="exp2" [@inner]="exp">
+                  inner 
+<               </div>
+<             </div>
+            `,
+            animations: [
+              trigger('outer', [transition('* => *', [animate(1000)])]),
+              trigger('inner', [transition('* => *', [animate(1000)])]),
+            ]
+          }
+        });
+
+        const driver = TestBed.get(AnimationDriver) as InnerContentTrackingAnimationDriver;
+        let fixture = TestBed.createComponent(DummyIfCmp);
+        var cmp = fixture.debugElement.componentInstance;
+        cmp.exp = true;
+        cmp.exp2 = true;
+        fixture.detectChanges();
+        flushMicrotasks();
+
+        expect(driver.log.length).toEqual(2);
+        var inner: any = driver.log.pop();
+        var innerPlayer: any = <InnerContentTrackingAnimationPlayer>inner['player'];
+        var outer: any = driver.log.pop();
+        var outerPlayer: any = <InnerContentTrackingAnimationPlayer>outer['player'];
+
+        expect(InnerContentTrackingAnimationPlayer.initLog).toEqual([
+          outerPlayer.element,
+          innerPlayer.element
+        ]);
+      }));
+
+      it('should trigger animations that exist in nested views without a chain of animations in between', fakeAsync(() => {
+        TestBed.overrideComponent(DummyIfCmp, {
+          set: {
+            template: `
+              <div *ngIf="exp" [@outer]="exp">
+                outer
+                <div *ngIf="exp">
+                  middle
+                  <div *ngIf="exp2" [@inner]="exp">
+                    inner
+                  </div>
+<               </div>
+<             </div>
+            `,
+            animations: [
+              trigger('outer', [transition('* => *', [animate(1000)])]),
+              trigger('inner', [transition('* => *', [animate(1000)])]),
+            ]
+          }
+        });
+
+        const driver = TestBed.get(AnimationDriver) as InnerContentTrackingAnimationDriver;
+        let fixture = TestBed.createComponent(DummyIfCmp);
+        var cmp = fixture.debugElement.componentInstance;
+        cmp.exp = true;
+        cmp.exp2 = true;
+        fixture.detectChanges();
+        flushMicrotasks();
+
+        expect(driver.log.length).toEqual(2);
+        var inner: any = driver.log.pop();
+        var innerPlayer: any = <InnerContentTrackingAnimationPlayer>inner['player'];
+        var outer: any = driver.log.pop();
+        var outerPlayer: any = <InnerContentTrackingAnimationPlayer>outer['player'];
+
+        console.log(outerPlayer.element.innerText);
+        console.log(innerPlayer.element.innerText);
+        console.log('0000000');
+        console.log(InnerContentTrackingAnimationPlayer.initLog[0].innerText);
+        console.log(InnerContentTrackingAnimationPlayer.initLog[1].innerText);
+        //expect(InnerContentTrackingAnimationPlayer.initLog).toEqual([
+          //outerPlayer.element,
+          //innerPlayer.element
+        //]);
+      }));
     });
 
     describe('animation output events', () => {
@@ -1623,17 +1709,25 @@ class InnerContentTrackingAnimationDriver extends MockAnimationDriver {
 }
 
 class InnerContentTrackingAnimationPlayer extends MockAnimationPlayer {
-  constructor(public element: any) { super(); }
+  static initLog: any[] = [];
+
+  constructor(public element: any) {
+    super();
+  }
 
   public computedHeight: number;
   public capturedInnerText: string;
   public playAttempts = 0;
 
-  init() { this.computedHeight = getDOM().getComputedStyle(this.element)['height']; }
+  init() {
+    InnerContentTrackingAnimationPlayer.initLog.push(this.element);
+    this.computedHeight = getDOM().getComputedStyle(this.element)['height'];
+  }
 
   play() {
     this.playAttempts++;
-    this.capturedInnerText = this.element.querySelector('.inner').innerText;
+    var innerElm = this.element.querySelector('.inner');
+    this.capturedInnerText = innerElm ? innerElm.innerText : '';
   }
 }
 

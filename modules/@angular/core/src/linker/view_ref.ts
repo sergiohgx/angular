@@ -104,7 +104,10 @@ export class ViewRef_<C> implements EmbeddedViewRef<C>, ChangeDetectorRef {
 
   markForCheck(): void { this._view.markPathToRootAsCheckOnce(); }
   detach(): void { this._view.cdMode = ChangeDetectorStatus.Detached; }
-  detectChanges(): void { this._view.detectChanges(false); }
+  detectChanges(): void {
+    this._view.detectChanges(false);
+    this._view.triggerQueuedAnimations();
+  }
   checkNoChanges(): void { this._view.detectChanges(true); }
   reattach(): void {
     this._view.cdMode = this._originalMode;

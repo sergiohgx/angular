@@ -50,6 +50,7 @@ export abstract class AppView<T> {
   private _hasExternalHostElement: boolean;
 
   public animationPlayers = new ViewAnimationMap();
+  public queuedAnimations: AnimationPlayer[] = [];
 
   private _animationListeners = new Map<any, _AnimationOutputWithHandler[]>();
 
@@ -80,31 +81,43 @@ export abstract class AppView<T> {
     }
   }
 
+  _queueAnimationPlayer(player: AnimationPlayer) {
+    if (this.parent && this.parent.type != ViewType.COMPONENT) {
+      this.parent._queueAnimationPlayer(player);
+    } else {
+      this.queuedAnimations.push(player);
+    }
+  }
+
   queueAnimation(
       element: any, animationName: string, player: AnimationPlayer, fromState: string,
       toState: string): void {
+    this._queueAnimationPlayer(player);
+
+    this.animationPlayers.set(element, animationName, player);
     var actualAnimationDetected = !(player instanceof NoOpAnimationPlayer);
     var animationData = {
       'fromState': fromState,
       'toState': toState,
       'running': actualAnimationDetected
     };
-    this.animationPlayers.set(element, animationName, player);
+
     player.onDone(() => {
       // TODO: make this into a datastructure for done|start
       this.triggerAnimationOutput(element, animationName, 'done', animationData);
       this.animationPlayers.remove(element, animationName);
     });
     player.onStart(
-        () => { this.triggerAnimationOutput(element, animationName, 'start', animationData); });
+      () => {
+        this.triggerAnimationOutput(element, animationName, 'start', animationData);
+      });
   }
 
   triggerQueuedAnimations() {
-    this.animationPlayers.getAllPlayers().forEach(player => {
-      if (!player.hasStarted()) {
-        player.play();
-      }
-    });
+    if (this.queuedAnimations.length) {
+      this.queuedAnimations.forEach(player => player.play());
+      this.queuedAnimations = [];
+    }
   }
 
   triggerAnimationOutput(

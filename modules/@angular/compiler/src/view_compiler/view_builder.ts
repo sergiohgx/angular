@@ -478,7 +478,7 @@ function createViewClass(
         generateDetectChangesMethod(view)),
     new o.ClassMethod('dirtyParentQueriesInternal', [], view.dirtyParentQueriesMethod.finish()),
     new o.ClassMethod('destroyInternal', [], view.destroyMethod.finish()),
-    new o.ClassMethod('detachInternal', [], view.detachMethod.finish())
+    new o.ClassMethod('detachInternal', [], generateDetachMethod(view))
   ].concat(view.eventHandlerMethods);
   var superClass = view.genConfig.genDebugInfo ? Identifiers.DebugAppView : Identifiers.AppView;
   var viewClass = new o.ClassStmt(
@@ -557,6 +557,15 @@ function generateCreateMethod(view: CompileView): o.Statement[] {
   ]);
 }
 
+function generateDetachMethod(view: CompileView): o.Statement[] {
+  var stmts: any[] = [];
+  ListWrapper.addAll(stmts, view.detachMethod.finish());
+  stmts.push(new o.IfStmt(o.THIS_EXPR.prop('type').equals(o.literal(ViewType.COMPONENT)), [
+    o.THIS_EXPR.callMethod('triggerQueuedAnimations', []).toStmt()
+  ]));
+  return stmts.concat(stmts);
+}
+
 function generateDetectChangesMethod(view: CompileView): o.Statement[] {
   var stmts: any[] = [];
   if (view.detectChangesInInputsMethod.isEmpty() && view.updateContentQueriesMethod.isEmpty() &&
@@ -567,9 +576,9 @@ function generateDetectChangesMethod(view: CompileView): o.Statement[] {
   }
   ListWrapper.addAll(stmts, view.animationBindingsMethod.finish());
   ListWrapper.addAll(stmts, view.detectChangesInInputsMethod.finish());
-  //stmts.push(
-      //o.THIS_EXPR.callMethod('detectContentChildrenChanges', [DetectChangesVars.throwOnChange])
-          //.toStmt());
+  stmts.push(
+      o.THIS_EXPR.callMethod('detectContentChildrenChanges', [DetectChangesVars.throwOnChange])
+          .toStmt());
   var afterContentStmts = view.updateContentQueriesMethod.finish().concat(
       view.afterContentLifecycleCallbacksMethod.finish());
   if (afterContentStmts.length > 0) {
@@ -598,6 +607,7 @@ function generateDetectChangesMethod(view: CompileView): o.Statement[] {
         DetectChangesVars.valUnwrapper.set(o.importExpr(Identifiers.ValueUnwrapper).instantiate([]))
             .toDeclStmt(null, [o.StmtModifier.Final]));
   }
+  stmts.push(o.THIS_EXPR.callMethod('triggerQueuedAnimations', []).toStmt());
   return varStmts.concat(stmts);
 }
 

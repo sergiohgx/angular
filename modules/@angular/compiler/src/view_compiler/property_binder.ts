@@ -180,13 +180,6 @@ function bindAndWriteToRenderer(
             animationFnExpr.callFn([o.THIS_EXPR, renderNode, oldRenderValue, emptyStateValue])
                 .toStmt());
 
-        if (!_animationViewCheckedFlagMap.get(view)) {
-          _animationViewCheckedFlagMap.set(view, true);
-          var triggerStmt = o.THIS_EXPR.callMethod('triggerQueuedAnimations', []).toStmt();
-          view.afterViewLifecycleCallbacksMethod.addStmt(triggerStmt);
-          view.detachMethod.addStmt(triggerStmt);
-        }
-
         break;
     }
 
